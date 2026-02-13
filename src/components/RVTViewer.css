@@ -1,0 +1,35 @@
+.rvt-viewer,
+.rvt-viewer-placeholder {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border: 1px solid var(--color-maroon);
+  background: var(--color-black);
+}
+
+.rvt-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.rvt-info {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.rvt-info p {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--color-white);
+  margin-bottom: 0.5rem;
+}
+
+.rvt-info .hint {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+}

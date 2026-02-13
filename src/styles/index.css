@@ -1,0 +1,133 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Gothic Voxel City — Maram Ashraf */
+:root {
+  --color-stone: #7A7A7A;
+  --color-maroon: #5B1E2D;
+  --color-charcoal: #1B1B1B;
+  --color-sand: #C2B280;
+  --color-oxide: #8C2F39;
+  --color-moonlight: #AAB7C4;
+  --color-white: #f8f8f6;
+  --color-black: #1B1B1B;
+
+  --font-gothic: 'Cinzel', serif;
+  --font-body: 'Inter', sans-serif;
+
+  --transition-slow: 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-medium: 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Architect page — day */
+  --arch-bg: #fbfaf8;
+  --arch-text: #171717;
+  --arch-muted: #6b6b6b;
+  --arch-card: rgba(255, 255, 255, 0.85);
+  --arch-border: rgba(0, 0, 0, 0.12);
+  --arch-accent: #6c1d2f;
+}
+
+:root[data-theme="night"] {
+  --arch-bg: #070a0f;
+  --arch-text: #f2f2f2;
+  --arch-muted: rgba(255, 255, 255, 0.65);
+  --arch-card: rgba(18, 22, 30, 0.75);
+  --arch-border: rgba(255, 255, 255, 0.12);
+  --arch-accent: #e8a4b8;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: var(--color-white);
+  color: var(--color-black);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--color-charcoal);
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-white);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-maroon);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-oxide);
+}
+
+::selection {
+  background: var(--color-maroon);
+  color: var(--color-white);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float-down {
+  0% {
+    transform: translateY(-100vh) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) translateX(20px);
+    opacity: 0;
+  }
+}

@@ -1,0 +1,757 @@
+/* Lighthouse — Architectural minimalism. Black, white, gold. Silence. */
+
+.lighthouse-page {
+  --bg: #F6F5F2;
+  --text: #111111;
+  --muted: #A8A8A8;
+  --accent: #C6A84B;
+  --font-head: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'SF Mono', 'Menlo', 'Monaco', monospace;
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  position: relative;
+  overflow-x: hidden;
+  transition: background 0.6s ease, color 0.6s ease;
+}
+
+.lighthouse-page.dark {
+  --bg: #0D0D0F;
+  --text: #EDEDED;
+  --muted: #888888;
+  --accent: #E1B45C;
+}
+
+/* Single gesture: vertical gold beam when dark */
+.lighthouse-page.dark::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 100vh;
+  background: var(--accent);
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+  transform: translateX(-50%);
+}
+
+/* 3D hero: ZForgotten HQ interior — scroll down for the rest of the page */
+.lighthouse-hero-3d {
+  height: 100vh;
+  width: 100%;
+  position: relative;
+  display: block;
+}
+
+.lighthouse-hero-3d canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.lighthouse-hero-3d-placeholder {
+  height: 100vh;
+  width: 100%;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+}
+
+.lighthouse-hero-3d-fallback {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+
+.lighthouse-hero-3d-fallback-content {
+  text-align: center;
+  padding: 2rem;
+}
+
+.lighthouse-hero-3d-fallback-title {
+  font-family: var(--font-head);
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: var(--text);
+  margin: 0 0 0.5rem 0;
+}
+
+.lighthouse-hero-3d-fallback-sub {
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 0 0 2rem 0;
+}
+
+.lighthouse-hero-3d-fallback-hint {
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ZForgotten HQ 3D hero hint — minimal, fades in, subtle pulse */
+.zf-hq-hero-hint {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: rgba(237, 237, 237, 0.7);
+  font-family: var(--font-body);
+  text-transform: lowercase;
+  white-space: nowrap;
+  animation: zf-hq-hint-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes zf-hq-hint-pulse {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 0.9; }
+}
+
+/* Header — minimal */
+.lighthouse-hud {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2.5rem;
+  background: var(--bg);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.6s ease;
+}
+
+.lighthouse-page.dark .lighthouse-hud {
+  border-bottom-color: rgba(225, 180, 92, 0.15);
+}
+
+.lighthouse-hud-back {
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text);
+  text-decoration: none;
+  transition: opacity 0.25s ease;
+}
+
+.lighthouse-hud-back:hover {
+  opacity: 0.7;
+}
+
+.lighthouse-hud-back span {
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.25s ease;
+}
+
+.lighthouse-hud-back:hover span {
+  border-bottom-color: var(--accent);
+}
+
+.lighthouse-hud-badge {
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  color: var(--muted);
+}
+
+/* Main — asymmetric, left-aligned, breathing space */
+.lighthouse-main {
+  position: relative;
+  z-index: 1;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 3rem 2.5rem 5rem;
+}
+
+/* Hero — two columns, then line */
+.lighthouse-hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  align-items: end;
+  margin-bottom: 0;
+}
+
+.lighthouse-hero-left {
+  text-align: left;
+}
+
+.lighthouse-title {
+  font-family: var(--font-head);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: var(--text);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.05;
+  cursor: default;
+  transition: border-color 0.4s ease;
+}
+
+.lighthouse-title.secret-reveal {
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 0.1em;
+}
+
+.lighthouse-hero-right {
+  text-align: right;
+}
+
+.lighthouse-hero-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+}
+
+.lighthouse-hero-line {
+  grid-column: 1 / -1;
+  height: 1px;
+  background: var(--muted);
+  opacity: 0.35;
+  margin: 2rem 0 3rem 0;
+}
+
+.lighthouse-sub {
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Ping: brief beam pulse in dark mode */
+.lighthouse-page.dark.beam-pulse::after {
+  animation: lhBeamPulse 1.2s ease-out;
+}
+
+@keyframes lhBeamPulse {
+  0% { opacity: 0.12; }
+  30% { opacity: 0.45; }
+  100% { opacity: 0.12; }
+}
+
+/* Manifesto — lines that fade in */
+.lighthouse-manifesto {
+  margin-bottom: 3.5rem;
+}
+
+.lighthouse-manifesto-line {
+  font-family: var(--font-head);
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  margin-bottom: 0.75rem;
+  opacity: 0;
+  animation: lhFadeIn 0.8s ease forwards;
+}
+
+.lighthouse-manifesto-line:nth-child(1) { animation-delay: 0.1s; }
+.lighthouse-manifesto-line:nth-child(2) { animation-delay: 0.4s; }
+.lighthouse-manifesto-line:nth-child(3) { animation-delay: 0.7s; }
+
+@keyframes lhFadeIn {
+  to { opacity: 1; }
+}
+
+/* Section titles */
+.lighthouse-section-title {
+  font-size: 0.65rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1.25rem;
+}
+
+.lighthouse-section-rule {
+  height: 1px;
+  background: var(--muted);
+  opacity: 0.25;
+  margin: 2rem 0 1.5rem 0;
+}
+
+/* System log — minimal, no box */
+.lighthouse-system-wrap {
+  margin-bottom: 3rem;
+}
+
+.lighthouse-system-line {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text);
+  opacity: 0.85;
+  margin-bottom: 0.2rem;
+}
+
+.lighthouse-system-cursor {
+  display: inline-block;
+  animation: lhBlink 1s step-end infinite;
+  color: var(--accent);
+}
+
+@keyframes lhBlink {
+  50% { opacity: 0; }
+}
+
+.lighthouse-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.lighthouse-btn {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.5rem 0;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  transition: opacity 0.25s ease, border-color 0.25s ease;
+}
+
+.lighthouse-btn:hover {
+  opacity: 0.85;
+  border-bottom-color: var(--accent);
+}
+
+.lighthouse-btn-active {
+  border-bottom-color: var(--accent);
+}
+
+.lighthouse-command-form {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin-top: 1rem;
+}
+
+.lighthouse-command-prompt {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.lighthouse-command-input {
+  flex: 1;
+  min-width: 12rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--muted);
+  color: var(--text);
+  padding: 0.25rem 0;
+  outline: none;
+  opacity: 0.9;
+  transition: border-color 0.25s ease;
+}
+
+.lighthouse-command-input::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.lighthouse-command-input:focus {
+  border-bottom-color: var(--accent);
+}
+
+/* Map overlay — B&W minimal, gold outline on hover only */
+.lighthouse-map-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: lhFadeIn 0.35s ease;
+}
+
+.lighthouse-map-panel {
+  width: 100%;
+  max-width: 800px;
+  margin: 2rem;
+  padding: 2rem 0;
+}
+
+.lighthouse-map-panel .lighthouse-section-title {
+  margin-bottom: 1.5rem;
+}
+
+.lighthouse-map-schematic {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.lighthouse-map-zone {
+  display: block;
+  width: 100%;
+  padding: 1.25rem 1rem;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  text-align: left;
+  background: none;
+  border: 1px solid var(--muted);
+  color: var(--text);
+  cursor: pointer;
+  opacity: 0.9;
+  transition: border-color 0.25s ease, opacity 0.25s ease;
+}
+
+.lighthouse-map-zone:hover {
+  border-color: var(--accent);
+  opacity: 1;
+}
+
+.lighthouse-map-zone-label {
+  display: block;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.25rem;
+}
+
+.lighthouse-map-zone-poem {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.lighthouse-map-close {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.5rem 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--muted);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.25s ease;
+}
+
+.lighthouse-map-close:hover {
+  border-bottom-color: var(--accent);
+}
+
+/* Poem overlay — minimal */
+.lighthouse-poem-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: lhFadeIn 0.4s ease;
+  cursor: pointer;
+}
+
+.lighthouse-poem-panel {
+  max-width: 420px;
+  padding: 2.5rem 2rem;
+  text-align: left;
+  cursor: default;
+}
+
+.lighthouse-poem-line {
+  font-family: var(--font-head);
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--text);
+  margin-bottom: 0.15rem;
+}
+
+.lighthouse-poem-close {
+  margin-top: 1.5rem;
+}
+
+/* Night-only secret */
+.lighthouse-night-secret {
+  position: fixed;
+  bottom: 4rem;
+  left: 2.5rem;
+  z-index: 5;
+  max-width: 280px;
+}
+
+.lighthouse-night-line {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.lighthouse-night-secret:hover .lighthouse-night-line {
+  opacity: 1;
+}
+
+.lighthouse-night-message {
+  font-size: 0.78rem;
+  color: var(--accent);
+  margin-top: 0.5rem;
+  animation: lhFadeIn 0.5s ease;
+}
+
+/* Badge */
+.lighthouse-badge {
+  position: fixed;
+  top: 5rem;
+  right: 2.5rem;
+  z-index: 20;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: var(--bg);
+  animation: lhFadeIn 0.5s ease;
+}
+
+/* Roadmap — minimal */
+.lighthouse-roadmap-wrap {
+  margin-bottom: 3rem;
+}
+
+.lighthouse-roadmap-toggle {
+  width: 100%;
+  padding: 0.6rem 0;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--muted);
+  color: var(--muted);
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+
+.lighthouse-roadmap-toggle:hover {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+.lighthouse-roadmap-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.lighthouse-roadmap-card {
+  padding: 0.75rem 1rem;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  text-align: left;
+  background: none;
+  border: 1px solid var(--muted);
+  color: var(--text);
+  cursor: pointer;
+  opacity: 0.85;
+  transition: border-color 0.25s ease, opacity 0.25s ease;
+}
+
+.lighthouse-roadmap-card:hover {
+  border-color: var(--accent);
+  opacity: 1;
+}
+
+.lighthouse-roadmap-card.lighthouse-pinned {
+  border-color: var(--accent);
+}
+
+.lighthouse-roadmap-stamp {
+  display: block;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.35rem;
+  color: var(--muted);
+}
+
+.lighthouse-roadmap-text {
+  color: var(--text);
+}
+
+/* Booth — minimal */
+.lighthouse-booth {
+  margin-bottom: 3rem;
+}
+
+.lighthouse-booth-text {
+  font-family: var(--font-head);
+  font-size: 0.95rem;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+  opacity: 0.9;
+}
+
+.lighthouse-booth-highlight {
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 0.1em;
+  display: inline-block;
+}
+
+/* CTA */
+.lighthouse-cta {
+  margin-bottom: 2.5rem;
+}
+
+.lighthouse-cta p {
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+/* Footer */
+.lighthouse-footer {
+  padding-top: 2rem;
+  border-top: 1px solid var(--muted);
+  opacity: 0.8;
+}
+
+.lighthouse-footer-line {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+.lighthouse-footer-warning {
+  font-size: 0.72rem;
+  color: var(--text);
+  opacity: 0.85;
+}
+
+/* Collab — minimal, optional */
+.lighthouse-collab {
+  margin-bottom: 3rem;
+}
+
+.lighthouse-collab-visual {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.lighthouse-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.75rem 0;
+}
+
+.lighthouse-chip-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.lighthouse-chip-role {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.lighthouse-collab-cable {
+  width: 32px;
+  height: 1px;
+  background: var(--muted);
+  opacity: 0.5;
+}
+
+.lighthouse-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.lighthouse-slider-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  min-width: 4rem;
+}
+
+.lighthouse-slider {
+  flex: 1;
+  max-width: 200px;
+  height: 2px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--muted);
+  opacity: 0.5;
+}
+
+.lighthouse-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+
+.lighthouse-slider-hint {
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+/* Dev notes */
+.lighthouse-dev-notes {
+  margin-top: 1rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--muted);
+  opacity: 0.9;
+}
+
+.lighthouse-dev-notes p {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  .lighthouse-hero {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .lighthouse-hero-right {
+    text-align: left;
+  }
+
+  .lighthouse-main {
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  .lighthouse-map-schematic {
+    grid-template-columns: 1fr;
+  }
+}

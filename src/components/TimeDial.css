@@ -1,0 +1,44 @@
+/* Time toggle — fixed above canvas, always clickable */
+.time-toggle-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.time-toggle-btn {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  line-height: 1;
+  background: rgba(18, 20, 24, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(91, 30, 45, 0.4);
+  color: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: transform 0.2s ease, box-shadow 0.25s ease;
+}
+
+.time-toggle-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(91, 30, 45, 0.2);
+  border-color: rgba(91, 30, 45, 0.6);
+  background: rgba(12, 14, 18, 0.95);
+  filter: brightness(0.88);
+}
+
+.time-toggle-btn:active {
+  transform: scale(0.98);
+}
+
+.time-toggle-auto {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: rgba(230, 225, 218, 0.55);
+}

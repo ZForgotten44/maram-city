@@ -1,0 +1,632 @@
+/* ============================================
+   Voxel Modern Architectural Interface
+   Theme: night (deep blue-gray) / day (sky blue)
+   ============================================ */
+
+/* --- Theme: world feel — night = deep sky, day = soft sky (voxel portfolio) --- */
+.project-detail[data-theme="night"] {
+  --pd-bg-from: #0a0e14;
+  --pd-bg-to: #0d1219;
+  --pd-card: #141a22;
+  --pd-card-border: rgba(225, 180, 92, 0.2);
+  --pd-accent: #E1B45C;
+  --pd-accent-alt: #C6A84B;
+  --pd-accent-green: #3eea6d;
+  --pd-text: #EDEDED;
+  --pd-text-muted: #888888;
+  --pd-btn-border: rgba(225, 180, 92, 0.5);
+  --pd-btn-hover-bg: rgba(225, 180, 92, 0.15);
+  --pd-btn-hover-text: #EDEDED;
+  --pd-title: #f4f8fc;
+}
+
+.project-detail[data-theme="day"] {
+  --pd-bg-from: #e8eef5;
+  --pd-bg-to: #d4e2f0;
+  --pd-card: #F6F5F2;
+  --pd-card-border: rgba(198, 168, 75, 0.25);
+  --pd-accent: #C6A84B;
+  --pd-accent-alt: #5B1E2D;
+  --pd-accent-green: #1a7f37;
+  --pd-text: #111111;
+  --pd-text-muted: #A8A8A8;
+  --pd-btn-border: rgba(198, 168, 75, 0.5);
+  --pd-btn-hover-bg: rgba(198, 168, 75, 0.12);
+  --pd-btn-hover-text: #111111;
+  --pd-title: #0d2137;
+}
+
+/* --- Entry transition: fade + slide up from city --- */
+.project-detail {
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--pd-bg-from) 0%, var(--pd-bg-to) 100%);
+  color: var(--pd-text);
+  padding: 2rem;
+  overflow-x: hidden;
+  position: relative;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.project-detail.entered {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- Voxel background: grid + silhouette --- */
+.project-detail-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.voxel-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.project-detail[data-theme="night"] .voxel-grid-bg {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+}
+
+.building-silhouette {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 180px;
+  opacity: 0.03;
+  background: var(--pd-text);
+  clip-path: polygon(20% 100%, 20% 40%, 50% 20%, 80% 40%, 80% 100%);
+}
+
+/* --- Layout: max-width + relative for content --- */
+.project-detail > .project-header,
+.project-detail > .project-nav,
+.project-detail > .project-content {
+  position: relative;
+  z-index: 1;
+}
+
+.project-detail > .project-content {
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* --- Header: title left, meta stack right (plan-sheet) --- */
+.project-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3rem;
+  align-items: start;
+  margin-bottom: 2.5rem;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.project-header-left {
+  min-width: 0;
+}
+
+.project-title {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  color: var(--pd-title);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.project-meta-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 160px;
+}
+
+.meta-box {
+  border: 2px solid var(--pd-card-border);
+  background: var(--pd-card);
+  padding: 0.6rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.meta-box-accent {
+  border-color: var(--pd-accent);
+  background: rgba(225, 180, 92, 0.08);
+}
+
+.project-detail[data-theme="day"] .meta-box-accent {
+  background: rgba(198, 168, 75, 0.08);
+}
+
+.meta-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--pd-text-muted);
+}
+
+.meta-value {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--pd-text);
+}
+
+/* --- Nav: voxel buttons (sharp 2px, square, glow hover) --- */
+.project-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.nav-tab,
+.sustainability-btn {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 0.7rem 1.5rem;
+  border: 2px solid var(--pd-btn-border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--pd-accent);
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.project-detail[data-theme="day"] .nav-tab,
+.project-detail[data-theme="day"] .sustainability-btn {
+  color: var(--pd-btn-border);
+}
+
+.nav-tab:hover,
+.sustainability-btn:hover {
+  background: var(--pd-btn-hover-bg);
+  color: var(--pd-btn-hover-text);
+  box-shadow: 0 0 20px rgba(45, 212, 191, 0.35);
+  transform: translateY(-2px);
+}
+
+.project-detail[data-theme="day"] .nav-tab:hover,
+.project-detail[data-theme="day"] .sustainability-btn:hover {
+  box-shadow: 0 0 18px rgba(0, 82, 155, 0.25);
+}
+
+.nav-tab.active {
+  background: var(--pd-btn-hover-bg);
+  color: var(--pd-btn-hover-text);
+  box-shadow: 0 0 16px rgba(45, 212, 191, 0.25);
+}
+
+.project-detail[data-theme="day"] .nav-tab.active {
+  box-shadow: 0 0 14px rgba(0, 82, 155, 0.2);
+}
+
+.sustainability-btn.active {
+  border-color: var(--pd-accent-green);
+  color: var(--pd-accent-green);
+  background: rgba(62, 234, 109, 0.12);
+}
+
+/* --- Overview --- */
+.overview-section {
+  animation: contentIn 0.4s ease-out;
+}
+
+.project-description {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: var(--pd-text);
+  max-width: 720px;
+  margin: 0 0 2.5rem;
+}
+
+/* --- Asymmetrical image grid: hero left (2 cols), stack right --- */
+.project-images.voxel-image-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.project-images.voxel-image-grid.single-image {
+  grid-template-columns: 1fr;
+}
+
+.image-block {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.image-hero .image-frame {
+  flex: 1;
+  min-height: 280px;
+}
+
+.image-stack {
+  min-height: 0;
+}
+
+.image-stack .image-frame {
+  flex: 1;
+  min-height: 0;
+}
+
+.image-frame {
+  border: 2px solid var(--pd-card-border);
+  background: var(--pd-card);
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.image-frame::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 1px solid rgba(255,255,255,0.06);
+  pointer-events: none;
+}
+
+.image-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s ease;
+}
+
+.image-frame:hover img {
+  transform: scale(1.03);
+}
+
+/* --- Materials section --- */
+.materials-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 2px solid var(--pd-card-border);
+  background: var(--pd-card);
+  animation: contentIn 0.4s ease-out;
+}
+
+.materials-section h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--pd-text);
+  margin: 0 0 1.25rem;
+}
+
+.materials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.material-category {
+  padding: 1rem;
+  border: 2px solid var(--pd-card-border);
+}
+
+.material-category.green {
+  border-color: var(--pd-accent-green);
+  background: rgba(62, 234, 109, 0.06);
+}
+
+.material-category.amber {
+  border-color: var(--pd-accent-alt);
+  background: rgba(230, 184, 92, 0.06);
+}
+
+.material-category.red {
+  border-color: #c0392b;
+  background: rgba(192, 57, 43, 0.06);
+}
+
+.material-category h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin: 0 0 0.5rem;
+  color: var(--pd-text-muted);
+}
+
+.material-category ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.material-category li {
+  font-size: 0.9rem;
+  color: var(--pd-text);
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.project-detail[data-theme="day"] .material-category li {
+  border-bottom-color: rgba(0,0,0,0.06);
+}
+
+.material-category li:last-child {
+  border-bottom: none;
+}
+
+/* --- Blueprints --- */
+.blueprints-section {
+  animation: contentIn 0.4s ease-out;
+}
+
+.blueprints-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.blueprint-card {
+  border: 2px solid var(--pd-card-border);
+  background: var(--pd-card);
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  font: inherit;
+  color: inherit;
+}
+
+.blueprint-card:hover {
+  border-color: var(--pd-accent);
+  box-shadow: 0 0 24px rgba(45, 212, 191, 0.2);
+  transform: translateY(-4px);
+}
+
+.project-detail[data-theme="day"] .blueprint-card:hover {
+  box-shadow: 0 0 20px rgba(0, 82, 155, 0.15);
+}
+
+.blueprint-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.blueprint-card h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 0.35rem;
+  color: var(--pd-text);
+}
+
+.blueprint-card p {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--pd-text-muted);
+  margin: 0;
+}
+
+/* --- 3D viewer --- */
+.model-viewer-section {
+  width: 100%;
+  height: 65vh;
+  min-height: 400px;
+  animation: contentIn 0.4s ease-out;
+}
+
+.placeholder-3d {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border: 2px solid var(--pd-card-border);
+  background: var(--pd-card);
+}
+
+.model-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.placeholder-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.placeholder-text p {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  color: var(--pd-text-muted);
+  margin: 0 0 0.25rem;
+}
+
+.placeholder-text .hint {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+/* --- Back button (voxel style) --- */
+.back-button {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  z-index: 100;
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--pd-btn-border);
+  border-radius: 0;
+  background: var(--pd-card);
+  color: var(--pd-accent);
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.project-detail[data-theme="day"] .back-button {
+  color: var(--pd-btn-border);
+}
+
+.back-button:hover {
+  background: var(--pd-btn-hover-bg);
+  color: var(--pd-btn-hover-text);
+  box-shadow: 0 0 20px rgba(45, 212, 191, 0.3);
+  transform: translateY(-2px);
+}
+
+.project-detail[data-theme="day"] .back-button:hover {
+  box-shadow: 0 0 16px rgba(198, 168, 75, 0.25);
+}
+
+/* --- Not found (world theme) --- */
+.project-not-found[data-theme="night"] {
+  --pd-bg-from: #0a0e14;
+  --pd-bg-to: #0d1219;
+  --pd-text: #EDEDED;
+  --pd-accent: #E1B45C;
+}
+
+.project-not-found[data-theme="day"] {
+  --pd-bg-from: #e8eef5;
+  --pd-bg-to: #d4e2f0;
+  --pd-text: #111111;
+  --pd-accent: #C6A84B;
+}
+
+.project-not-found {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  background: linear-gradient(180deg, var(--pd-bg-from) 0%, var(--pd-bg-to) 100%);
+  color: var(--pd-text);
+}
+
+.project-not-found h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.project-not-found a {
+  color: var(--pd-accent);
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  transition: opacity 0.2s;
+}
+
+.project-not-found a:hover {
+  opacity: 0.85;
+}
+
+/* --- Animations --- */
+@keyframes contentIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+  .project-header {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .project-meta-stack {
+    flex-direction: row;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .meta-box {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .project-images.voxel-image-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .image-hero .image-frame {
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 600px) {
+  .project-detail {
+    padding: 1.25rem;
+  }
+
+  .project-title {
+    letter-spacing: 0.12em;
+  }
+
+  .project-nav {
+    gap: 0.5rem;
+  }
+
+  .nav-tab,
+  .sustainability-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.7rem;
+  }
+
+  .back-button {
+    bottom: 1rem;
+    left: 1rem;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.7rem;
+  }
+}

@@ -1,0 +1,146 @@
+.homepage {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.homepage-gate {
+  background: var(--color-charcoal);
+}
+
+.gate-canvas {
+  width: 100%;
+  height: 100%;
+  background: var(--color-charcoal);
+  cursor: default;
+}
+
+.homepage-tagline {
+  position: absolute;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: var(--font-gothic);
+  font-size: clamp(0.75rem, 2vw, 0.9rem);
+  letter-spacing: 0.2em;
+  color: rgba(230, 225, 218, 0.85);
+  z-index: 5;
+}
+
+.homepage-inbox-btn {
+  position: absolute;
+  top: 3.5rem;
+  right: 1.5rem;
+  z-index: 10;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid rgba(91, 30, 45, 0.5);
+  background: rgba(18, 20, 24, 0.9);
+  color: rgba(230, 225, 218, 0.95);
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.homepage-inbox-btn:hover {
+  border-color: var(--color-maroon);
+}
+.homepage-inbox-shake {
+  animation: homepage-inbox-shake 0.4s ease-in-out;
+}
+@keyframes homepage-inbox-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+.homepage-inbox-icon {
+  position: relative;
+}
+.homepage-inbox-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  background: #c62828;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.world-content-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.world-content-modal-panel {
+  width: 90%;
+  max-width: 420px;
+  max-height: 80vh;
+  overflow: auto;
+  background: rgba(18, 20, 24, 0.98);
+  border: 1px solid rgba(91, 30, 45, 0.5);
+  border-radius: 6px;
+  padding: 1.5rem;
+  position: relative;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
+}
+.world-content-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: rgba(230, 225, 218, 0.9);
+  cursor: pointer;
+}
+.homepage-inbox-panel .inbox-modal-title {
+  font-family: var(--font-gothic);
+  font-size: 1.25rem;
+  letter-spacing: 0.15em;
+  color: rgba(230, 225, 218, 0.98);
+  margin: 0 0 1rem 0;
+}
+.homepage-inbox-panel .inbox-modal-message {
+  padding: 1rem 0;
+  color: rgba(200, 195, 188, 0.95);
+  font-size: 0.95rem;
+}
+.homepage-inbox-panel .inbox-modal-message strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: rgba(230, 225, 218, 0.98);
+}
+.homepage-inbox-panel .world-content-modal-close-btn {
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid rgba(91, 30, 45, 0.5);
+  color: rgba(230, 225, 218, 0.9);
+  cursor: pointer;
+  margin-top: 1rem;
+}
+.homepage-inbox-panel .world-content-modal-close-btn:hover {
+  border-color: var(--color-maroon);
+}

@@ -1,0 +1,179 @@
+.blueprint-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-out;
+  overflow: auto;
+  padding: 2rem;
+}
+
+.blueprint-content {
+  width: 100%;
+  max-width: 1400px;
+  background: var(--color-charcoal);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.blueprint-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.blueprint-header h3 {
+  font-family: var(--font-gothic);
+  font-size: 1.5rem;
+  color: var(--color-maroon);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.close-button {
+  background: transparent;
+  border: none;
+  color: rgba(212, 175, 55, 0.8);
+  font-size: 2rem;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-medium);
+  border-radius: 50%;
+}
+
+.close-button:hover {
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--color-maroon);
+}
+
+.blueprint-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  flex-wrap: wrap;
+}
+
+.blueprint-controls button {
+  background: transparent;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: rgba(212, 175, 55, 0.8);
+  padding: 0.5rem 1rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all var(--transition-medium);
+}
+
+.blueprint-controls button:hover:not(:disabled) {
+  border-color: var(--color-maroon);
+  color: var(--color-maroon);
+}
+
+.blueprint-controls button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.blueprint-controls span {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: rgba(224, 224, 224, 0.7);
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.zoom-controls button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zoom-controls span {
+  min-width: 60px;
+  text-align: center;
+}
+
+.blueprint-viewer {
+  flex: 1;
+  overflow: auto;
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.blueprint-viewer canvas {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+.loading, .error {
+  padding: 3rem;
+  text-align: center;
+  font-family: var(--font-body);
+  color: rgba(212, 175, 55, 0.8);
+}
+
+.error {
+  color: #8b4a4a;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .blueprint-modal {
+    padding: 1rem;
+  }
+  
+  .blueprint-content {
+    max-height: 95vh;
+  }
+  
+  .blueprint-controls {
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .zoom-controls {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+}
