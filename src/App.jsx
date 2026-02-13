@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
-import Homepage from './pages/Homepage'
 import WorldMap from './pages/WorldMap'
 import ProjectDetail from './pages/ProjectDetail'
 import { ThemeProvider } from './context/ThemeContext'
@@ -72,7 +71,7 @@ function App() {
           <ZFEasterEgg />
           <SoundDesign />
           <Routes>
-            <Route path="/" element={<Homepage />} />
+            <Route path="/" element={<WorldMap />} />
             <Route path="/world" element={<WorldMap />} />
             <Route path="/project/:id" element={<ProjectDetail />} />
             <Route path="/about" element={<About />} />
