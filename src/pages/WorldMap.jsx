@@ -3160,36 +3160,66 @@ function LighthouseModalContent({ onClose }) {
   )
 }
 
-const INBOX_POEM = `My sweet Marmora, my cute lovely girl,
-This Valentine I gathered your whole bright world.
-Every building you dreamed, every line you drew,
-I carried them softly and built them for you.
-I made you a city from patience and flame,
-From nights whispering your beautiful name.
-I felt what architects silently feel,
-The weight of a vision you refuse to kneel.
-I struggled with angles, with shadows and light,
-Just to make the skyline stand perfect and right.
-And all I could think as I measured each part
-Was how perfectly you are seated in my heart.
+const INBOX_POEM = `I built you a city out of ache and desire,
+ Out of sleepless nights full of fire.
+ Not just from love, not gentle or mild,
+ But the one that makes a grown man wild.
 
-Your eyes are windows with warm golden glow,
-Your lips are soft terraces dusted in folks flow.
-Your smile is a sunrise over every street,
-Turning cold stone into something sweet.
-You are softer than marble, stronger than steel,
-The kind of beauty foundations can feel.
+I traced your darkness in steel and black,
+ Strong and sharp, yet no softness you lack.
+ You move like a skyline cutting the night,
+ All shadows and curves are dangerous light.
+
+I built you a city from hunger and flame,
+ From nights saying your beautiful name.
+ I built it from tension I carry in skin,
+ From wanting you close, from pulling you in.
+
+I learned your patience in steel and stone,
+ The boring silence that you've only known.
+ I measured the skyline the way that I trace
+ The slow soft curve of your lips and your face.
+
+You are softer than marbles, stronger than steels,
+Yet my little girl came down on her knees.
 And I am so proud of the woman you are,
-My architect genius, my brightest star.
+My architect genius, my super star.
 
-Come live with me in this city I made,
-Where fear and doubt become a fade.
-We will walk through the dreams you once sketched,
-Now real in the skyline, our hands are stretched.
-And I will keep building as long as I breathe,
-Adding new codes with every weave.
-For this city is more than brick and art,
-It's forever wrapped around my heart.`
+You stand like a tower, dark, precise,
+ Gothic and beautiful, built from ice.
+ But under that clothes I know the heat,
+ The way your body answers when ours meet.
+
+Your eyes don't glance, they lock and command,
+ Your lips taste sweeter the closer I stand.
+ Your hips are promises tight and warm,
+ Built like a structure that shapes a storm.
+
+If I had known you liked poems like this,
+ I'd write you one with every kiss.
+ Every morning. Every breath.
+ Every second until my death.
+
+I'd write them on skin, not only on page,
+ Across your neck, across the ribcage.
+ I'd earn you in ways that feel too chill,
+ In the heat of your body under my will.
+
+This city stands because you exist,
+ Because of the fire in every kiss.
+ Not just buildings. Not just art.
+ But your name carved deep in my heart.
+
+When you walk through what I made,
+ Know every brick holds the way you sway.
+ This city is yours. The nights are too.
+ And every hot, unfinished dream of you.
+
+And when you walk through what I've done,
+Know this was built for only one.
+Not just buildings rising above, 
+But a kingdom ruled by obsession and love.
+`
 
 function InboxModalContent({ onClose }) {
   const [opened, setOpened] = useState(false)
