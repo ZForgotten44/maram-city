@@ -130,13 +130,13 @@ export default memo(Building)
 
 function getBuildingHeight(type, importance) {
   const pyramidH = importance === 3 ? 4.2 : importance === 2 ? 3.2 : 2.2
-  const h = { resort: 2.5, school: 3, 'mixed-use': 4, tower: 9 + importance * 1.2, pyramid: pyramidH, hospital: 3.8, default: 4 }
+  const h = { resort: 2.5, school: 3, 'mixed-use': 4, tower: 9 + importance * 1.2, pyramid: pyramidH, hospital: 3.12, default: 4 }
   return h[type] ?? 4 + importance
 }
 
 function OutlineBox({ height, buildingType, isSelected }) {
-  const w = buildingType === 'tower' ? 1.4 : buildingType === 'hospital' ? 3.8 : buildingType === 'pyramid' ? 1.8 : 3
-  const d = buildingType === 'tower' ? 1.4 : buildingType === 'hospital' ? 2.9 : buildingType === 'pyramid' ? 1.8 : 2.5
+  const w = buildingType === 'tower' ? 1.4 : buildingType === 'hospital' ? 3.8 : buildingType === 'mixed-use' ? 4.2 : buildingType === 'pyramid' ? 1.8 : 3
+  const d = buildingType === 'tower' ? 1.4 : buildingType === 'hospital' ? 2.9 : buildingType === 'mixed-use' ? 3.4 : buildingType === 'pyramid' ? 1.8 : 2.5
   const color = HOVER_GREEN
   const opacity = isSelected ? 0.35 : 0.25
   return (
@@ -284,7 +284,7 @@ const HOSPITAL_ACCENT = '#4DA3FF'
 const HOSPITAL_WINDOW_DAY = '#FFDFA3'
 function Hospital({ material, importance = 1 }) {
   const { themeBlend } = useTheme()
-  const h = 2.8 + importance * 0.7
+  const h = (2.8 + importance * 0.7) * 0.82
   const wingMat = useMemo(() => ({ ...material, base: themeBlend > 0 ? HOSPITAL_SECONDARY : material.base }), [material, themeBlend])
   const winCount = 12
   const winMats = useMemo(() => Array.from({ length: winCount }, () => new THREE.MeshBasicMaterial({ color: WINDOW_DARK })), [])
@@ -336,14 +336,25 @@ function Hospital({ material, importance = 1 }) {
       <Box args={[1.6, 0.08, 1.2]} position={[-1.6, 0.15 + 0.95, 1.52]} castShadow receiveShadow>
         <meshStandardMaterial color={TRIM_DARK} roughness={0.85} />
       </Box>
-      {/* Vertical blue accent strips / facade breakup */}
+      {/* Horizontal façade lines */}
+      {[0.4, 0.65, 0.88].map((frac, i) => (
+        <mesh key={i} position={[0, 0.15 + h * frac, 1.42]} castShadow={false} receiveShadow={false}>
+          <boxGeometry args={[3.5, 0.04, 0.06]} />
+          <meshStandardMaterial color={TRIM_DARK} roughness={0.88} />
+        </mesh>
+      ))}
+      {/* Vertical blue accent strips / window strips */}
       {themeBlend > 0.2 && (
         <>
-          <mesh position={[-0.6, 0.15 + h * 0.5, 1.43]} castShadow={false} receiveShadow={false}>
+          <mesh position={[-0.7, 0.15 + h * 0.5, 1.43]} castShadow={false} receiveShadow={false}>
             <boxGeometry args={[0.06, h * 0.85, 0.02]} />
             <meshBasicMaterial color={HOSPITAL_ACCENT} />
           </mesh>
-          <mesh position={[0.6, 0.15 + h * 0.5, 1.43]} castShadow={false} receiveShadow={false}>
+          <mesh position={[0, 0.15 + h * 0.5, 1.43]} castShadow={false} receiveShadow={false}>
+            <boxGeometry args={[0.06, h * 0.85, 0.02]} />
+            <meshBasicMaterial color={HOSPITAL_ACCENT} />
+          </mesh>
+          <mesh position={[0.7, 0.15 + h * 0.5, 1.43]} castShadow={false} receiveShadow={false}>
             <boxGeometry args={[0.06, h * 0.85, 0.02]} />
             <meshBasicMaterial color={HOSPITAL_ACCENT} />
           </mesh>
@@ -371,10 +382,14 @@ function Hospital({ material, importance = 1 }) {
       <Box args={[0.08, 0.7, 0.04]} position={[0, 0.15 + h * 0.5, 1.44]} castShadow={false} receiveShadow={false}>
         <meshStandardMaterial color={OXIDE} emissive={OXIDE} emissiveIntensity={themeBlend > 0.3 ? 0.12 : 0} roughness={0.9} metalness={0} />
       </Box>
-      {/* Roofline */}
+      {/* Roofline + roof edge trim */}
       <Box args={[3.65, 0.1, 2.85]} position={[0, 0.15 + h + 0.05, 0]} castShadow receiveShadow>
         <meshStandardMaterial color={TRIM_DARK} roughness={0.85} metalness={0.06} />
       </Box>
+      <mesh position={[0, 0.15 + h + 0.08, 1.44]} castShadow={false} receiveShadow={false}>
+        <boxGeometry args={[3.7, 0.04, 0.04]} />
+        <meshStandardMaterial color={TRIM_DARK} roughness={0.86} />
+      </mesh>
     </group>
   )
 }
@@ -883,57 +898,74 @@ function MixedUse({ material, importance = 1 }) {
   // Courtyard: windows DOWN — just above door/entrance (special case, not upper 60–90%)
   const lowRow1Y = baseY + 0.95
   const lowRow2Y = baseY + 1.35
+  const W = 4.2
+  const D = 3.4
   return (
     <group>
       {/* Base plinth */}
-      <Box args={[3.8, 0.18, 3.1]} position={[0, 0.09, 0]} castShadow receiveShadow>
+      <Box args={[W, 0.18, D]} position={[0, 0.09, 0]} castShadow receiveShadow>
         <meshStandardMaterial color={TRIM_DARK} roughness={0.9} metalness={0.05} />
       </Box>
-      <Box args={[3.6, 0.5, 2.9]} position={[0, 0.27, 0]} castShadow receiveShadow>
+      <Box args={[W - 0.2, 0.5, D - 0.2]} position={[0, 0.27, 0]} castShadow receiveShadow>
         <StdMat material={material} />
       </Box>
       {/* Ground-floor storefront band (2 tones) */}
-      <Box args={[3.2, h * 0.35, 2.6]} position={[0, 0.5 + (h * 0.35) / 2, 0]} castShadow receiveShadow>
+      <Box args={[W - 0.6, h * 0.35, D - 0.5]} position={[0, 0.5 + (h * 0.35) / 2, 0]} castShadow receiveShadow>
         <StdMat material={material} />
       </Box>
-      <Box args={[2.6, h * 0.4, 2]} position={[0.3, 0.5 + h * 0.35 + (h * 0.4) / 2, 0]} castShadow receiveShadow>
+      <Box args={[W - 1.2, h * 0.4, D - 1.2]} position={[0.1, 0.5 + h * 0.35 + (h * 0.4) / 2, 0]} castShadow receiveShadow>
         <StdMat material={material} />
       </Box>
-      <Box args={[2, h * 0.25, 1.6]} position={[-0.2, 0.5 + h * 0.75 + (h * 0.25) / 2, 0]} castShadow receiveShadow>
+      <Box args={[W - 2, h * 0.25, D - 1.6]} position={[-0.1, 0.5 + h * 0.75 + (h * 0.25) / 2, 0]} castShadow receiveShadow>
         <StdMat material={material} />
       </Box>
-      {/* Corner trims */}
+      {/* Vertical edge trims + slight panel variation */}
       {[[1,1],[1,-1],[-1,-1],[-1,1]].map(([sx, sz], i) => (
-        <mesh key={i} position={[sx * 1.75, 0.5 + h * 0.5, sz * 1.35]} castShadow={false} receiveShadow={false}>
-          <boxGeometry args={[0.1, h + 0.1, 0.1]} />
+        <mesh key={i} position={[sx * (W / 2 - 0.05), 0.5 + h * 0.5, sz * (D / 2 - 0.05)]} castShadow={false} receiveShadow={false}>
+          <boxGeometry args={[0.12, h + 0.1, 0.12]} />
           <meshStandardMaterial color={TRIM_DARK} roughness={0.85} />
         </mesh>
       ))}
+      {/* Window spacing rhythm — extra strip */}
+      {[0, 1, 2].map((i) => (
+        <mesh key={i} position={[-W / 2 + 0.4 + i * (W * 0.32), 0.5 + h * 0.5, D / 2 + 0.02]} castShadow={false} receiveShadow={false}>
+          <boxGeometry args={[0.08, h * 0.7, 0.04]} />
+          <meshStandardMaterial color={TRIM_DARK} roughness={0.86} />
+        </mesh>
+      ))}
       {/* Door in storefront — base zone */}
-      <Box args={[0.5, 0.75, 0.05]} position={[-0.5, 0.5 + 0.5, 1.48]} castShadow={false} receiveShadow={false}>
+      <Box args={[0.55, 0.75, 0.05]} position={[-0.3, 0.5 + 0.5, D / 2 + 0.02]} castShadow={false} receiveShadow={false}>
         <meshStandardMaterial color={CHARCOAL} roughness={0.9} />
       </Box>
+      {/* Front entrance overhang */}
+      <Box args={[0.9, 0.06, 0.4]} position={[-0.3, 0.5 + 0.88, D / 2 + 0.22]} castShadow receiveShadow>
+        <meshStandardMaterial color={TRIM_DARK} roughness={0.85} />
+      </Box>
       {/* Ground storefront band — lit strip */}
-      <Box args={[2.5, 0.1, 0.04]} position={[0, 0.52, 1.48]} castShadow={false} receiveShadow={false}>
+      <Box args={[W - 1.2, 0.1, 0.04]} position={[0, 0.52, D / 2 + 0.02]} castShadow={false} receiveShadow={false}>
         <meshStandardMaterial color={MIXEDUSE_CREAM} emissive={MIXEDUSE_CREAM} emissiveIntensity={themeBlend < 0.5 ? 0.25 : 0.08} />
       </Box>
-      {/* Courtyard: windows DOWN — just above door, minimal count */}
+      {/* Courtyard: windows DOWN — just above door, rhythm spacing */}
       {[0, 1].map((i) => (
-        <mesh key={i} position={[-1.3 + i * 0.9, lowRow1Y, 1.48]} castShadow={false} receiveShadow={false}>
+        <mesh key={i} position={[-W / 2 + 0.5 + i * 1.0, lowRow1Y, D / 2 + 0.02]} castShadow={false} receiveShadow={false}>
           <boxGeometry args={[0.45, 0.4, 0.04]} />
           {themeBlend > 0.4 ? <meshBasicMaterial color={MIXEDUSE_CREAM} /> : <primitive object={winMats[i]} attach="material" />}
         </mesh>
       ))}
       {[0, 1].map((i) => (
-        <mesh key={i + 2} position={[-1.2 + i * 2.4, lowRow2Y, 1.48]} castShadow={false} receiveShadow={false}>
+        <mesh key={i + 2} position={[-W / 2 + 0.6 + i * 2.0, lowRow2Y, D / 2 + 0.02]} castShadow={false} receiveShadow={false}>
           <boxGeometry args={[0.5, 0.35, 0.04]} />
           {themeBlend > 0.4 ? <meshBasicMaterial color={MIXEDUSE_CREAM} /> : <primitive object={winMats[i + 2]} attach="material" />}
         </mesh>
       ))}
-      {/* Roofline */}
-      <Box args={[3.65, 0.1, 2.95]} position={[0, 0.5 + h + 0.05, 0]} castShadow receiveShadow>
+      {/* Roofline + roof outline trim */}
+      <Box args={[W - 0.15, 0.1, D - 0.05]} position={[0, 0.5 + h + 0.05, 0]} castShadow receiveShadow>
         <meshStandardMaterial color={TRIM_DARK} roughness={0.85} metalness={0.06} />
       </Box>
+      <mesh position={[0, 0.5 + h + 0.08, D / 2 + 0.02]} castShadow={false} receiveShadow={false}>
+        <boxGeometry args={[W, 0.04, 0.04]} />
+        <meshStandardMaterial color={TRIM_DARK} roughness={0.86} />
+      </mesh>
     </group>
   )
 }

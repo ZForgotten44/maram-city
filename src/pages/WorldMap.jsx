@@ -1420,7 +1420,7 @@ function TrafficLights() {
 
 // No visible grid — removed for finished look
 
-// Trees: 6 variants, clustered, lower height, open plazas, denser at edges
+// Trees: distributed around buildings, 2–4 per side, buffer 1–1.5, no runway/taxi/sidewalks
 const DARK_GREEN_LEAF = '#1a2e1a'
 const DARK_GREEN_MID = '#243d24'
 const DARK_GREEN_DARK = '#0f1f0f'
@@ -1432,51 +1432,70 @@ function mulberry32(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
 }
+// Building footprints (center x, z, halfW, halfD) for tree exclusion + framing
+const BUILDING_FOOTPRINTS = [
+  [9, 7, 1.5, 1.25], [-8, 6, 1.5, 1.25], [7, -2.5, 2.1, 1.7], [-4, -10, 0.7, 0.7], [4, -10, 0.7, 0.7],
+  [0, -8, 1.1, 1.1], [-4, -8, 1.1, 1.1], [4, -8, 1.1, 1.1], [-7, -2.5, 1.9, 1.45],
+]
+const TREE_BUFFER = 1.25
+const RUNWAY_MARGIN = 1.5
+const RUNWAY_WORLD = { xMin: -10.5, xMax: 18.5, zMin: 13.5, zMax: 20.5 }
+const TAXI_WORLD = { xMin: -17.5, xMax: -4.5, zMin: 10.1, zMax: 14.9 }
+function inRunwayOrTaxi(x, z) {
+  if (x >= RUNWAY_WORLD.xMin && x <= RUNWAY_WORLD.xMax && z >= RUNWAY_WORLD.zMin && z <= RUNWAY_WORLD.zMax) return true
+  if (x >= TAXI_WORLD.xMin && x <= TAXI_WORLD.xMax && z >= TAXI_WORLD.zMin && z <= TAXI_WORLD.zMax) return true
+  return false
+}
+function inAnyBuildingBuffer(x, z, buffer) {
+  for (const [cx, cz, hw, hd] of BUILDING_FOOTPRINTS) {
+    if (Math.abs(x - cx) <= hw + buffer && Math.abs(z - cz) <= hd + buffer) return true
+  }
+  return false
+}
+function onSidewalk(x, z) {
+  if (Math.abs(z - 8) < 2 && Math.abs(x) < 12) return true
+  if (Math.abs(z + 12) < 2 && Math.abs(x) < 12) return true
+  if (Math.abs(x - 11) < 2 && Math.abs(z) < 10) return true
+  if (Math.abs(x + 11) < 2 && Math.abs(z) < 10) return true
+  return false
+}
 const TREE_POSITIONS = (() => {
   const trees = []
   const rng = mulberry32(42)
-  const avoid = (x, z) => {
-    if (Math.abs(x) < 8 && Math.abs(z + 8) < 6) return true
-    if (Math.abs(x - 9) < 3 && Math.abs(z - 7) < 2.5) return true
-    if (Math.abs(x + 8) < 3 && Math.abs(z - 6) < 2.5) return true
-    if (Math.abs(x - 7) < 3 && Math.abs(z + 2.5) < 2.5) return true
-    if (Math.abs(x + 7) < 3.5 && Math.abs(z + 2.5) < 3) return true
-    if (Math.abs(x + 4) < 2 && Math.abs(z + 10) < 2) return true
-    if (Math.abs(x - 4) < 2 && Math.abs(z + 10) < 2) return true
-    if (Math.abs(z - 8) < 2 && Math.abs(x) < 12) return true
-    if (Math.abs(z + 12) < 2 && Math.abs(x) < 12) return true
-    if (Math.abs(x - 11) < 2 && Math.abs(z) < 10) return true
-    if (Math.abs(x + 11) < 2 && Math.abs(z) < 10) return true
-    return false
-  }
-  const clusterCenters = []
-  for (let c = 0; c < 45; c++) {
-    const x = (rng() - 0.5) * 36
-    const z = (rng() - 0.5) * 36
-    if (avoid(x, z)) continue
-    const edge = Math.max(Math.abs(x), Math.abs(z)) / 20
-    if (rng() > 0.35 + 0.5 * edge) continue
-    clusterCenters.push({ x, z, n: 2 + Math.floor(rng() * 4) })
-  }
-  clusterCenters.forEach((c) => {
-    for (let j = 0; j < c.n; j++) {
-      const x = c.x + (rng() - 0.5) * 2.5
-      const z = c.z + (rng() - 0.5) * 2.5
-      if (avoid(x, z)) return
-      const trunkH = 0.4 + rng() * 0.85
-      const trunkW = 0.12 + rng() * 0.12
-      const depth = Math.abs(z + 5) + Math.abs(x) * 0.5
-      const colorIdx = depth > 10 ? (rng() > 0.4 ? 2 : 1) : Math.floor(rng() * 3)
-      trees.push({
-        x, z,
-        trunkH,
-        trunkW,
-        shape: Math.floor(rng() * 6),
-        colorIdx,
-        leanY: (rng() - 0.5) * 0.22,
-        leanX: (rng() - 0.5) * 0.12,
-      })
-    }
+  BUILDING_FOOTPRINTS.forEach(([cx, cz, hw, hd], bi) => {
+    const sides = [
+      { n: 2 + Math.floor(rng() * 3), x0: cx - hw, x1: cx + hw, z: cz + hd + TREE_BUFFER, dx: 1, dz: 0 },
+      { n: 2 + Math.floor(rng() * 3), x0: cx - hw, x1: cx + hw, z: cz - hd - TREE_BUFFER, dx: 1, dz: 0 },
+      { n: 2 + Math.floor(rng() * 3), x: cx - hw - TREE_BUFFER, z0: cz - hd, z1: cz + hd, dx: 0, dz: 1 },
+      { n: 2 + Math.floor(rng() * 3), x: cx + hw + TREE_BUFFER, z0: cz - hd, z1: cz + hd, dx: 0, dz: 1 },
+    ]
+    sides.forEach((side) => {
+      const n = Math.min(4, Math.max(2, side.n))
+      for (let i = 0; i < n; i++) {
+        const t = (n === 1 ? 0.5 : (i + 0.3 + rng() * 0.4) / n)
+        let x, z
+        if (side.dx) {
+          x = side.x0 + (side.x1 - side.x0) * t + (rng() - 0.5) * 0.5
+          z = side.z + (rng() - 0.5) * 0.35
+        } else {
+          x = side.x + (rng() - 0.5) * 0.35
+          z = side.z0 + (side.z1 - side.z0) * t + (rng() - 0.5) * 0.5
+        }
+        if (inRunwayOrTaxi(x, z) || onSidewalk(x, z) || inAnyBuildingBuffer(x, z, 0.1)) continue
+        const trunkH = (0.4 + rng() * 0.85) * (0.9 + rng() * 0.3)
+        const trunkW = 0.12 + rng() * 0.1
+        trees.push({
+          x, z,
+          trunkH,
+          trunkW,
+          shape: Math.floor(rng() * 6),
+          colorIdx: Math.floor(rng() * 3),
+          leanY: (rng() - 0.5) * 0.22,
+          leanX: (rng() - 0.5) * 0.12,
+          scale: 0.9 + rng() * 0.3,
+        })
+      }
+    })
   })
   return trees
 })()
@@ -1506,11 +1525,13 @@ function SimpleTrees() {
     <group ref={groupRef}>
       {TREE_POSITIONS.map((tree, i) => {
         const c = TREE_COLORS[tree.colorIdx]
+        const s = tree.scale ?? 1
         return (
           <group
             key={i}
             position={[tree.x, 0, tree.z]}
             rotation={[tree.leanX, tree.leanY, 0]}
+            scale={[s, s, s]}
           >
             <mesh position={[0, tree.trunkH / 2, 0]} castShadow receiveShadow>
               <boxGeometry args={[tree.trunkW, tree.trunkH, tree.trunkW]} />
@@ -1573,6 +1594,65 @@ function SimpleTrees() {
           </group>
         )
       })}
+    </group>
+  )
+}
+
+// Seating area: 2–3 clusters between mixed-use & hospital (green space)
+const SEAT_WOOD = '#8b7355'
+const SEAT_GREY = '#7a7a7a'
+const SEATING_CLUSTERS = [
+  { x: -3, z: -2.5, seats: [[0, 0, 0], [0.5, 0, 0.4], [-0.35, 0, -0.3]], light: true, tree: true },
+  { x: 0, z: -2.7, seats: [[0, 0, 0], [-0.45, 0, 0.35]], light: true, tree: false },
+  { x: 2.8, z: -2.4, seats: [[0, 0, 0], [0.4, 0, -0.35], [0.2, 0, 0.45]], light: false, tree: true },
+]
+function SeatingArea() {
+  return (
+    <group>
+      {SEATING_CLUSTERS.map((cluster, ci) => (
+        <group key={ci} position={[cluster.x, 0, cluster.z]}>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
+            <circleGeometry args={[1.4, 16]} />
+            <meshStandardMaterial color="#2a332a" roughness={0.95} metalness={0} />
+          </mesh>
+          {cluster.seats.map(([sx, sy, sz], si) => (
+            <group key={si} position={[sx, 0, sz]} rotation={[0, (si * 0.4 - 0.3) * Math.PI, 0]}>
+              <mesh position={[0, 0.2, 0]} castShadow receiveShadow>
+                <boxGeometry args={[0.5, 0.15, 0.35]} />
+                <meshStandardMaterial color={si % 2 ? SEAT_GREY : SEAT_WOOD} roughness={0.88} />
+              </mesh>
+              <mesh position={[0, 0.55, -0.12]} castShadow receiveShadow>
+                <boxGeometry args={[0.48, 0.5, 0.08]} />
+                <meshStandardMaterial color={si % 2 ? SEAT_GREY : SEAT_WOOD} roughness={0.88} />
+              </mesh>
+            </group>
+          ))}
+          {cluster.light && (
+            <group position={[0.7, 0, 0.5]}>
+              <mesh position={[0, 0.4, 0]} castShadow>
+                <cylinderGeometry args={[0.04, 0.05, 0.8, 8]} />
+                <meshStandardMaterial color={CHARCOAL} roughness={0.85} />
+              </mesh>
+              <mesh position={[0, 0.85, 0]} castShadow>
+                <sphereGeometry args={[0.12, 8, 6]} />
+                <meshStandardMaterial color="#e8e0c0" emissive="#e8e0c0" emissiveIntensity={0.15} roughness={0.7} />
+              </mesh>
+            </group>
+          )}
+          {cluster.tree && (
+            <group position={[-0.6, 0, -0.5]}>
+              <mesh position={[0, 0.25, 0]} castShadow receiveShadow>
+                <boxGeometry args={[0.1, 0.5, 0.1]} />
+                <meshStandardMaterial color={DARK_GREEN_DARK} roughness={0.95} />
+              </mesh>
+              <mesh position={[0, 0.6, 0]} castShadow receiveShadow>
+                <boxGeometry args={[0.4, 0.35, 0.4]} />
+                <meshStandardMaterial color={DARK_GREEN_LEAF} roughness={0.88} />
+              </mesh>
+            </group>
+          )}
+        </group>
+      ))}
     </group>
   )
 }
@@ -1718,34 +1798,59 @@ function HorizonSilhouettes() {
   )
 }
 
-// White clouds — day more visible, night subtle; slow drift
+// Clouds: more coverage, 3 types (small fast high, medium slow, large slow), varied scale/height/opacity/speed, soft parallax
 function CloudLayer() {
   const { themeBlendRef } = useTheme()
   const groupRef = useRef()
-  const clouds = useMemo(
-    () =>
-      Array.from({ length: 12 }).map((_, i) => {
-        const angle = (i / 12) * Math.PI * 2 + 0.2
-        const radius = 24 + (i % 3) * 4
-        const size = 0.9 + (i % 4) * 0.25
-        return {
-          x: Math.cos(angle) * radius,
-          z: Math.sin(angle) * radius,
-          y: 11 + (i % 4) * 0.6,
-          size,
-        }
-      }),
-    [],
-  )
+  const clouds = useMemo(() => {
+    const rng = mulberry32(201)
+    const list = []
+    for (let i = 0; i < 28; i++) {
+      const type = i % 3
+      let size, y, speed, opacity
+      if (type === 0) {
+        size = 0.5 + rng() * 0.35
+        y = 14 + rng() * 2.2
+        speed = 0.0018 + rng() * 0.001
+        opacity = 0.28 + rng() * 0.15
+      } else if (type === 1) {
+        size = 0.9 + rng() * 0.4
+        y = 11 + rng() * 1.8
+        speed = 0.0006 + rng() * 0.0004
+        opacity = 0.35 + rng() * 0.18
+      } else {
+        size = 1.35 + rng() * 0.45
+        y = 9 + rng() * 1.5
+        speed = 0.0003 + rng() * 0.0002
+        opacity = 0.4 + rng() * 0.2
+      }
+      const angle = (i / 28) * Math.PI * 2 + rng() * 0.4
+      const radius = 22 + rng() * 10
+      list.push({
+        x: Math.cos(angle) * radius,
+        z: Math.sin(angle) * radius,
+        y,
+        size,
+        speed,
+        opacity,
+        seed: i * 7,
+      })
+    }
+    return list
+  }, [])
   useFrame((state) => {
     if (!groupRef.current) return
     const b = themeBlendRef.current
-    groupRef.current.rotation.y = state.clock.elapsedTime * (0.0008 + b * 0.0003)
-    const cloudOpacity = 0.35 + 0.35 * b
-    groupRef.current.traverse((obj) => {
-      if (obj.isMesh && obj.material?.transparent) {
-        obj.material.opacity = cloudOpacity
-        obj.material.color.lerpColors(new THREE.Color('#e8eaf0'), new THREE.Color('#f5f8ff'), b)
+    const t = state.clock.elapsedTime
+    groupRef.current.children.forEach((child, i) => {
+      const c = clouds[i]
+      if (!c) return
+      child.rotation.y = t * c.speed
+      child.position.y = c.y + Math.sin(t * 0.02 + c.seed) * 0.15
+      if (child.children[0]?.material) {
+        const baseOpacity = c.opacity * (0.5 + 0.5 * b)
+        child.children[0].material.opacity = baseOpacity
+        child.children[0].material.color.lerpColors(new THREE.Color('#e8eaf0'), new THREE.Color('#f5f8ff'), b)
       }
     })
   })
@@ -1755,7 +1860,7 @@ function CloudLayer() {
         <group key={i} position={[c.x, c.y, c.z]} scale={[c.size, c.size * 0.45, c.size]}>
           <mesh>
             <boxGeometry args={[1.2, 0.5, 1.2]} />
-            <meshBasicMaterial color="#e8eaf0" transparent opacity={0.35} depthWrite={false} />
+            <meshBasicMaterial color="#e8eaf0" transparent opacity={c.opacity} depthWrite={false} />
           </mesh>
         </group>
       ))}
@@ -1847,21 +1952,47 @@ function FlyoverPlane() {
   )
 }
 
-// Minecraft-style people walking (promenades / sidewalks only)
+// People: along airport road, varied colors/heights, some pairs, some alone
+const PEDESTRIAN_COLORS = ['#a85a5a', '#2c3e6a', '#2d5a3d', '#c9a227', '#b0b0b0', '#6b4c3d', '#f0ebe0']
 const PEDESTRIAN_PATHS = [
-  { start: [-5, -1], end: [5, 1], speed: 0.06 },
-  { start: [4, 3], end: [-4, -3], speed: 0.05 },
-  { start: [-2, 4], end: [3, -4], speed: 0.055 },
-  { start: [7, -2], end: [-7, 2], speed: 0.05 },
+  { start: [0, 12], end: [4, 16.5], speed: 0.04 },
+  { start: [4, 16], end: [0, 11], speed: 0.038 },
+  { start: [-2, 10], end: [4, 15], speed: 0.042 },
+  { start: [6, 11], end: [4, 15.5], speed: 0.04 },
+  { start: [4, 10], end: [4, 14], speed: 0.045 },
+  { start: [3, 13], end: [5, 16], speed: 0.04 },
+  { start: [2, 10.5], end: [4, 14.5], speed: 0.043 },
+  { start: [5, 12], end: [3, 15], speed: 0.039 },
 ]
+const PEDESTRIAN_SCALES = (() => {
+  const rng = mulberry32(101)
+  return PEDESTRIAN_PATHS.map(() => 0.9 + rng() * 0.25)
+})()
+const PEDESTRIAN_COLOR_IDS = (() => {
+  const rng = mulberry32(102)
+  return PEDESTRIAN_PATHS.map(() => Math.floor(rng() * PEDESTRIAN_COLORS.length))
+})()
+const PEDESTRIAN_PAIR_PATH_INDEX = [0, 2, 4]
+const PEDESTRIAN_PAIR_PHASE_OFFSET = 0.18
 function PeopleWalking() {
   const refs = useRef([])
+  const pairRefs = useRef([])
   useFrame((state) => {
     const t = state.clock.elapsedTime
     PEDESTRIAN_PATHS.forEach((path, i) => {
       const g = refs.current[i]
+      if (g) {
+        const phase = (t * path.speed + i * 3) % 1
+        const x = path.start[0] + (path.end[0] - path.start[0]) * phase
+        const z = path.start[1] + (path.end[1] - path.start[1]) * phase
+        g.position.set(x, 0, z)
+      }
+    })
+    PEDESTRIAN_PAIR_PATH_INDEX.forEach((pathIdx, pi) => {
+      const g = pairRefs.current[pi]
       if (!g) return
-      const phase = (t * path.speed + i * 3) % 1
+      const path = PEDESTRIAN_PATHS[pathIdx]
+      const phase = (t * path.speed + pathIdx * 3 + PEDESTRIAN_PAIR_PHASE_OFFSET) % 1
       const x = path.start[0] + (path.end[0] - path.start[0]) * phase
       const z = path.start[1] + (path.end[1] - path.start[1]) * phase
       g.position.set(x, 0, z)
@@ -1869,18 +2000,57 @@ function PeopleWalking() {
   })
   return (
     <>
-      {PEDESTRIAN_PATHS.map((_, i) => (
-        <group key={i} ref={(el) => (refs.current[i] = el)}>
-          <mesh position={[0, 0.32, 0]} castShadow>
-            <boxGeometry args={[0.22, 0.45, 0.12]} />
-            <meshStandardMaterial color={STONE_DARK} roughness={0.9} />
-          </mesh>
-          <mesh position={[0, 0.78, 0]} castShadow>
-            <boxGeometry args={[0.26, 0.26, 0.22]} />
-            <meshStandardMaterial color={CHARCOAL} roughness={0.9} />
-          </mesh>
-        </group>
-      ))}
+      {PEDESTRIAN_PATHS.map((_, i) => {
+        const color = PEDESTRIAN_COLORS[PEDESTRIAN_COLOR_IDS[i]]
+        const scale = PEDESTRIAN_SCALES[i]
+        return (
+          <group key={i} ref={(el) => (refs.current[i] = el)} scale={[scale, scale, scale]}>
+            <mesh position={[0, 0.32, 0]} castShadow>
+              <boxGeometry args={[0.22, 0.45, 0.12]} />
+              <meshStandardMaterial color={color} roughness={0.9} />
+            </mesh>
+            <mesh position={[0, 0.78, 0]} castShadow>
+              <boxGeometry args={[0.26, 0.26, 0.22]} />
+              <meshStandardMaterial color={color} roughness={0.9} />
+            </mesh>
+          </group>
+        )
+      })}
+      {PEDESTRIAN_PAIR_PATH_INDEX.map((pathIdx, pi) => {
+        const color = PEDESTRIAN_COLORS[(PEDESTRIAN_COLOR_IDS[pathIdx] + 2) % PEDESTRIAN_COLORS.length]
+        const scale = 0.88 + (pi * 0.1) % 0.2
+        return (
+          <group key={`p-${pi}`} ref={(el) => (pairRefs.current[pi] = el)} scale={[scale, scale, scale]}>
+            <mesh position={[0, 0.32, 0]} castShadow>
+              <boxGeometry args={[0.22, 0.45, 0.12]} />
+              <meshStandardMaterial color={color} roughness={0.9} />
+            </mesh>
+            <mesh position={[0, 0.78, 0]} castShadow>
+              <boxGeometry args={[0.26, 0.26, 0.22]} />
+              <meshStandardMaterial color={color} roughness={0.9} />
+            </mesh>
+          </group>
+        )
+      })}
+      {/* Static: a few near terminal entrance and road crossing */}
+      {[
+        { x: 4, z: 15.2 }, { x: 3.2, z: 15.6 }, { x: 4.8, z: 14.9 }, { x: 4, z: 10.2 }, { x: 3.5, z: 10.8 },
+      ].map((pos, i) => {
+        const color = PEDESTRIAN_COLORS[(i + 3) % PEDESTRIAN_COLORS.length]
+        const scale = 0.92 + (i % 3) * 0.06
+        return (
+          <group key={`s-${i}`} position={[pos.x, 0, pos.z]} scale={[scale, scale, scale]}>
+            <mesh position={[0, 0.32, 0]} castShadow>
+              <boxGeometry args={[0.22, 0.45, 0.12]} />
+              <meshStandardMaterial color={color} roughness={0.9} />
+            </mesh>
+            <mesh position={[0, 0.78, 0]} castShadow>
+              <boxGeometry args={[0.26, 0.26, 0.22]} />
+              <meshStandardMaterial color={color} roughness={0.9} />
+            </mesh>
+          </group>
+        )
+      })}
     </>
   )
 }
@@ -3364,6 +3534,7 @@ function WorldMap() {
               <PeopleWalking />
               <CarsMoving />
               <SimpleTrees />
+              <SeatingArea />
               <MicroAirport
                   onHover={(h) => setSelectedBuilding(h ? 'airport' : (prev) => (prev === 'airport' ? null : prev))}
                   onClick={() => { setSelectedBuilding('airport'); lhWorld?.addSecretClick('airport') }}
