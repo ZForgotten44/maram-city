@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
+
+const ROUTER_FUTURE = { v7_startTransition: true, v7_relativeSplatPath: true }
 import { useEffect, useRef } from 'react'
 import WorldMap from './pages/WorldMap'
 import ProjectDetail from './pages/ProjectDetail'
@@ -61,12 +63,11 @@ function ZFEasterEgg() {
 
 // Single ThemeProvider wraps entire app so TimeDial and Canvas/WorldMap share the same context.
 function App() {
-  console.log('App component rendering')
   return (
     <ErrorBoundary>
       <ThemeProvider>
         <LighthouseWorldProvider>
-        <Router>
+        <Router future={ROUTER_FUTURE}>
           <ScrollHandler />
           <ZFEasterEgg />
           <SoundDesign />

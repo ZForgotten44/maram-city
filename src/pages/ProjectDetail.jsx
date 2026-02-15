@@ -5,6 +5,7 @@ import { OrbitControls, PerspectiveCamera, Environment } from '@react-three/drei
 import { getProjectById } from '../data/projects'
 import BlueprintViewer from '../components/BlueprintViewer'
 import RVTViewer from '../components/RVTViewer'
+import GlbViewer from '../components/GlbViewer'
 import { useTheme } from '../context/ThemeContext'
 import './ProjectDetail.css'
 
@@ -40,7 +41,7 @@ function ProjectDetail({ embedded, projectId: projectIdProp, onClose }) {
   }
 
   const isDay = theme === 'day'
-  const [heroImage, ...restImages] = project.images || []
+  const images = project.images || []
 
   return (
     <div
@@ -53,10 +54,16 @@ function ProjectDetail({ embedded, projectId: projectIdProp, onClose }) {
         <div className="building-silhouette" data-building={project.buildingType} />
       </div>
 
-      {/* Top: Title left, Metadata right (plan-sheet layout) */}
+      {/* Sticky close (X) — always visible when scrolling */}
+      {(embedded && onClose) && (
+        <button type="button" className="project-close-sticky" onClick={onClose} aria-label="Close">×</button>
+      )}
+
+      {/* Title + description always under title; metadata right */}
       <header className="project-header">
         <div className="project-header-left">
           <h1 className="project-title">{project.title}</h1>
+          <p className="project-description-under-title">{project.description}</p>
         </div>
         <div className="project-meta-stack">
           <div className="meta-box">
@@ -100,6 +107,14 @@ function ProjectDetail({ embedded, projectId: projectIdProp, onClose }) {
         >
           3D Model
         </button>
+        {images.length > 3 && (
+          <button
+            className={`nav-tab ${activeView === 'gallery' ? 'active' : ''}`}
+            onClick={() => setActiveView('gallery')}
+          >
+            Gallery
+          </button>
+        )}
         <button
           className={`sustainability-btn ${sustainabilityMode ? 'active' : ''}`}
           onClick={() => setSustainabilityMode(!sustainabilityMode)}
@@ -112,27 +127,25 @@ function ProjectDetail({ embedded, projectId: projectIdProp, onClose }) {
       <main className="project-content">
         {activeView === 'overview' && (
           <div className="overview-section">
-            <p className="project-description">{project.description}</p>
-
-            {/* Asymmetrical image grid: hero left, two stacked right */}
-            <div className={`project-images voxel-image-grid ${restImages.length === 0 ? 'single-image' : ''}`}>
-              {heroImage && (
-                <div className="image-block image-hero">
+            {/* Overview: first 3 pictures + "See more pictures" (clear of close button) */}
+            <div className={`project-images voxel-image-grid ${images.length <= 1 ? 'single-image' : ''}`}>
+              {images.slice(0, 3).map((src) => (
+                <div key={src} className="image-block">
                   <div className="image-frame">
-                    <img src={heroImage} alt={`${project.title} — main`} />
+                    <img src={src} alt="" loading="lazy" />
                   </div>
                 </div>
-              )}
-              {restImages.length > 0 && (
-                <div className="image-block image-stack">
-                  {restImages.slice(0, 2).map((image, index) => (
-                    <div key={index} className="image-frame">
-                      <img src={image} alt={`${project.title} — view ${index + 2}`} />
-                    </div>
-                  ))}
-                </div>
-              )}
+              ))}
             </div>
+            {images.length > 3 && (
+              <button
+                type="button"
+                className="see-more-pictures"
+                onClick={() => setActiveView('gallery')}
+              >
+                See more pictures
+              </button>
+            )}
 
             {sustainabilityMode && (
               <div className="materials-section">
@@ -174,6 +187,21 @@ function ProjectDetail({ embedded, projectId: projectIdProp, onClose }) {
           </div>
         )}
 
+        {activeView === 'gallery' && (
+          <div className="gallery-section">
+            <h3 className="gallery-section-title">All pictures</h3>
+            <div className="project-images voxel-image-grid project-gallery-all">
+              {images.map((src) => (
+                <div key={src} className="image-block gallery-item">
+                  <div className="image-frame">
+                    <img src={src} alt="" loading="lazy" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {activeView === 'blueprints' && (
           <div className="blueprints-section">
             <div className="blueprints-grid">
@@ -195,8 +223,17 @@ function ProjectDetail({ embedded, projectId: projectIdProp, onClose }) {
 
         {activeView === '3d' && (
           <div className="model-viewer-section">
-            {project.rvtFile ? (
-              <RVTViewer rvtFile={project.rvtFile} />
+            {project.model3d?.glbOrGltf ? (
+              <>
+                <GlbViewer url={project.model3d.glbOrGltf.downloadUrl} />
+              </>
+            ) : project.rvtFile || project.model3d?.rvt ? (
+              <>
+                <RVTViewer rvtFile={project.rvtFile || (project.model3d?.rvt && { url: project.model3d.rvt.downloadUrl, name: project.model3d.rvt.name })} />
+                <div className="model-badge needs-conversion" role="status">
+                  .rvt cannot be viewed in browser. Export to .glb for 3D view.
+                </div>
+              </>
             ) : (
               <div className="placeholder-3d">
                 <Canvas shadows gl={{ antialias: true }} className="model-canvas">
@@ -219,7 +256,7 @@ function ProjectDetail({ embedded, projectId: projectIdProp, onClose }) {
                 </Canvas>
                 <div className="placeholder-text">
                   <p>3D Model will be displayed here</p>
-                  <p className="hint">Revit (.rvt) BIM file support ready</p>
+                  <p className="hint">Add a .glb or .gltf in Photos and 3D, or export from Revit</p>
                 </div>
               </div>
             )}

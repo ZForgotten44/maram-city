@@ -66,9 +66,9 @@ const NIGHT_FOG = '#070a10'
 const TRANSITION_DURATION = 1.2
 const BLEND_UPDATE_INTERVAL = 6
 
-// Default view: max zoom-out, up angle, city center + bit of sun
-const DEFAULT_CAMERA_POSITION = [40, 10, 700]
-const DEFAULT_CAMERA_TARGET = [0, 7, 8]
+// Default view (from camera log — press P to print current)
+const DEFAULT_CAMERA_POSITION = [-0.4063, 23.0511, 50.4808]
+const DEFAULT_CAMERA_TARGET = [-0.306, -1.9175, -17.051]
 
 // Intro: start in “space” looking at Earth, then zoom to city
 const INTRO_CURVE_START = [0, 70, -220]
@@ -94,8 +94,8 @@ function CameraControls({ controlsRef, resetCameraRef, defaultPosition, defaultT
       enablePan={enabled}
       enableZoom={enabled}
       enableRotate={enabled}
-      minDistance={16}
-      maxDistance={42}
+      minDistance={8}
+      maxDistance={72}
       minPolarAngle={Math.PI / 4}
       maxPolarAngle={Math.PI / 2 - 0.35}
       enableDamping={enableDamping}
@@ -212,6 +212,7 @@ function IntroSequence({
 }) {
   const tRef = useRef(0)
   const finishedRef = useRef(false)
+  const lookRef = useRef(new THREE.Vector3())
   const curve = useRef(
     new THREE.CatmullRomCurve3([
       new THREE.Vector3(0, 70, -220),
@@ -239,15 +240,14 @@ function IntroSequence({
           : 1 - Math.pow(1 - t, 2)
 
     const pos = curve.current.getPoint(ease)
-    const look = new THREE.Vector3()
     if (t < 0.75) {
-      look.copy(targetStart).lerp(targetMid, t / 0.75)
+      lookRef.current.copy(targetStart).lerp(targetMid, t / 0.75)
     } else {
-      look.copy(targetMid).lerp(cityTarget, (t - 0.75) / 0.25)
+      lookRef.current.copy(targetMid).lerp(cityTarget, (t - 0.75) / 0.25)
     }
 
     controls.object.position.copy(pos)
-    controls.target.copy(look)
+    controls.target.copy(lookRef.current)
 
     if (introProgressRef) introProgressRef.current = ease
     const earthOpacity = t < 0.72 ? 1 : THREE.MathUtils.clamp(1 - (t - 0.72) / 0.18, 0, 1)
@@ -265,14 +265,15 @@ function IntroSequence({
   return null
 }
 
-// During intro, lerp background from space blue to day sky
+const INTRO_SKY_START = new THREE.Color(SPACE_SKY)
+const INTRO_SKY_END = new THREE.Color(DAY_SKY_TOP)
 function IntroSky({ introProgressRef }) {
   const { scene } = useThree()
   useFrame(() => {
     if (!scene.background || !introProgressRef) return
     const t = introProgressRef.current ?? 0
     if (t >= 1) return
-    scene.background.lerpColors(new THREE.Color(SPACE_SKY), new THREE.Color(DAY_SKY_TOP), t)
+    scene.background.lerpColors(INTRO_SKY_START, INTRO_SKY_END, t)
   })
   return null
 }
@@ -303,11 +304,19 @@ function CityFadeDriver({ cityGroupRef, cityFadeRef }) {
   return null
 }
 
+const THEME_NIGHT_SKY = new THREE.Color(NIGHT_SKY)
+const THEME_DAY_SKY = new THREE.Color(DAY_SKY_TOP)
+const THEME_NIGHT_FOG = new THREE.Color(NIGHT_FOG)
+const THEME_DAY_FOG = new THREE.Color(DAY_FOG)
+const THEME_AMBIENT_COLOR = new THREE.Color('#aab7c4')
+const THEME_DIR_COLOR = new THREE.Color('#fff8e8')
 function ThemeDriver() {
   const { themeRef, themeBlendRef, themeBlend, setThemeBlend, ambientRef, directionalRef } = useTheme()
   const { scene } = useThree()
   const frameCount = useRef(0)
+  const bgRef = useRef(new THREE.Color(NIGHT_SKY))
   useFrame((_, delta) => {
+    if (!scene.fog) scene.fog = new THREE.Fog(NIGHT_FOG, 24, 52)
     const target = themeRef.current === 'day' ? 1 : 0
     const blend = themeBlendRef.current
     const step = Math.min(1, (delta / TRANSITION_DURATION) * 2.2)
@@ -315,15 +324,13 @@ function ThemeDriver() {
     const b = themeBlendRef.current
     frameCount.current++
     if (frameCount.current % BLEND_UPDATE_INTERVAL === 0) setThemeBlend(b)
-    scene.background = new THREE.Color(NIGHT_SKY).lerp(new THREE.Color(DAY_SKY_TOP), b)
-    if (!scene.fog) scene.fog = new THREE.Fog(NIGHT_FOG, 24, 52)
-    scene.fog.color.lerpColors(new THREE.Color(NIGHT_FOG), new THREE.Color(DAY_FOG), b)
-    if (ambientRef.current) {
-      ambientRef.current.intensity = 0.35 + 0.55 * b
-    }
+    bgRef.current.copy(THEME_NIGHT_SKY).lerp(THEME_DAY_SKY, b)
+    scene.background = bgRef.current
+    scene.fog.color.lerpColors(THEME_NIGHT_FOG, THEME_DAY_FOG, b)
+    if (ambientRef.current) ambientRef.current.intensity = 0.35 + 0.55 * b
     if (directionalRef.current) {
       directionalRef.current.intensity = 1.2 + 0.2 * b
-      directionalRef.current.color.lerpColors(new THREE.Color('#aab7c4'), new THREE.Color('#fff8e8'), b)
+      directionalRef.current.color.copy(THEME_AMBIENT_COLOR).lerp(THEME_DIR_COLOR, b)
     }
   })
   return null
@@ -334,11 +341,12 @@ function FogController() {
   const { camera, scene } = useThree()
   const { themeBlendRef } = useTheme()
   const vec = useRef(new THREE.Vector3())
+  const center = useRef(new THREE.Vector3(0, 5, 0))
   const lastDist = useRef(null)
   useFrame(() => {
     if (!scene.fog) return
     vec.current.setFromMatrixPosition(camera.matrixWorld)
-    const dist = vec.current.distanceTo(new THREE.Vector3(0, 5, 0))
+    const dist = vec.current.distanceTo(center.current)
     if (lastDist.current != null && Math.abs(dist - lastDist.current) < FOG_UPDATE_THRESHOLD) return
     lastDist.current = dist
     const b = themeBlendRef.current
@@ -526,11 +534,11 @@ function WaterFoam() {
     const wave = 0.4 + 0.25 * Math.sin(state.clock.elapsedTime * 1.1)
     if (ring1.current?.material) {
       ring1.current.material.opacity = (wave + 0.35 * b) * 0.9
-      ring1.current.material.color.lerpColors(new THREE.Color('#e8f4ff'), new THREE.Color('#b8dcff'), 0.3 + 0.5 * b)
+      ring1.current.material.color.lerpColors(FOAM_RING1_NIGHT, FOAM_RING1_DAY, 0.3 + 0.5 * b)
     }
     if (ring2.current?.material) {
       ring2.current.material.opacity = (0.3 + 0.25 * b) * (0.92 + 0.2 * Math.sin(state.clock.elapsedTime * 1.1))
-      ring2.current.material.color.lerpColors(new THREE.Color('#dceef8'), new THREE.Color('#a8d8ff'), 0.3 + 0.5 * b)
+      ring2.current.material.color.lerpColors(FOAM_RING2_NIGHT, FOAM_RING2_DAY, 0.3 + 0.5 * b)
     }
   })
   return (
@@ -556,7 +564,7 @@ function WaterSunStreak() {
     const b = themeBlendRef.current
     const pulse = 0.12 + 0.08 * Math.sin(state.clock.elapsedTime * 0.8)
     ref.current.material.opacity = (1 - b) * 0.06 + b * pulse
-    ref.current.material.color.lerpColors(new THREE.Color('#a0b0c8'), new THREE.Color('#fff8e0'), b)
+    ref.current.material.color.lerpColors(WATER_STREAK_NIGHT, WATER_STREAK_DAY, b)
   })
   return (
     <mesh ref={ref} rotation={[-Math.PI / 2, 0, 0]} position={[8, -0.38, -18]} scale={[1, 2.5 / 6, 1]} renderOrder={10002}>
@@ -723,6 +731,34 @@ function DistantShips() {
         </group>
       ))}
     </>
+  )
+}
+
+// Brown mountains / islands in the sea — farther from island, bigger, more of them
+const SEA_MOUNTAIN_SPOTS = [
+  { x: 48, z: -38, scale: 2.2, color: '#6B4423' },
+  { x: -45, z: 42, scale: 1.9, color: '#5D3A1A' },
+  { x: 42, z: 50, scale: 2.0, color: '#7D5A3D' },
+  { x: -52, z: -35, scale: 2.4, color: '#5A3822' },
+  { x: 55, z: 20, scale: 2.1, color: '#6D4C2E' },
+  { x: -38, z: -48, scale: 1.8, color: '#4E3319' },
+]
+function SeaMountains() {
+  return (
+    <group>
+      {SEA_MOUNTAIN_SPOTS.map((spot, i) => (
+        <group key={i} position={[spot.x, 0, spot.z]}>
+          <mesh castShadow receiveShadow position={[0, 0.8 * spot.scale, 0]}>
+            <coneGeometry args={[1.4 * spot.scale, 2.2 * spot.scale, 8]} />
+            <meshStandardMaterial color={spot.color} roughness={0.92} metalness={0} />
+          </mesh>
+          <mesh castShadow receiveShadow position={[0.15, 1.6 * spot.scale, -0.1]}>
+            <coneGeometry args={[0.6 * spot.scale, 1.2 * spot.scale, 6]} />
+            <meshStandardMaterial color={spot.color} roughness={0.9} metalness={0} />
+          </mesh>
+        </group>
+      ))}
+    </group>
   )
 }
 
@@ -1131,6 +1167,27 @@ function PyramidPlaza() {
 
 // Beach — left side of island: sand strip, umbrellas both sides, life buoys, voxel people
 const SAND_COLOR = '#D4A574'
+function BeachSwimmer({ basePosition, seed }) {
+  const groupRef = useRef()
+  useFrame((state) => {
+    if (!groupRef.current) return
+    const t = state.clock.elapsedTime + seed
+    groupRef.current.position.y = basePosition[1] + Math.sin(t * 1.2) * 0.06
+    groupRef.current.position.x = basePosition[0] + Math.sin(t * 0.7) * 0.04
+  })
+  return (
+    <group ref={groupRef} position={[basePosition[0], basePosition[1], basePosition[2]]} rotation={[0, 0, -0.25]}>
+      <mesh position={[0, 0.12, 0]}>
+        <boxGeometry args={[0.35, 0.14, 0.18]} />
+        <meshStandardMaterial color="#5a8a9e" roughness={0.85} />
+      </mesh>
+      <mesh position={[0, 0.22, 0]}>
+        <boxGeometry args={[0.2, 0.2, 0.2]} />
+        <meshStandardMaterial color="#D4A574" roughness={0.9} />
+      </mesh>
+    </group>
+  )
+}
 function Beach() {
   const walkRef = useRef()
   useFrame((state) => {
@@ -1222,6 +1279,14 @@ function Beach() {
           <meshStandardMaterial color="#D4A574" roughness={0.9} />
         </mesh>
       </group>
+      {/* Three people swimming (farther out in water so visible) */}
+      {[
+        [-2.2, 0.15, -2.5],
+        [-2.4, 0.12, 1.2],
+        [-2.0, 0.18, 4.2],
+      ].map(([px, py, pz], i) => (
+        <BeachSwimmer key={i} basePosition={[px, py, pz]} seed={i * 1.3} />
+      ))}
     </group>
   )
 }
@@ -1452,6 +1517,11 @@ function inAnyBuildingBuffer(x, z, buffer) {
   }
   return false
 }
+const PYRAMID_ZONE_CENTERS = [[0, -8], [-4, -8], [4, -8]]
+const PYRAMID_ZONE_RADIUS = 2.8
+function insidePyramidZone(x, z) {
+  return PYRAMID_ZONE_CENTERS.some(([cx, cz]) => (x - cx) ** 2 + (z - cz) ** 2 <= PYRAMID_ZONE_RADIUS ** 2)
+}
 function onSidewalk(x, z) {
   if (Math.abs(z - 8) < 2 && Math.abs(x) < 12) return true
   if (Math.abs(z + 12) < 2 && Math.abs(x) < 12) return true
@@ -1459,44 +1529,67 @@ function onSidewalk(x, z) {
   if (Math.abs(x + 11) < 2 && Math.abs(z) < 10) return true
   return false
 }
+// Trees only in green areas. No roads, no on seats, no on beach.
+function inSeatingBuffer(x, z) {
+  const seats = [[-3, -2.5], [0, -2.7], [2.8, -2.4]]
+  for (const [sx, sz] of seats) {
+    if ((x - sx) ** 2 + (z - sz) ** 2 < 1.8 ** 2) return true
+  }
+  return false
+}
+function onBeach(x, z) {
+  return x >= -20.5 && x <= -15.5 && z >= -15 && z <= 15
+}
+const ALLOWED_TREE_ZONES = [
+  // Green strip between mixed-use and hospital, in front of seats (not on seats)
+  { xMin: -1.2, xMax: 3.5, zMin: -2.95, zMax: -2.2, n: 4 },
+  // Green behind hospital (left side)
+  { xMin: -11, xMax: -9, zMin: -3.5, zMax: -1.5, n: 3 },
+  // Green behind mixed-use (right side)
+  { xMin: 9.5, xMax: 12, zMin: -3.2, zMax: -1.8, n: 3 },
+  // Island perimeter edges — not on beach (beach is x -20 to -16, z -15..15)
+  { xMin: -21, xMax: -18.5, zMin: 15, zMax: 21, n: 2 },
+  { xMin: -21, xMax: -18.5, zMin: -21, zMax: -15, n: 3 },
+  { xMin: 18.5, xMax: 21, zMin: -12, zMax: 12, n: 4 },
+  { xMin: -12, xMax: 12, zMin: -21, zMax: -18, n: 4 },
+  { xMin: -21, xMax: -11, zMin: 18, zMax: 21, n: 3 },
+  { xMin: -18, xMax: -10, zMin: 7, zMax: 9, n: 3 },
+  { xMin: 10, xMax: 13, zMin: -2, zMax: 2, n: 3 },
+  // Around lighthouse (green spots)
+  { xMin: 12.5, xMax: 16, zMin: 4, zMax: 7, n: 4 },
+  // In front of resort (9, 7), not on road
+  { xMin: 7.5, xMax: 10.5, zMin: 7.2, zMax: 9, n: 4 },
+  // Beside airport terminal (apron side), back of airport
+  { xMin: -20, xMax: -17, zMin: 10.5, zMax: 13, n: 3 },
+  { xMin: -14, xMax: -11, zMin: 10.5, zMax: 13, n: 3 },
+  // Around construction / pyramid area (back green)
+  { xMin: -6, xMax: -2, zMin: -11, zMax: -8.5, n: 3 },
+  { xMin: 2, xMax: 6, zMin: -11, zMax: -8.5, n: 3 },
+  { xMin: -2, xMax: 2, zMin: -11, zMax: -8.5, n: 2 },
+]
 const TREE_POSITIONS = (() => {
   const trees = []
   const rng = mulberry32(42)
-  BUILDING_FOOTPRINTS.forEach(([cx, cz, hw, hd], bi) => {
-    const sides = [
-      { n: 2 + Math.floor(rng() * 3), x0: cx - hw, x1: cx + hw, z: cz + hd + TREE_BUFFER, dx: 1, dz: 0 },
-      { n: 2 + Math.floor(rng() * 3), x0: cx - hw, x1: cx + hw, z: cz - hd - TREE_BUFFER, dx: 1, dz: 0 },
-      { n: 2 + Math.floor(rng() * 3), x: cx - hw - TREE_BUFFER, z0: cz - hd, z1: cz + hd, dx: 0, dz: 1 },
-      { n: 2 + Math.floor(rng() * 3), x: cx + hw + TREE_BUFFER, z0: cz - hd, z1: cz + hd, dx: 0, dz: 1 },
-    ]
-    sides.forEach((side) => {
-      const n = Math.min(4, Math.max(2, side.n))
-      for (let i = 0; i < n; i++) {
-        const t = (n === 1 ? 0.5 : (i + 0.3 + rng() * 0.4) / n)
-        let x, z
-        if (side.dx) {
-          x = side.x0 + (side.x1 - side.x0) * t + (rng() - 0.5) * 0.5
-          z = side.z + (rng() - 0.5) * 0.35
-        } else {
-          x = side.x + (rng() - 0.5) * 0.35
-          z = side.z0 + (side.z1 - side.z0) * t + (rng() - 0.5) * 0.5
-        }
-        if (inRunwayOrTaxi(x, z) || onSidewalk(x, z) || inAnyBuildingBuffer(x, z, 0.1)) continue
-        const trunkH = (0.4 + rng() * 0.85) * (0.9 + rng() * 0.3)
-        const trunkW = 0.12 + rng() * 0.1
-        trees.push({
-          x, z,
-          trunkH,
-          trunkW,
-          shape: Math.floor(rng() * 6),
-          colorIdx: Math.floor(rng() * 3),
-          leanY: (rng() - 0.5) * 0.22,
-          leanX: (rng() - 0.5) * 0.12,
-          scale: 0.9 + rng() * 0.3,
-        })
-      }
-    })
-  })
+  for (const zone of ALLOWED_TREE_ZONES) {
+    const n = zone.n
+    for (let i = 0; i < n; i++) {
+      const x = zone.xMin + (zone.xMax - zone.xMin) * (0.2 + 0.6 * (i + rng()) / (n + 1)) + (rng() - 0.5) * 0.3
+      const z = zone.zMin + (zone.zMax - zone.zMin) * (0.2 + 0.6 * rng()) + (rng() - 0.5) * 0.3
+      if (inRunwayOrTaxi(x, z) || onSidewalk(x, z) || inAnyBuildingBuffer(x, z, 0.15) || insidePyramidZone(x, z) || inSeatingBuffer(x, z) || onBeach(x, z)) continue
+      const trunkH = (0.4 + rng() * 0.85) * (0.9 + rng() * 0.3)
+      const trunkW = 0.12 + rng() * 0.1
+      trees.push({
+        x, z,
+        trunkH,
+        trunkW,
+        shape: Math.floor(rng() * 6),
+        colorIdx: Math.floor(rng() * 3),
+        leanY: (rng() - 0.5) * 0.22,
+        leanX: (rng() - 0.5) * 0.12,
+        scale: 0.9 + rng() * 0.3,
+      })
+    }
+  }
   return trees
 })()
 
@@ -1506,17 +1599,21 @@ const DAY_TREE_COLORS = ['#3DDC5A', '#4FE36A', '#2BC04C']
 function SimpleTrees() {
   const { themeBlendRef } = useTheme()
   const groupRef = useRef()
+  const treeColorRef = useRef(new THREE.Color())
+  const treeColorDayRef = useRef(new THREE.Color())
   useFrame(() => {
     if (!groupRef.current) return
     const b = themeBlendRef.current
+    const nightColor = treeColorRef.current
+    const dayColor = treeColorDayRef.current
     groupRef.current.children.forEach((treeGroup, i) => {
       const tree = TREE_POSITIONS[i]
       if (!tree) return
-      const nightC = TREE_COLORS[tree.colorIdx]
-      const dayC = DAY_TREE_COLORS[(tree.colorIdx + (i % 2)) % 3]
+      nightColor.set(TREE_COLORS[tree.colorIdx])
+      dayColor.set(DAY_TREE_COLORS[(tree.colorIdx + (i % 2)) % 3])
       treeGroup.children.forEach((mesh, j) => {
         if (j === 0 || !mesh.material) return
-        mesh.material.color.copy(new THREE.Color(nightC)).lerp(new THREE.Color(dayC), b)
+        mesh.material.color.copy(nightColor).lerp(dayColor, b)
         mesh.material.roughness = 0.88 - 0.12 * b
       })
     })
@@ -1657,7 +1754,16 @@ function SeatingArea() {
   )
 }
 
-// Sky: night dark, morning = saturated blue top/mid + warm horizon glow
+const SKY_NIGHT = new THREE.Color('#0d1219')
+const SKY_DAY = new THREE.Color('#7EC8FF')
+const FOAM_RING1_NIGHT = new THREE.Color('#e8f4ff')
+const FOAM_RING1_DAY = new THREE.Color('#b8dcff')
+const FOAM_RING2_NIGHT = new THREE.Color('#dceef8')
+const FOAM_RING2_DAY = new THREE.Color('#a8d8ff')
+const WATER_STREAK_NIGHT = new THREE.Color('#a0b0c8')
+const WATER_STREAK_DAY = new THREE.Color('#fff8e0')
+const CLOUD_NIGHT = new THREE.Color('#e8eaf0')
+const CLOUD_DAY = new THREE.Color('#f5f8ff')
 function SkyGradient() {
   const { themeBlendRef } = useTheme()
   const domeRef = useRef()
@@ -1665,12 +1771,10 @@ function SkyGradient() {
   useFrame(() => {
     const b = themeBlendRef.current
     if (domeRef.current?.material) {
-      domeRef.current.material.color.lerpColors(new THREE.Color('#0d1219'), new THREE.Color('#7EC8FF'), b)
+      domeRef.current.material.color.lerpColors(SKY_NIGHT, SKY_DAY, b)
       domeRef.current.material.opacity = 0.7 - 0.2 * b
     }
-    if (horizonRef.current?.material) {
-      horizonRef.current.material.opacity = b * 0.5
-    }
+    if (horizonRef.current?.material) horizonRef.current.material.opacity = b * 0.5
   })
   return (
     <group renderOrder={-10}>
@@ -1773,29 +1877,70 @@ function SunAndRays({ onArchitectClick }) {
 }
 
 // Horizon: 360° cylindrical silhouette so no flat “walls” from any angle
-function HorizonSilhouettes() {
+const MOUNTAIN_LAYER_Z = [-95, -120, -150, -185]
+const MOUNTAIN_LAYER_SCALE = [[0.92, 0.28], [1.0, 0.32], [1.18, 0.38], [1.4, 0.45]]
+const MOUNTAIN_NIGHT_COLORS = ['#3d2e24', '#4a3a2e', '#5c4838', '#6b5544']
+const MOUNTAIN_DAY_COLORS = ['#5c4a3a', '#6b5848', '#7d6b58', '#8f7d6a']
+
+function buildJaggedRidgeGeometry(width, height, segW, segH, seed) {
+  const g = new THREE.PlaneGeometry(width, height, segW, segH)
+  const pos = g.attributes.position
+  const rng = mulberry32(seed)
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i)
+    const y = pos.getY(i)
+    const t = y + 0.5
+    const amp = 5 * (0.35 * Math.sin(x * 0.08) + 0.45 * Math.sin(x * 0.14 + 2 + rng() * 4) + 0.2 * Math.sin(x * 0.05 + rng() * 6) + 0.15 * (rng() - 0.5))
+    pos.setY(i, y + t * amp)
+  }
+  g.computeVertexNormals()
+  return g
+}
+
+const MOUNTAIN_GEOMS = [401, 402, 403, 404].map((s) => buildJaggedRidgeGeometry(200, 40, 72, 28, s))
+
+const MOUNTAIN_LERP_NIGHT = MOUNTAIN_NIGHT_COLORS.map((c) => new THREE.Color(c))
+const MOUNTAIN_LERP_DAY = MOUNTAIN_DAY_COLORS.map((c) => new THREE.Color(c))
+
+function LayeredMountainRidges() {
   const { themeBlendRef } = useTheme()
-  const cylinderRef = useRef()
+  const matRefs = useRef([])
   useFrame(() => {
-    if (!cylinderRef.current?.material) return
     const b = themeBlendRef.current
-    cylinderRef.current.material.opacity = 0.18 + 0.22 * b
+    matRefs.current.forEach((mat, i) => {
+      if (!mat) return
+      mat.color.lerpColors(MOUNTAIN_LERP_NIGHT[i], MOUNTAIN_LERP_DAY[i], b)
+    })
   })
   return (
-    <group position={[0, 8, 0]} renderOrder={-10}>
-      <mesh ref={cylinderRef} renderOrder={-10}>
-        <cylinderGeometry args={[46, 50, 14, 64, 1, true]} />
-        <meshBasicMaterial
-          color="#1a2430"
-          transparent
-          opacity={0.22}
-          depthWrite={false}
-          depthTest={false}
-          side={THREE.BackSide}
-        />
-      </mesh>
+    <group position={[0, 2, 0]} renderOrder={-8}>
+      {MOUNTAIN_LAYER_Z.map((z, i) => (
+        <mesh
+          key={i}
+          position={[0, i * -0.8, z]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          scale={[MOUNTAIN_LAYER_SCALE[i][0], MOUNTAIN_LAYER_SCALE[i][1], 1]}
+          geometry={MOUNTAIN_GEOMS[i]}
+          receiveShadow
+        >
+          <meshStandardMaterial
+            ref={(el) => { if (el) matRefs.current[i] = el }}
+            color={MOUNTAIN_NIGHT_COLORS[i]}
+            roughness={0.95}
+            metalness={0}
+            transparent={false}
+            opacity={1}
+            depthWrite={true}
+            side={THREE.FrontSide}
+          />
+        </mesh>
+      ))}
     </group>
   )
+}
+
+function HorizonSilhouettes() {
+  return null
 }
 
 // Clouds: more coverage, 3 types (small fast high, medium slow, large slow), varied scale/height/opacity/speed, soft parallax
@@ -1850,7 +1995,7 @@ function CloudLayer() {
       if (child.children[0]?.material) {
         const baseOpacity = c.opacity * (0.5 + 0.5 * b)
         child.children[0].material.opacity = baseOpacity
-        child.children[0].material.color.lerpColors(new THREE.Color('#e8eaf0'), new THREE.Color('#f5f8ff'), b)
+        child.children[0].material.color.lerpColors(CLOUD_NIGHT, CLOUD_DAY, b)
       }
     })
   })
@@ -1926,73 +2071,216 @@ function BirdFlock() {
   )
 }
 
-// Gray and white plane(s) — flyover
+// Low-poly flyover plane: fuselage (tapered), wings, tail fin, tail wings. Scale 1.5, length 8*1.25, wingspan 10. Night lights: red left, green right, white tail.
 const PLANE_BODY = '#8a8f94'
-const PLANE_ACCENT = '#e8ecf0'
+const PLANE_SCALE = 0.25
+const PLANE_L = 8 * 1.25
+const PLANE_W = 1.2
+const PLANE_H = 1.5
+const WING_SPAN = 10
+const LIGHT_RED = '#c0392b'
+const LIGHT_GREEN = '#27ae60'
+const LIGHT_WHITE = '#f5f8ff'
 function FlyoverPlane() {
   const planeRef = useRef()
+  const redRef = useRef()
+  const greenRef = useRef()
+  const whiteRef = useRef()
   useFrame((state) => {
     if (!planeRef.current) return
     const t = state.clock.elapsedTime * 0.04
     const r = 30
     planeRef.current.position.set(Math.cos(t) * r, 13 + Math.sin(t * 2) * 0.3, Math.sin(t) * r)
     planeRef.current.lookAt(0, 8, 0)
+    const time = state.clock.elapsedTime
+    const blink = 1.5 + Math.sin(time * 4) * 1
+    if (redRef.current?.material) redRef.current.material.emissiveIntensity = Math.max(0, blink)
+    if (greenRef.current?.material) greenRef.current.material.emissiveIntensity = Math.max(0, blink * 0.9)
+    if (whiteRef.current?.material) whiteRef.current.material.emissiveIntensity = Math.max(0, 0.8 + Math.sin(time * 5) * 0.7)
   })
   return (
-    <group ref={planeRef}>
-      <mesh>
-        <boxGeometry args={[1.2, 0.3, 0.35]} />
+    <group ref={planeRef} scale={[PLANE_SCALE, PLANE_SCALE, PLANE_SCALE]}>
+      <mesh position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={-1}>
+        <circleGeometry args={[2.2, 16]} />
+        <meshBasicMaterial color="#0a0a0a" transparent opacity={0.2} depthWrite={false} />
+      </mesh>
+      {/* Fuselage: long axis Z */}
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[PLANE_W, PLANE_H * 0.5, PLANE_L]} />
         <meshStandardMaterial color={PLANE_BODY} metalness={0.35} roughness={0.55} />
       </mesh>
-      <mesh position={[0, 0.08, 0.1]}>
-        <boxGeometry args={[0.5, 0.06, 0.25]} />
-        <meshStandardMaterial color={PLANE_ACCENT} metalness={0.2} roughness={0.7} />
+      <mesh position={[0, 0, PLANE_L * 0.35]}>
+        <boxGeometry args={[PLANE_W * 0.85, PLANE_H * 0.4, PLANE_L * 0.4]} />
+        <meshStandardMaterial color={PLANE_BODY} metalness={0.35} roughness={0.55} />
+      </mesh>
+      <mesh position={[0, 0, -PLANE_L * 0.42]}>
+        <boxGeometry args={[PLANE_W * 0.7, PLANE_H * 0.35, PLANE_L * 0.2]} />
+        <meshStandardMaterial color={PLANE_BODY} metalness={0.4} roughness={0.5} />
+      </mesh>
+      {/* Wings: long axis X (left/right) */}
+      <mesh position={[0, -PLANE_H * 0.1, 0]}>
+        <boxGeometry args={[WING_SPAN, 0.12, PLANE_L * 0.4]} />
+        <meshStandardMaterial color={PLANE_BODY} metalness={0.3} roughness={0.6} />
+      </mesh>
+      <mesh position={[0, PLANE_H * 0.35, -PLANE_L * 0.42]}>
+        <boxGeometry args={[0.08, PLANE_H * 1.1, PLANE_W * 0.6]} />
+        <meshStandardMaterial color={PLANE_BODY} metalness={0.35} roughness={0.55} />
+      </mesh>
+      <mesh position={[0, PLANE_H * 0.2, -PLANE_L * 0.42]}>
+        <boxGeometry args={[PLANE_W * 1.8, 0.06, PLANE_L * 0.25]} />
+        <meshStandardMaterial color={PLANE_BODY} metalness={0.35} roughness={0.55} />
+      </mesh>
+      <mesh ref={redRef} position={[-WING_SPAN * 0.5 * 0.4, 0.02, 0]}>
+        <sphereGeometry args={[0.12, 8, 6]} />
+        <meshStandardMaterial color={LIGHT_RED} emissive={LIGHT_RED} emissiveIntensity={1.5} roughness={0.6} />
+      </mesh>
+      <mesh ref={greenRef} position={[WING_SPAN * 0.5 * 0.4, 0.02, 0]}>
+        <sphereGeometry args={[0.12, 8, 6]} />
+        <meshStandardMaterial color={LIGHT_GREEN} emissive={LIGHT_GREEN} emissiveIntensity={1.5} roughness={0.6} />
+      </mesh>
+      <mesh ref={whiteRef} position={[0, PLANE_H * 0.5, PLANE_L * 0.48]}>
+        <sphereGeometry args={[0.1, 6, 6]} />
+        <meshStandardMaterial color={LIGHT_WHITE} emissive={LIGHT_WHITE} emissiveIntensity={1.2} roughness={0.5} />
       </mesh>
     </group>
   )
 }
 
-// People: along airport road, varied colors/heights, some pairs, some alone
-const PEDESTRIAN_COLORS = ['#a85a5a', '#2c3e6a', '#2d5a3d', '#c9a227', '#b0b0b0', '#6b4c3d', '#f0ebe0']
-const PEDESTRIAN_PATHS = [
-  { start: [0, 12], end: [4, 16.5], speed: 0.04 },
-  { start: [4, 16], end: [0, 11], speed: 0.038 },
-  { start: [-2, 10], end: [4, 15], speed: 0.042 },
-  { start: [6, 11], end: [4, 15.5], speed: 0.04 },
-  { start: [4, 10], end: [4, 14], speed: 0.045 },
-  { start: [3, 13], end: [5, 16], speed: 0.04 },
-  { start: [2, 10.5], end: [4, 14.5], speed: 0.043 },
-  { start: [5, 12], end: [3, 15], speed: 0.039 },
+// Two satellites: slow orbit ring around island, high in sky. Low-poly body + 2 panels.
+const SATELLITE_ORBIT_RADIUS = 38
+const SATELLITE_ORBIT_Y = 26
+const SATELLITE_ORBIT_SPEED = 0.012
+function Satellites() {
+  const g1 = useRef()
+  const g2 = useRef()
+  useFrame((state) => {
+    const t = state.clock.elapsedTime
+    if (g1.current) {
+      const a1 = t * SATELLITE_ORBIT_SPEED
+      g1.current.position.set(Math.cos(a1) * SATELLITE_ORBIT_RADIUS, SATELLITE_ORBIT_Y, Math.sin(a1) * SATELLITE_ORBIT_RADIUS)
+      g1.current.lookAt(0, 8, 0)
+    }
+    if (g2.current) {
+      const a2 = t * SATELLITE_ORBIT_SPEED + Math.PI
+      g2.current.position.set(Math.cos(a2) * SATELLITE_ORBIT_RADIUS, SATELLITE_ORBIT_Y, Math.sin(a2) * SATELLITE_ORBIT_RADIUS)
+      g2.current.lookAt(0, 8, 0)
+    }
+  })
+  return (
+    <>
+      <group ref={g1}>
+        <mesh>
+          <boxGeometry args={[0.25, 0.12, 0.4]} />
+          <meshStandardMaterial color="#a0a8b0" metalness={0.4} roughness={0.6} />
+        </mesh>
+        <mesh position={[0.22, 0, 0]}>
+          <boxGeometry args={[0.5, 0.02, 0.35]} />
+          <meshStandardMaterial color="#8899aa" metalness={0.3} roughness={0.7} />
+        </mesh>
+        <mesh position={[-0.22, 0, 0]}>
+          <boxGeometry args={[0.5, 0.02, 0.35]} />
+          <meshStandardMaterial color="#8899aa" metalness={0.3} roughness={0.7} />
+        </mesh>
+      </group>
+      <group ref={g2}>
+        <mesh>
+          <boxGeometry args={[0.22, 0.1, 0.35]} />
+          <meshStandardMaterial color="#9a9ca8" metalness={0.4} roughness={0.6} />
+        </mesh>
+        <mesh position={[0.2, 0, 0]}>
+          <boxGeometry args={[0.45, 0.02, 0.3]} />
+          <meshStandardMaterial color="#7a8a9a" metalness={0.3} roughness={0.7} />
+        </mesh>
+        <mesh position={[-0.2, 0, 0]}>
+          <boxGeometry args={[0.45, 0.02, 0.3]} />
+          <meshStandardMaterial color="#7a8a9a" metalness={0.3} roughness={0.7} />
+        </mesh>
+      </group>
+    </>
+  )
+}
+
+// Population zones: A) Airport (small), B) City core, C) Beach, D) Micro-scatter. Varied colors, scale 0.9–1.1, head rotation. Never cluster, never grid-align.
+const PEDESTRIAN_COLORS = ['#a85a5a', '#2c3e6a', '#2d5a3d', '#c9a227', '#b0b0b0', '#6b4c3d', '#f0ebe0', '#8b7355', '#5a4a3a']
+function Person({ color, scale = 1, headRotY = 0, headRotX = 0 }) {
+  return (
+    <group scale={[scale, scale, scale]}>
+      <mesh position={[0, 0.32, 0]} castShadow>
+        <boxGeometry args={[0.22, 0.45, 0.12]} />
+        <meshStandardMaterial color={color} roughness={0.9} />
+      </mesh>
+      <group position={[0, 0.78, 0]} rotation={[headRotX, headRotY, 0]}>
+        <mesh castShadow>
+          <boxGeometry args={[0.26, 0.26, 0.22]} />
+          <meshStandardMaterial color={color} roughness={0.9} />
+        </mesh>
+      </group>
+    </group>
+  )
+}
+const MIN_PERSON_DIST = 0.8
+function personDist(a, b) { return Math.hypot(a.x - b.x, a.z - b.z) }
+function filterPeopleMinDist(list, minD, existing = []) {
+  const out = []
+  for (const p of list) {
+    if (out.some((q) => personDist(p, q) < minD)) continue
+    if (existing.some((q) => personDist(p, q) < minD)) continue
+    out.push(p)
+  }
+  return out
+}
+// People between control tower and terminals (apron), not on track. RUNWAY_WORLD z 13.5–20.5 — keep z < 13.5
+const _rawAirport = [
+  { x: -8, z: 12.2, color: 0, scale: 1.02, headRotY: 0.1 }, { x: -5.5, z: 11.8, color: 2, scale: 0.95, headRotY: -0.08 },
+  { x: -3, z: 12.4, color: 5, scale: 1.08, headRotY: 0.05 }, { x: 0, z: 11.5, color: 1, scale: 0.98 }, { x: -6, z: 12.8, color: 3, scale: 1.0 },
+  { x: -4, z: 11.2, color: 4, scale: 0.92, headRotY: 0.2 }, { x: -1.5, z: 12, color: 6, scale: 0.96 },
 ]
-const PEDESTRIAN_SCALES = (() => {
-  const rng = mulberry32(101)
-  return PEDESTRIAN_PATHS.map(() => 0.9 + rng() * 0.25)
-})()
-const PEDESTRIAN_COLOR_IDS = (() => {
-  const rng = mulberry32(102)
-  return PEDESTRIAN_PATHS.map(() => Math.floor(rng() * PEDESTRIAN_COLORS.length))
-})()
-const PEDESTRIAN_PAIR_PATH_INDEX = [0, 2, 4]
-const PEDESTRIAN_PAIR_PHASE_OFFSET = 0.18
+const _rawCity = [
+  { x: -6.4, z: -2.1, color: 1, scale: 1.05, headRotY: -0.1 }, { x: -7.5, z: -2.8, color: 6, scale: 0.93 },
+  { x: 2.2, z: 1.8, color: 2, scale: 0.97 }, { x: -1.8, z: 2.1, color: 4, scale: 1.02, headRotY: 0.12 },
+  { x: 6.3, z: -2.2, color: 0, scale: 0.96, headRotY: -0.05 }, { x: 5.8, z: -3.0, color: 5, scale: 1.04 },
+  { x: -0.5, z: -2.4, color: 3, scale: 0.99 }, { x: 1.2, z: -2.9, color: 7, scale: 1.01, headRotY: 0.08 },
+  { x: -5.8, z: -1.8, color: 0, scale: 0.97 }, { x: 3.5, z: 0.5, color: 5, scale: 1.02 }, { x: -2.5, z: -3.2, color: 2, scale: 0.94 },
+  { x: -4.2, z: -2.5, color: 3, scale: 0.98 }, { x: 4.2, z: -1.5, color: 6, scale: 0.95, headRotY: -0.1 }, { x: 0.8, z: 0.8, color: 1, scale: 1.0 },
+  { x: -3.2, z: 1.2, color: 4, scale: 0.93 }, { x: 5.2, z: -0.5, color: 7, scale: 0.97 },
+]
+// One person under the lighthouse (beach)
+const _rawBeach = [
+  { x: 15.5, z: 5.8, color: 2, scale: 1.0, headRotY: 0.15 },
+]
+const _rawScatter = [
+  { x: 2.5, z: -5, color: 3, scale: 0.91, headRotY: -0.2 }, { x: -5.5, z: 3.5, color: 7, scale: 1.06 }, { x: 11, z: -1, color: 2, scale: 0.95, headRotY: 0.15 },
+  { x: 0, z: -6, color: 1, scale: 0.93 }, { x: -3, z: 4, color: 4, scale: 1.0 },
+  { x: 4, z: -4, color: 0, scale: 0.96 }, { x: -7, z: 2, color: 6, scale: 0.94 }, { x: 9, z: 2, color: 3, scale: 1.0, headRotY: -0.12 },
+]
+const AIRPORT_PEOPLE = filterPeopleMinDist(_rawAirport, MIN_PERSON_DIST)
+const CITY_PEOPLE = filterPeopleMinDist(_rawCity, MIN_PERSON_DIST, AIRPORT_PEOPLE)
+const BEACH_PEOPLE = filterPeopleMinDist(_rawBeach, MIN_PERSON_DIST, [...AIRPORT_PEOPLE, ...CITY_PEOPLE])
+const SCATTER_PEOPLE = filterPeopleMinDist(_rawScatter, MIN_PERSON_DIST, [...AIRPORT_PEOPLE, ...CITY_PEOPLE, ...BEACH_PEOPLE])
+const PEDESTRIAN_PATHS = [
+  { start: [4, 12], end: [4, 15.5], speed: 0.028 },
+  { start: [3, 14], end: [4.5, 15], speed: 0.035 },
+  { start: [-6, -2], end: [-5.5, 1.5], speed: 0.022 },
+  { start: [6, -3], end: [2, 2], speed: 0.032 },
+  { start: [-0.5, -2.5], end: [1, -2.2], speed: 0.038 },
+  { start: [-8, 7], end: [-9.5, 7.8], speed: 0.025 },
+  { start: [-4, -3], end: [-2, 0], speed: 0.03 },
+  { start: [2, 1], end: [5, -1], speed: 0.042 },
+  { start: [8, 5], end: [11, 2], speed: 0.02 },
+  { start: [-10, 3], end: [-7, 5], speed: 0.034 },
+  { start: [0, -5], end: [3, -4], speed: 0.046 },
+  { start: [10, -2], end: [7, 1], speed: 0.026 },
+]
+const PEDESTRIAN_PATH_COLORS = [0, 2, 4, 1, 6, 3, 5, 0, 2, 4, 1, 6]
+const PEDESTRIAN_PATH_SCALES = [0.98, 1.05, 0.92, 1.02, 0.96, 1.0, 0.94, 1.03, 0.97, 1.01, 0.99, 0.95]
 function PeopleWalking() {
   const refs = useRef([])
-  const pairRefs = useRef([])
   useFrame((state) => {
     const t = state.clock.elapsedTime
     PEDESTRIAN_PATHS.forEach((path, i) => {
       const g = refs.current[i]
-      if (g) {
-        const phase = (t * path.speed + i * 3) % 1
-        const x = path.start[0] + (path.end[0] - path.start[0]) * phase
-        const z = path.start[1] + (path.end[1] - path.start[1]) * phase
-        g.position.set(x, 0, z)
-      }
-    })
-    PEDESTRIAN_PAIR_PATH_INDEX.forEach((pathIdx, pi) => {
-      const g = pairRefs.current[pi]
       if (!g) return
-      const path = PEDESTRIAN_PATHS[pathIdx]
-      const phase = (t * path.speed + pathIdx * 3 + PEDESTRIAN_PAIR_PHASE_OFFSET) % 1
+      const phase = (t * path.speed + i * 3) % 1
       const x = path.start[0] + (path.end[0] - path.start[0]) * phase
       const z = path.start[1] + (path.end[1] - path.start[1]) * phase
       g.position.set(x, 0, z)
@@ -2000,71 +2288,45 @@ function PeopleWalking() {
   })
   return (
     <>
-      {PEDESTRIAN_PATHS.map((_, i) => {
-        const color = PEDESTRIAN_COLORS[PEDESTRIAN_COLOR_IDS[i]]
-        const scale = PEDESTRIAN_SCALES[i]
-        return (
-          <group key={i} ref={(el) => (refs.current[i] = el)} scale={[scale, scale, scale]}>
-            <mesh position={[0, 0.32, 0]} castShadow>
-              <boxGeometry args={[0.22, 0.45, 0.12]} />
-              <meshStandardMaterial color={color} roughness={0.9} />
-            </mesh>
-            <mesh position={[0, 0.78, 0]} castShadow>
-              <boxGeometry args={[0.26, 0.26, 0.22]} />
-              <meshStandardMaterial color={color} roughness={0.9} />
-            </mesh>
-          </group>
-        )
-      })}
-      {PEDESTRIAN_PAIR_PATH_INDEX.map((pathIdx, pi) => {
-        const color = PEDESTRIAN_COLORS[(PEDESTRIAN_COLOR_IDS[pathIdx] + 2) % PEDESTRIAN_COLORS.length]
-        const scale = 0.88 + (pi * 0.1) % 0.2
-        return (
-          <group key={`p-${pi}`} ref={(el) => (pairRefs.current[pi] = el)} scale={[scale, scale, scale]}>
-            <mesh position={[0, 0.32, 0]} castShadow>
-              <boxGeometry args={[0.22, 0.45, 0.12]} />
-              <meshStandardMaterial color={color} roughness={0.9} />
-            </mesh>
-            <mesh position={[0, 0.78, 0]} castShadow>
-              <boxGeometry args={[0.26, 0.26, 0.22]} />
-              <meshStandardMaterial color={color} roughness={0.9} />
-            </mesh>
-          </group>
-        )
-      })}
-      {/* Static: a few near terminal entrance and road crossing */}
-      {[
-        { x: 4, z: 15.2 }, { x: 3.2, z: 15.6 }, { x: 4.8, z: 14.9 }, { x: 4, z: 10.2 }, { x: 3.5, z: 10.8 },
-      ].map((pos, i) => {
-        const color = PEDESTRIAN_COLORS[(i + 3) % PEDESTRIAN_COLORS.length]
-        const scale = 0.92 + (i % 3) * 0.06
-        return (
-          <group key={`s-${i}`} position={[pos.x, 0, pos.z]} scale={[scale, scale, scale]}>
-            <mesh position={[0, 0.32, 0]} castShadow>
-              <boxGeometry args={[0.22, 0.45, 0.12]} />
-              <meshStandardMaterial color={color} roughness={0.9} />
-            </mesh>
-            <mesh position={[0, 0.78, 0]} castShadow>
-              <boxGeometry args={[0.26, 0.26, 0.22]} />
-              <meshStandardMaterial color={color} roughness={0.9} />
-            </mesh>
-          </group>
-        )
-      })}
+      {AIRPORT_PEOPLE.map((p, i) => (
+        <group key={`a-${i}`} position={[p.x, 0, p.z]}>
+          <Person color={PEDESTRIAN_COLORS[p.color]} scale={p.scale} headRotY={p.headRotY ?? 0} headRotX={p.headRotX ?? 0} />
+        </group>
+      ))}
+      {CITY_PEOPLE.map((p, i) => (
+        <group key={`c-${i}`} position={[p.x, 0, p.z]}>
+          <Person color={PEDESTRIAN_COLORS[p.color]} scale={p.scale} headRotY={p.headRotY ?? 0} headRotX={p.headRotX ?? 0} />
+        </group>
+      ))}
+      {BEACH_PEOPLE.map((p, i) => (
+        <group key={`b-${i}`} position={[p.x, 0, p.z]}>
+          <Person color={PEDESTRIAN_COLORS[p.color]} scale={p.scale} headRotY={p.headRotY ?? 0} headRotX={p.headRotX ?? 0} />
+        </group>
+      ))}
+      {SCATTER_PEOPLE.map((p, i) => (
+        <group key={`s-${i}`} position={[p.x, 0, p.z]}>
+          <Person color={PEDESTRIAN_COLORS[p.color]} scale={p.scale} headRotY={p.headRotY ?? 0} headRotX={p.headRotX ?? 0} />
+        </group>
+      ))}
+      {PEDESTRIAN_PATHS.map((path, i) => (
+        <group key={`w-${i}`} ref={(el) => (refs.current[i] = el)}>
+          <Person color={PEDESTRIAN_COLORS[PEDESTRIAN_PATH_COLORS[i]]} scale={PEDESTRIAN_PATH_SCALES[i]} />
+        </group>
+      ))}
     </>
   )
 }
 
-// Car types: varied size and color (red, white, blue, silver, green, burgundy)
+// Car types: varied size and color. Length (d) ~+50% so cars read as longer.
 const CAR_TYPES = [
-  { w: 0.48, h: 0.18, d: 0.28, cabH: 0.14, cabD: 0.24, color: '#c0392b' },
-  { w: 0.52, h: 0.2, d: 0.3, cabH: 0.15, cabD: 0.26, color: '#ecf0f1' },
-  { w: 0.58, h: 0.22, d: 0.32, cabH: 0.16, cabD: 0.28, color: '#2980b9' },
-  { w: 0.55, h: 0.2, d: 0.38, cabH: 0.15, cabD: 0.22, color: '#bdc3c7' },
-  { w: 0.54, h: 0.21, d: 0.34, cabH: 0.16, cabD: 0.2, color: '#27ae60' },
-  { w: 0.45, h: 0.16, d: 0.26, cabH: 0.12, cabD: 0.22, color: '#6c3483' },
-  { w: 0.5, h: 0.19, d: 0.3, cabH: 0.14, cabD: 0.24, color: '#1a5276' },
-  { w: 0.56, h: 0.2, d: 0.32, cabH: 0.15, cabD: 0.26, color: '#d35400' },
+  { w: 0.48, h: 0.18, d: 0.56, cabH: 0.14, cabD: 0.38, color: '#c0392b' },
+  { w: 0.52, h: 0.2, d: 0.6, cabH: 0.15, cabD: 0.4, color: '#ecf0f1' },
+  { w: 0.58, h: 0.22, d: 0.64, cabH: 0.16, cabD: 0.42, color: '#2980b9' },
+  { w: 0.55, h: 0.2, d: 0.72, cabH: 0.15, cabD: 0.36, color: '#bdc3c7' },
+  { w: 0.54, h: 0.21, d: 0.68, cabH: 0.16, cabD: 0.32, color: '#27ae60' },
+  { w: 0.45, h: 0.16, d: 0.52, cabH: 0.12, cabD: 0.34, color: '#6c3483' },
+  { w: 0.5, h: 0.19, d: 0.6, cabH: 0.14, cabD: 0.38, color: '#1a5276' },
+  { w: 0.56, h: 0.2, d: 0.64, cabH: 0.15, cabD: 0.4, color: '#d35400' },
 ]
 const CAR_PATHS_FULL = [
   { start: [-11, 8], end: [11, 8], speed: 0.026 },
@@ -2093,12 +2355,21 @@ function CarsMoving() {
     CAR_PATHS.forEach((path, i) => {
       const g = refs.current[i]
       if (!g) return
-      const phase = (t * path.speed * speedMult + i * 4) % 1
-      const x = path.start[0] + (path.end[0] - path.start[0]) * phase
-      const z = path.start[1] + (path.end[1] - path.start[1]) * phase
+      const raw = (t * path.speed * speedMult + i * 0.2) % 2
+      let x, z, dx, dz
+      if (raw <= 1) {
+        x = path.start[0] + (path.end[0] - path.start[0]) * raw
+        z = path.start[1] + (path.end[1] - path.start[1]) * raw
+        dx = path.end[0] - path.start[0]
+        dz = path.end[1] - path.start[1]
+      } else {
+        const back = raw - 1
+        x = path.end[0] + (path.start[0] - path.end[0]) * back
+        z = path.end[1] + (path.start[1] - path.end[1]) * back
+        dx = path.start[0] - path.end[0]
+        dz = path.start[1] - path.end[1]
+      }
       g.position.set(x, 0, z)
-      const dx = path.end[0] - path.start[0]
-      const dz = path.end[1] - path.start[1]
       g.rotation.y = Math.atan2(-dx, dz)
     })
   })
@@ -2327,16 +2598,47 @@ function MountainPeakHaze() {
   )
 }
 
-// Construction crane — top-right island, LARGE so readable from default camera: tall tower + long arm + hook
+// Construction crane — intentional motion: rotate arm 2–3s → stop → hook down → pause → hook up → repeat. Night: 2–3 emissive lights with gentle flicker.
 const CRANE_YELLOW = '#E8A317'
 const CRANE_ORANGE = '#CC7A00'
+const CRANE_ROTATE_DUR = 2.5
+const CRANE_HOOK_DOWN_DUR = 1.2
+const CRANE_PAUSE_DUR = 0.3
+const CRANE_HOOK_UP_DUR = 1.2
+const CRANE_CYCLE = CRANE_ROTATE_DUR + CRANE_HOOK_DOWN_DUR + CRANE_PAUSE_DUR + CRANE_HOOK_UP_DUR
 function ConstructionCrane() {
   const armRef = useRef()
   const hookRef = useRef()
+  const lightRefs = useRef([])
+  const { themeBlendRef } = useTheme()
   useFrame((state) => {
     const t = state.clock.elapsedTime
-    if (armRef.current) armRef.current.rotation.y = Math.sin(t * 0.12) * 0.08
-    if (hookRef.current) hookRef.current.rotation.z = Math.sin(t * 0.25) * 0.04
+    const cycleT = t % CRANE_CYCLE
+    let armY = 0
+    let hookY = -0.9
+    if (cycleT < CRANE_ROTATE_DUR) {
+      armY = (cycleT / CRANE_ROTATE_DUR) * 0.16 - 0.08
+    } else if (cycleT < CRANE_ROTATE_DUR + CRANE_HOOK_DOWN_DUR) {
+      armY = 0.08
+      const p = (cycleT - CRANE_ROTATE_DUR) / CRANE_HOOK_DOWN_DUR
+      hookY = -0.9 - p * 0.6
+    } else if (cycleT < CRANE_ROTATE_DUR + CRANE_HOOK_DOWN_DUR + CRANE_PAUSE_DUR) {
+      armY = 0.08
+      hookY = -1.5
+    } else {
+      armY = 0.08
+      const p = (cycleT - CRANE_ROTATE_DUR - CRANE_HOOK_DOWN_DUR - CRANE_PAUSE_DUR) / CRANE_HOOK_UP_DUR
+      hookY = -1.5 + p * 0.6
+    }
+    if (armRef.current) armRef.current.rotation.y = armY
+    if (hookRef.current) hookRef.current.position.y = hookY
+    const night = 1 - themeBlendRef.current
+    if (night > 0.1 && lightRefs.current.length) {
+      const flicker = 0.7 + 0.3 * Math.sin(t * 1.8) * Math.sin(t * 2.3)
+      lightRefs.current.forEach((mesh) => {
+        if (mesh?.material) mesh.material.emissiveIntensity = night * flicker * 0.5
+      })
+    }
   })
   return (
     <group position={[15, 0, -15]}>
@@ -2350,16 +2652,29 @@ function ConstructionCrane() {
         <boxGeometry args={[2.2, 0.6, 2.2]} />
         <meshStandardMaterial color="#4a4a4a" roughness={0.85} />
       </mesh>
-      {/* Tall tower — industrial yellow, clearly a crane */}
+      {/* Tall tower — industrial yellow */}
       <mesh position={[0, 3.4, 0]} castShadow>
         <boxGeometry args={[0.7, 4, 0.7]} />
         <meshStandardMaterial color={CRANE_YELLOW} roughness={0.7} metalness={0.2} />
+      </mesh>
+      {/* Night lights on tower (2) and arm (1) — emissiveIntensity updated in useFrame for flicker */}
+      <mesh position={[0.35, 4.2, 0]} ref={(el) => { if (el) lightRefs.current[0] = el }}>
+        <sphereGeometry args={[0.12, 8, 8]} />
+        <meshStandardMaterial color="#ffcc66" emissive="#ffcc66" emissiveIntensity={0} />
+      </mesh>
+      <mesh position={[-0.35, 2.8, 0]} ref={(el) => { if (el) lightRefs.current[1] = el }}>
+        <sphereGeometry args={[0.1, 6, 6]} />
+        <meshStandardMaterial color="#ffcc66" emissive="#ffcc66" emissiveIntensity={0} />
       </mesh>
       {/* Long horizontal arm + counter arm + hook */}
       <group ref={armRef} position={[0, 5.4, 0]}>
         <mesh position={[2.5, 0, 0]} castShadow>
           <boxGeometry args={[5, 0.35, 0.5]} />
           <meshStandardMaterial color={CRANE_ORANGE} roughness={0.7} metalness={0.15} />
+        </mesh>
+        <mesh position={[1.5, 0.18, 0]} ref={(el) => { if (el) lightRefs.current[2] = el }}>
+          <sphereGeometry args={[0.08, 6, 6]} />
+          <meshStandardMaterial color="#ffdd77" emissive="#ffdd77" emissiveIntensity={0} />
         </mesh>
         <mesh position={[-2.5, 0, 0]} castShadow>
           <boxGeometry args={[5, 0.35, 0.5]} />
@@ -2592,6 +2907,8 @@ function MicroAirport({ onHover, onClick }) {
   const runwayLightsRef = useRef([])
   const taxiLightsRef = useRef([])
   const radioSphereRef = useRef()
+  const controlTowerCabinRef = useRef()
+  const controlTowerFlickerRef = useRef()
   const [hoveredPart, setHoveredPart] = useState(null) // 't0'|'t1'|'t2'|'tower'|null
   const hovered = !!hoveredPart
   useCursor(hovered, 'pointer', 'auto')
@@ -2603,15 +2920,25 @@ function MicroAirport({ onHover, onClick }) {
   useFrame((state) => {
     const b = themeBlendRef.current
     const t = state.clock.elapsedTime
+    const night = 1 - b
     if (radioSphereRef.current?.material) {
       const flicker = 0.8 + 0.2 * Math.sin(t * 6) + 0.1 * Math.sin(t * 17)
-      radioSphereRef.current.material.emissiveIntensity = (1 - b) ? 3.0 * flicker : 0.4
+      radioSphereRef.current.material.emissiveIntensity = night ? 3.0 * flicker : 0.4
+    }
+    const flickerVal = night > 0.2 ? 0.5 + 0.5 * Math.sin(t * 5) + 0.25 * Math.sin(t * 13) : 0
+    if (controlTowerCabinRef.current?.material) {
+      const mat = controlTowerCabinRef.current.material
+      if (mat.emissive) mat.emissive.setHex(0xE6B85C)
+      mat.emissiveIntensity = 0.3 * flickerVal
+    }
+    if (controlTowerFlickerRef.current?.material) {
+      controlTowerFlickerRef.current.material.emissiveIntensity = 0.8 * flickerVal
     }
     runwayLightsRef.current.forEach((mesh) => {
-      if (mesh?.material) mesh.material.opacity = (0.6 + 0.3 * Math.sin(state.clock.elapsedTime * 2)) * (1 - b)
+      if (mesh?.material) mesh.material.opacity = (0.6 + 0.3 * Math.sin(state.clock.elapsedTime * 2)) * night
     })
     taxiLightsRef.current.forEach((mesh) => {
-      if (mesh?.material) mesh.material.opacity = 0.85 * (1 - b)
+      if (mesh?.material) mesh.material.opacity = 0.85 * night
     })
   })
 
@@ -2780,9 +3107,13 @@ function MicroAirport({ onHover, onClick }) {
           <cylinderGeometry args={[0.4, 0.5, 4.4, 12]} />
           <meshStandardMaterial color="#8a8f94" roughness={0.82} />
         </mesh>
-        <mesh position={[0, 4.5, 0]} castShadow={false} raycast={() => null}>
+        <mesh ref={controlTowerCabinRef} position={[0, 4.5, 0]} castShadow={false} raycast={() => null}>
           <cylinderGeometry args={[0.48, 0.48, 0.5, 12]} />
-          <meshStandardMaterial color={GLASS_CYAN} metalness={0.1} roughness={0.05} transparent opacity={0.9} />
+          <meshStandardMaterial color={GLASS_CYAN} metalness={0.1} roughness={0.05} transparent opacity={0.9} emissive="#E6B85C" emissiveIntensity={0} />
+        </mesh>
+        <mesh ref={controlTowerFlickerRef} position={[0, 4.5, 0]} castShadow={false} raycast={() => null}>
+          <cylinderGeometry args={[0.2, 0.2, 0.15, 8]} />
+          <meshStandardMaterial color="#E6B85C" emissive="#E6B85C" emissiveIntensity={0} depthWrite={false} />
         </mesh>
         <mesh position={[0, 4.95, 0]} castShadow raycast={() => null}>
           <cylinderGeometry args={[0.44, 0.44, 0.14, 12]} />
@@ -2819,106 +3150,199 @@ function MicroAirport({ onHover, onClick }) {
 }
 
 const LANDING_CURVE = [
-  new THREE.Vector3(8, 6, 14),
-  new THREE.Vector3(4, 3, 8),
-  new THREE.Vector3(0, 0.5, 2),
-  new THREE.Vector3(-6, 0.05, -1),
+  new THREE.Vector3(10, 5, 14),
+  new THREE.Vector3(4, 2, 10),
+  new THREE.Vector3(-4, 0.3, 4),
+  new THREE.Vector3(-10, 0.02, 1.2),
+]
+const TAXI_CURVE = [
+  new THREE.Vector3(-10, 0.02, 1.2),
+  new THREE.Vector3(-10, 0.02, 0),
   new THREE.Vector3(-10, 0.02, -1.5),
 ]
 const TAKEOFF_CURVE = [
   new THREE.Vector3(-10, 0.02, -1.5),
-  new THREE.Vector3(-6, 0.05, 0),
-  new THREE.Vector3(0, 0.5, 2),
-  new THREE.Vector3(6, 2, 6),
-  new THREE.Vector3(12, 5, 12),
+  new THREE.Vector3(-4, 0.3, -0.5),
+  new THREE.Vector3(2, 0.8, 2),
+  new THREE.Vector3(10, 4, 10),
 ]
 const LANDING_SPLINE = new THREE.CatmullRomCurve3(LANDING_CURVE, false)
+const TAXI_SPLINE = new THREE.CatmullRomCurve3(TAXI_CURVE, false)
 const TAKEOFF_SPLINE = new THREE.CatmullRomCurve3(TAKEOFF_CURVE, false)
+const GATE_RIGHT = new THREE.Vector3(-10, 0.02, 1.2)
+const GATE_LEFT = new THREE.Vector3(-10, 0.02, -1.5)
 
-const GATE_POS = new THREE.Vector3(-10, 0.02, -1.5)
+const AIRPORT_PLANE_SCALE = 1.05
+const CURVE_REF = { pos: new THREE.Vector3(), tangent: new THREE.Vector3() }
+// Orient plane so nose (not tail) points along tangent. +PI so we land/take off head-first.
+function setPlaneNoseDirection(group, tangent, flattenY = true) {
+  const t = tangent.clone()
+  if (flattenY) {
+    t.y = 0
+    if (t.lengthSq() < 1e-6) return
+    t.normalize()
+  }
+  group.rotation.x = 0
+  group.rotation.z = 0
+  group.rotation.y = Math.atan2(-t.z, t.x) + Math.PI
+}
+function AirportPlaneMesh({ leftLightRef, rightLightRef, tailLightRef, bodyColor }) {
+  return (
+    <group scale={AIRPORT_PLANE_SCALE} rotation={[0, -Math.PI / 2, 0]}>
+      {/* Fuselage: long on Z, narrow X/Y */}
+      <mesh position={[0, 0, 0]} castShadow>
+        <boxGeometry args={[0.28, 0.18, 1.1]} />
+        <meshStandardMaterial color={bodyColor} roughness={0.6} metalness={0.1} />
+      </mesh>
+      {/* Wings: horizontal, wide on X */}
+      <mesh position={[0, 0.02, 0]} castShadow>
+        <boxGeometry args={[0.9, 0.05, 0.22]} />
+        <meshStandardMaterial color="#bdc3c7" roughness={0.7} />
+      </mesh>
+      {/* Tail fin: vertical */}
+      <mesh position={[0, 0.18, -0.52]} castShadow>
+        <boxGeometry args={[0.06, 0.22, 0.2]} />
+        <meshStandardMaterial color={bodyColor} roughness={0.65} />
+      </mesh>
+      {/* Nose */}
+      <mesh position={[0, 0, 0.52]} castShadow>
+        <boxGeometry args={[0.2, 0.14, 0.18]} />
+        <meshStandardMaterial color={bodyColor} roughness={0.6} />
+      </mesh>
+      {/* Nav lights — blink at night */}
+      <mesh position={[0.22, 0.06, 0.5]} ref={rightLightRef}>
+        <sphereGeometry args={[0.04, 6, 6]} />
+        <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={0} />
+      </mesh>
+      <mesh position={[-0.22, 0.06, 0.5]} ref={leftLightRef}>
+        <sphereGeometry args={[0.04, 6, 6]} />
+        <meshStandardMaterial color="#00ff00" emissive="#00ff00" emissiveIntensity={0} />
+      </mesh>
+      <mesh position={[0, 0.2, -0.52]} ref={tailLightRef}>
+        <sphereGeometry args={[0.035, 6, 6]} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0} />
+      </mesh>
+    </group>
+  )
+}
+
+const PLANE_COUNT = 4
+const PARK_RIGHT_WAIT = 1.5
+const PARK_LEFT_WAIT = 4
+const TAXI_SPEED = 0.08
+const AIRPORT_PLANE_SPEED = 0.11
+const PLANE_PHASE_OFFSET = 0.48
+const PLANE_STAGGER_SEC = 18
+const PLANE_SPEED_MULT = [0.85, 1.15, 0.9, 1.1]
 
 function AirportPlanes() {
-  const plane1Ref = useRef()
-  const plane2Ref = useRef()
-  const t1 = useRef(0)
-  const t2 = useRef(0)
-  const state1 = useRef('landing')
-  const state2 = useRef('parked')
-
-  useFrame((_state, delta) => {
-    const speed = 0.15 * delta
-    if (plane1Ref.current) {
-      if (state1.current === 'landing') {
-        t1.current += speed
-        if (t1.current >= 1) {
-          t1.current = 0
-          state1.current = 'parked'
-        }
-        const pos = LANDING_SPLINE.getPointAt(Math.min(t1.current, 1))
-        plane1Ref.current.position.copy(pos)
-        const tangent = LANDING_SPLINE.getTangentAt(Math.min(t1.current, 1))
-        plane1Ref.current.lookAt(pos.clone().add(tangent))
-      } else {
-        plane1Ref.current.position.copy(GATE_POS)
-        t1.current += delta * 0.25
-        if (t1.current > 6) {
-          t1.current = 0
-          state1.current = 'landing'
-        }
-      }
+  const refs = useRef([])
+  const ts = useRef(Array(PLANE_COUNT).fill(0))
+  const states = useRef(['landing', 'parked_right', 'taxi', 'parked_left', 'takeoff'])
+  const l0 = useRef(), l1 = useRef(), l2 = useRef(), l3 = useRef(), l4 = useRef(), l5 = useRef()
+  const l6 = useRef(), l7 = useRef(), l8 = useRef(), l9 = useRef(), l10 = useRef(), l11 = useRef()
+  const lightRefs = [l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11]
+  const { themeBlendRef } = useTheme()
+  const initStagger = useRef(false)
+  if (!initStagger.current) {
+    initStagger.current = true
+    const phases = ['landing', 'parked_right', 'taxi', 'parked_left']
+    for (let i = 0; i < PLANE_COUNT; i++) {
+      ts.current[i] = (i * PLANE_PHASE_OFFSET) % 1
+      states.current[i] = phases[i % 4]
     }
-    if (plane2Ref.current) {
-      if (state2.current === 'parked') {
-        plane2Ref.current.position.copy(GATE_POS)
-        t2.current += delta * 0.3
-        if (t2.current > 8) {
-          t2.current = 0
-          state2.current = 'takeoff'
+  }
+
+  useFrame((state, delta) => {
+    const elapsed = state.clock.elapsedTime
+    const active = (i) => elapsed >= i * PLANE_STAGGER_SEC
+    const night = 1 - themeBlendRef.current
+    const blink = night > 0.2 ? Math.max(0.1, 0.25 + 0.2 * Math.sin(elapsed * 4)) : 0
+    lightRefs.forEach((r) => { const m = r.current; if (m?.material) m.material.emissiveIntensity = blink })
+    for (let i = 0; i < PLANE_COUNT; i++) {
+      const g = refs.current[i]
+      if (!g) continue
+      const s = states.current[i]
+      let t = ts.current[i]
+      const phase = i * PLANE_PHASE_OFFSET
+      const speedMult = active(i) ? PLANE_SPEED_MULT[i % PLANE_SPEED_MULT.length] : 0
+      const speed = AIRPORT_PLANE_SPEED * delta * speedMult
+      const taxiSpeed = TAXI_SPEED * delta * speedMult
+      if (s === 'landing') {
+        t = Math.min(1, t + speed)
+        if (active(i)) ts.current[i] = t
+        const pt = (t + phase) % 1
+        LANDING_SPLINE.getPointAt(pt, CURVE_REF.pos)
+        LANDING_SPLINE.getTangentAt(pt, CURVE_REF.tangent)
+        g.position.copy(CURVE_REF.pos)
+        setPlaneNoseDirection(g, CURVE_REF.tangent, true)
+        g.visible = active(i)
+        if (active(i) && t >= 1) {
+          ts.current[i] = 0
+          states.current[i] = 'parked_right'
+        }
+      } else if (s === 'parked_right') {
+        g.position.copy(GATE_RIGHT)
+        g.rotation.set(0, Math.PI, 0)
+        g.visible = active(i)
+        t = t + (active(i) ? delta : 0)
+        if (active(i)) ts.current[i] = t
+        if (active(i) && t > PARK_RIGHT_WAIT) {
+          ts.current[i] = 0
+          states.current[i] = 'taxi'
+        }
+      } else if (s === 'taxi') {
+        t = Math.min(1, t + taxiSpeed)
+        if (active(i)) ts.current[i] = t
+        const pt = (t + phase) % 1
+        TAXI_SPLINE.getPointAt(pt, CURVE_REF.pos)
+        TAXI_SPLINE.getTangentAt(pt, CURVE_REF.tangent)
+        g.position.copy(CURVE_REF.pos)
+        setPlaneNoseDirection(g, CURVE_REF.tangent, true)
+        g.visible = active(i)
+        if (active(i) && t >= 1) {
+          ts.current[i] = 0
+          states.current[i] = 'parked_left'
+        }
+      } else if (s === 'parked_left') {
+        g.position.copy(GATE_LEFT)
+        g.rotation.set(0, 0, 0)
+        g.visible = active(i)
+        t = t + (active(i) ? delta : 0)
+        if (active(i)) ts.current[i] = t
+        if (active(i) && t > PARK_LEFT_WAIT) {
+          ts.current[i] = 0
+          states.current[i] = 'takeoff'
         }
       } else {
-        t2.current += speed
-        if (t2.current >= 1) {
-          t2.current = 0
-          state2.current = 'parked'
+        t = Math.min(1, t + speed)
+        if (active(i)) ts.current[i] = t
+        const pt = (t + phase) % 1
+        TAKEOFF_SPLINE.getPointAt(pt, CURVE_REF.pos)
+        TAKEOFF_SPLINE.getTangentAt(pt, CURVE_REF.tangent)
+        g.position.copy(CURVE_REF.pos)
+        setPlaneNoseDirection(g, CURVE_REF.tangent, true)
+        g.visible = active(i)
+        if (active(i) && t >= 1) {
+          ts.current[i] = 0
+          states.current[i] = 'landing'
         }
-        const pos = TAKEOFF_SPLINE.getPointAt(t2.current)
-        plane2Ref.current.position.copy(pos)
-        const tangent = TAKEOFF_SPLINE.getTangentAt(t2.current)
-        plane2Ref.current.lookAt(pos.clone().add(tangent))
       }
     }
   })
 
   return (
     <>
-      <group ref={plane1Ref}>
-        <mesh castShadow>
-          <boxGeometry args={[0.8, 0.2, 0.35]} />
-          <meshStandardMaterial color="#ecf0f1" roughness={0.6} metalness={0.1} />
-        </mesh>
-        <mesh position={[0, 0.05, 0]} castShadow>
-          <boxGeometry args={[0.5, 0.06, 0.4]} />
-          <meshStandardMaterial color="#bdc3c7" roughness={0.7} />
-        </mesh>
-        <mesh position={[0.35, 0.08, 0]} castShadow>
-          <boxGeometry args={[0.08, 0.15, 0.25]} />
-          <meshStandardMaterial color="#2980b9" roughness={0.7} />
-        </mesh>
-      </group>
-      <group ref={plane2Ref}>
-        <mesh castShadow>
-          <boxGeometry args={[0.8, 0.2, 0.35]} />
-          <meshStandardMaterial color="#ecf0f1" roughness={0.6} metalness={0.1} />
-        </mesh>
-        <mesh position={[0, 0.05, 0]} castShadow>
-          <boxGeometry args={[0.5, 0.06, 0.4]} />
-          <meshStandardMaterial color="#bdc3c7" roughness={0.7} />
-        </mesh>
-        <mesh position={[0.35, 0.08, 0]} castShadow>
-          <boxGeometry args={[0.08, 0.15, 0.25]} />
-          <meshStandardMaterial color="#27ae60" roughness={0.7} />
-        </mesh>
-      </group>
+      {Array.from({ length: PLANE_COUNT }, (_, i) => (
+        <group key={i} ref={(el) => (refs.current[i] = el)}>
+          <AirportPlaneMesh
+            leftLightRef={lightRefs[i * 3]}
+            rightLightRef={lightRefs[i * 3 + 1]}
+            tailLightRef={lightRefs[i * 3 + 2]}
+            bodyColor="#ecf0f1"
+          />
+        </group>
+      ))}
     </>
   )
 }
@@ -3092,6 +3516,8 @@ function HQTransitionRunner() {
   const { hqPhase, setHQPhase, controlsRef } = useHQ()
   const startPos = useRef(new THREE.Vector3())
   const startTarget = useRef(new THREE.Vector3())
+  const approachPos = useRef(new THREE.Vector3(...HQ_APPROACH_POS))
+  const approachTarget = useRef(new THREE.Vector3(...HQ_APPROACH_TARGET))
   const phaseStartTime = useRef(0)
   const didSaveStart = useRef(false)
 
@@ -3108,14 +3534,14 @@ function HQTransitionRunner() {
       }
       const t = (state.clock.elapsedTime - phaseStartTime.current) / HQ_APPROACH_DURATION
       if (t >= 1) {
-        ctrl.object.position.set(...HQ_APPROACH_POS)
-        ctrl.target.set(...HQ_APPROACH_TARGET)
+        ctrl.object.position.copy(approachPos.current)
+        ctrl.target.copy(approachTarget.current)
         setHQPhase('door')
         phaseStartTime.current = state.clock.elapsedTime
       } else {
         const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-        ctrl.object.position.lerpVectors(startPos.current, new THREE.Vector3(...HQ_APPROACH_POS), eased)
-        ctrl.target.lerpVectors(startTarget.current, new THREE.Vector3(...HQ_APPROACH_TARGET), eased)
+        ctrl.object.position.lerpVectors(startPos.current, approachPos.current, eased)
+        ctrl.target.lerpVectors(startTarget.current, approachTarget.current, eased)
       }
     } else if (hqPhase === 'door') {
       if (state.clock.elapsedTime - phaseStartTime.current >= HQ_DOOR_DURATION) {
@@ -3215,13 +3641,6 @@ function BuildingFlyRunner() {
 }
 
 function ScenePrecompile() {
-  const { scene, gl } = useThree()
-  const done = useRef(false)
-  useFrame(() => {
-    if (done.current) return
-    done.current = true
-    gl.compileAsync(scene).catch(() => {})
-  })
   return null
 }
 
@@ -3420,6 +3839,25 @@ function WorldMap() {
   }, [])
 
   useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'p' || e.key === 'P') {
+        const ctrl = controlsRef?.current
+        if (!ctrl?.object?.position || !ctrl?.target) {
+          console.log('Camera: OrbitControls not ready yet.')
+          return
+        }
+        const pos = ctrl.object.position
+        const tar = ctrl.target
+        console.log('%c——— Default camera (copy into WorldMap.jsx) ———', 'font-weight:bold')
+        console.log('const DEFAULT_CAMERA_POSITION = [' + [pos.x, pos.y, pos.z].map((n) => Number(n.toFixed(4))).join(', ') + ']')
+        console.log('const DEFAULT_CAMERA_TARGET = [' + [tar.x, tar.y, tar.z].map((n) => Number(n.toFixed(4))).join(', ') + ']')
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  useEffect(() => {
     if (hqPhase === 'inside') {
       setActiveModal({ type: 'lighthouse' })
       setHQPhase('idle')
@@ -3506,6 +3944,7 @@ function WorldMap() {
               <Ships />
               <DistantShips />
               <Dolphins />
+              <SeaMountains />
               <LighthouseWaterHit />
               <IslandGround />
               <Beach />
@@ -3523,14 +3962,13 @@ function WorldMap() {
               <SunAndRays onArchitectClick={() => setActiveModal({ type: 'about' })} />
               <Stars />
               <Moon onArchitectClick={() => setActiveModal({ type: 'about' })} />
+              <LayeredMountainRidges />
               <HorizonSilhouettes />
               <WraparoundBackground />
-              <BackgroundMountains />
-              <MountainAtmosphere />
-              <MountainPeakHaze />
               <CloudLayer />
               <BirdFlock />
               <FlyoverPlane />
+              <Satellites />
               <PeopleWalking />
               <CarsMoving />
               <SimpleTrees />
@@ -3624,7 +4062,7 @@ function WorldMap() {
                   const [x, , z] = position
                   const sx = x * 0.95
                   const sy = -z * 0.95
-                  const colors = { resort: '#c9a227', 'elementary-school': '#4a90d9', 'mixed-use': '#7b68a6', hospital: '#c75b5b', 'tower-east': '#5b8a72', 'tower-west': '#5b8a72', 'three-pyramids': '#b8860b' }
+                  const colors = { resort: '#c9a227', 'elementary-school': '#4a90d9', 'mixed-use': '#7b68a6', hospital: '#c75b5b', 'tower-east': '#5b8a72', 'tower-west': '#5b8a72', 'twin-towers': '#5b8a72', 'three-pyramids': '#b8860b', 'life-line-hospital': '#c75b5b' }
                   const fill = colors[project.id] || '#e6e1da'
                   return (
                     <g key={project.id} onClick={() => { setFlyToBuildingId(project.id); setShowMapModal(false) }} style={{ cursor: 'pointer' }}>

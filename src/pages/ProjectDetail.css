@@ -119,11 +119,44 @@
   min-width: 0;
 }
 
+.project-close-sticky {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 200;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 2px solid var(--pd-btn-border);
+  background: var(--pd-card);
+  color: var(--pd-text);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+.project-close-sticky:hover {
+  background: var(--pd-btn-hover-bg);
+  color: var(--pd-accent);
+}
+
 .project-title {
   font-family: 'Space Grotesk', 'Inter', sans-serif;
   font-size: clamp(2rem, 5vw, 3.5rem);
   font-weight: 700;
   color: var(--pd-title);
+  margin: 0 0 0.25rem;
+}
+
+.project-description-under-title {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--pd-text-muted);
+  margin: 0 0 1rem;
+  max-width: 42rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   margin: 0;
@@ -256,6 +289,68 @@
 
 .project-images.voxel-image-grid.single-image {
   grid-template-columns: 1fr;
+}
+
+.project-images.voxel-image-grid.project-gallery-all {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.project-images.voxel-image-grid.project-gallery-all .image-block {
+  min-height: 200px;
+}
+
+.project-images.voxel-image-grid.project-gallery-all .image-frame {
+  aspect-ratio: 4/3;
+}
+
+.see-more-pictures {
+  display: inline-block;
+  margin-top: 1rem;
+  margin-bottom: 3rem;
+  padding: 0.6rem 1.2rem;
+  font-family: var(--pd-font, 'Inter', sans-serif);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--pd-accent);
+  background: transparent;
+  border: 2px solid var(--pd-btn-border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.see-more-pictures:hover {
+  background: var(--pd-btn-hover-bg);
+  color: var(--pd-btn-hover-text);
+}
+
+.overview-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--pd-text-muted);
+  margin: 0 0 0.5rem;
+}
+
+.gallery-section {
+  padding-bottom: 2rem;
+}
+
+.gallery-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+  color: var(--pd-text);
+}
+
+.project-gallery-all {
+  gap: 1.25rem;
+}
+
+.project-gallery-all .gallery-item .image-frame {
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .image-block {
@@ -484,6 +579,16 @@
 .placeholder-text .hint {
   font-size: 0.8rem;
   opacity: 0.8;
+}
+
+.model-badge.needs-conversion {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--pd-text-muted);
+  background: var(--pd-card);
+  border: 1px solid var(--pd-card-border);
+  border-radius: 6px;
 }
 
 /* --- Back button (voxel style) --- */

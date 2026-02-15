@@ -4,8 +4,12 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "generate:projects": "node scripts/generateProjects.mjs",
+    "prebuild": "node scripts/generateProjects.mjs",
+    "sync:drive": "node scripts/syncDrive.js",
     "dev": "vite",
     "build": "vite build",
+    "build:with-drive": "npm run sync:drive && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -18,7 +22,9 @@
     "gsap": "^3.12.2",
     "framer-motion": "^10.16.16",
     "react-pdf": "^7.6.0",
-    "lil-gui": "^0.19.0"
+    "lil-gui": "^0.19.0",
+    "googleapis": "^144.0.0",
+    "pdf-parse": "^1.1.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",

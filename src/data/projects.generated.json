@@ -1,0 +1,98 @@
+{
+  "generatedAt": "2026-02-15T06:10:06.123Z",
+  "projects": [
+    {
+      "id": "life-line-hospital",
+      "folderName": "LIFE LINE HOSPITAL",
+      "name": "LIFE LINE HOSPITAL",
+      "year": "",
+      "duration": "",
+      "type": "",
+      "location": "",
+      "description": "",
+      "images": [
+        "/projects/LIFE%20LINE%20HOSPITAL/PHOTOS%20AND%203D/3D.png",
+        "/projects/LIFE%20LINE%20HOSPITAL/PHOTOS%20AND%203D/EMERGENCY%20ENTANCE.png",
+        "/projects/LIFE%20LINE%20HOSPITAL/PHOTOS%20AND%203D/MAIN%20ENTRANCE.png",
+        "/projects/LIFE%20LINE%20HOSPITAL/PHOTOS%20AND%203D/RENDER10.jpg",
+        "/projects/LIFE%20LINE%20HOSPITAL/PHOTOS%20AND%203D/RENDERRR2.png",
+        "/projects/LIFE%20LINE%20HOSPITAL/PHOTOS%20AND%203D/SETTINGS.jpg",
+        "/projects/LIFE%20LINE%20HOSPITAL/PHOTOS%20AND%203D/VASCULLR%20DEAPARTMENT.jpg"
+      ],
+      "blueprints": [
+        {
+          "name": "FIRST FLOOR PLAN",
+          "url": "/projects/LIFE%20LINE%20HOSPITAL/BLUEPRINTS/FIRST%20FLOOR%20PLAN.pdf"
+        },
+        {
+          "name": "NORTH ELEVATION",
+          "url": "/projects/LIFE%20LINE%20HOSPITAL/BLUEPRINTS/NORTH%20ELEVATION.pdf"
+        },
+        {
+          "name": "SECOND FLOOR PLAN",
+          "url": "/projects/LIFE%20LINE%20HOSPITAL/BLUEPRINTS/SECOND%20FLOOR%20PLAN.pdf"
+        },
+        {
+          "name": "THE POSTER",
+          "url": "/projects/LIFE%20LINE%20HOSPITAL/BLUEPRINTS/THE%20POSTER.pdf"
+        },
+        {
+          "name": "WEST ELEVATION",
+          "url": "/projects/LIFE%20LINE%20HOSPITAL/BLUEPRINTS/WEST%20ELEVATION.pdf"
+        },
+        {
+          "name": "master plan rendered",
+          "url": "/projects/LIFE%20LINE%20HOSPITAL/BLUEPRINTS/master%20plan%20rendered.pdf"
+        },
+        {
+          "name": "section 1",
+          "url": "/projects/LIFE%20LINE%20HOSPITAL/BLUEPRINTS/section%201.pdf"
+        },
+        {
+          "name": "section2",
+          "url": "/projects/LIFE%20LINE%20HOSPITAL/BLUEPRINTS/section2.pdf"
+        }
+      ],
+      "rvt": "/projects/LIFE%20LINE%20HOSPITAL/PHOTOS%20AND%203D/hosp.rvt",
+      "glbOrGltf": null
+    },
+    {
+      "id": "mixed-use",
+      "folderName": "Mixed use",
+      "name": "Mixed use",
+      "year": "",
+      "duration": "",
+      "type": "",
+      "location": "",
+      "description": "",
+      "images": [],
+      "blueprints": [
+        {
+          "name": "mixed use poster",
+          "url": "/projects/Mixed%20use/BLUEPRINTS/mixed%20use%20poster.pdf"
+        }
+      ],
+      "rvt": null,
+      "glbOrGltf": null
+    },
+    {
+      "id": "twin-towers",
+      "folderName": "twin Towers",
+      "name": "twin Towers",
+      "year": "",
+      "duration": "",
+      "type": "",
+      "location": "",
+      "description": "",
+      "images": [],
+      "blueprints": [
+        {
+          "name": "towers poster",
+          "url": "/projects/twin%20Towers/BLUEPRINTS/towers%20poster.pdf"
+        }
+      ],
+      "rvt": null,
+      "glbOrGltf": null
+    }
+  ]
+}

@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Large project assets (over GitHub 100MB limit — use LFS or external hosting)
+public/projects/LIFE LINE HOSPITAL/PHOTOS AND 3D/hosp.rvt
+public/projects/Mixed use/BLUEPRINTS/mixed use poster.pdf
+public/projects/twin Towers/BLUEPRINTS/towers poster.pdf
+public/projects/LIFE LINE HOSPITAL/BLUEPRINTS/THE POSTER.pdf
