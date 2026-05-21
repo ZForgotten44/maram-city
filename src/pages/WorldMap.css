@@ -11,6 +11,74 @@
   margin: 0;
 }
 
+.world-museum-entry {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  background: #030611;
+  overflow: hidden;
+  animation: museum-entry-reveal 1.8s ease forwards;
+}
+
+.world-museum-entry-light {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 207, 118, 0.55), transparent 22%),
+    radial-gradient(circle at 50% 58%, rgba(125, 167, 255, 0.32), transparent 45%);
+  opacity: 0;
+  animation: museum-entry-light 2.2s ease forwards;
+}
+
+.world-museum-entry-doors {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.world-museum-entry-doors span {
+  background:
+    linear-gradient(90deg, rgba(199, 166, 58, 0.14), transparent 12%, transparent 88%, rgba(199, 166, 58, 0.14)),
+    linear-gradient(180deg, #201019, #070812 70%);
+  box-shadow: inset 0 0 90px rgba(255, 205, 126, 0.16);
+}
+
+.world-museum-entry-doors span:first-child {
+  transform-origin: left center;
+  animation: museum-door-left 2.2s cubic-bezier(.2,.7,.2,1) forwards;
+}
+
+.world-museum-entry-doors span:last-child {
+  transform-origin: right center;
+  animation: museum-door-right 2.2s cubic-bezier(.2,.7,.2,1) forwards;
+}
+
+@keyframes museum-entry-reveal {
+  0%, 58% { background: #030611; }
+  100% { background: transparent; }
+}
+
+@keyframes museum-entry-light {
+  0% { opacity: 0; transform: scale(0.72); }
+  45% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.35); }
+}
+
+@keyframes museum-door-left {
+  0%, 18% { transform: translateX(0); }
+  100% { transform: translateX(-105%) rotateY(-16deg); }
+}
+
+@keyframes museum-door-right {
+  0%, 18% { transform: translateX(0); }
+  100% { transform: translateX(105%) rotateY(16deg); }
+}
+
 .world-map-inbox-btn {
   position: fixed;
   top: 7rem;
@@ -351,21 +419,29 @@
   color: rgba(200, 200, 200, 0.8);
   z-index: 5;
 }
+.world-content-modal-close-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 1rem 0 0;
+  margin-bottom: -0.5rem;
+  background: linear-gradient(to bottom, rgba(18, 20, 24, 0.98) 60%, transparent);
+}
 .world-content-modal-close {
-  position: absolute;
-  top: 0.75rem;
-  right: 1rem;
-  z-index: 10;
   font-size: 1.5rem;
   line-height: 1;
-  background: none;
-  border: none;
+  background: rgba(18, 20, 24, 0.95);
+  border: 1px solid rgba(91, 30, 45, 0.4);
+  border-radius: 4px;
   color: rgba(230, 225, 218, 0.9);
   cursor: pointer;
-  padding: 0.25rem;
+  padding: 0.35rem 0.5rem;
 }
 .world-content-modal-close:hover {
   color: #fff;
+  background: rgba(40, 35, 38, 0.98);
 }
 .world-content-modal-inner {
   padding: 2rem;

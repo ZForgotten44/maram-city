@@ -17,12 +17,31 @@ function BlueprintViewer({ blueprint, onClose }) {
   const [scale, setScale] = useState(1.0)
   const [pendingScale, setPendingScale] = useState(1.0)
   const [documentLoaded, setDocumentLoaded] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const contentRef = useRef(null)
   const debounceRef = useRef(null)
+
+  function toggleFullscreen() {
+    if (!contentRef.current) return
+    if (!document.fullscreenElement) {
+      contentRef.current.requestFullscreen?.().then(() => setIsFullscreen(true)).catch(() => {})
+    } else {
+      document.exitFullscreen?.().then(() => setIsFullscreen(false)).catch(() => {})
+    }
+  }
+
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement)
+    document.addEventListener('fullscreenchange', onFsChange)
+    return () => document.removeEventListener('fullscreenchange', onFsChange)
+  }, [])
 
   useEffect(() => {
     setPendingScale(1.0)
     setScale(1.0)
     setDocumentLoaded(false)
+    setLoadError(false)
   }, [blueprint?.url])
 
   useEffect(() => {
@@ -52,10 +71,15 @@ function BlueprintViewer({ blueprint, onClose }) {
 
   return (
     <div className="blueprint-modal" onClick={onClose}>
-      <div className="blueprint-content" onClick={(e) => e.stopPropagation()}>
+      <div ref={contentRef} className="blueprint-content" onClick={(e) => e.stopPropagation()}>
         <div className="blueprint-header">
           <h3>{blueprint.name}</h3>
-          <button className="close-button" onClick={onClose}>×</button>
+          <div className="blueprint-header-actions">
+            <button type="button" className="blueprint-fullscreen-button" onClick={toggleFullscreen} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
+              {isFullscreen ? '⤓' : '⤢'}
+            </button>
+            <button className="close-button" onClick={onClose}>×</button>
+          </div>
         </div>
 
         <div className="blueprint-controls">
@@ -82,15 +106,23 @@ function BlueprintViewer({ blueprint, onClose }) {
         </div>
 
         <div className="blueprint-viewer">
-          {!documentLoaded && (
+          {loadError && (
+            <div className="blueprint-load-error">
+              <p>This blueprint could not be loaded.</p>
+              <p className="hint">Add the PDF to the project folder (e.g. <code>BLUEPRINTS</code>) so it appears here.</p>
+            </div>
+          )}
+          {!documentLoaded && !loadError && (
             <div className="blueprint-loading-overlay" aria-live="polite">
               <span className="blueprint-loading-spinner" />
               <p>Loading PDF…</p>
             </div>
           )}
+          {!loadError && (
           <Document
             file={blueprint.url}
             onLoadSuccess={onDocumentLoadSuccess}
+            onLoadError={() => setLoadError(true)}
             loading={null}
             error={<div className="error">Failed to load blueprint</div>}
             renderMode="canvas"
@@ -102,6 +134,7 @@ function BlueprintViewer({ blueprint, onClose }) {
               renderAnnotationLayer={true}
             />
           </Document>
+          )}
         </div>
       </div>
     </div>

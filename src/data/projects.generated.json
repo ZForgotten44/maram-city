@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-15T06:10:06.123Z",
+  "generatedAt": "2026-05-21T19:49:12.563Z",
   "projects": [
     {
       "id": "life-line-hospital",
@@ -54,7 +54,10 @@
         }
       ],
       "rvt": "/projects/LIFE%20LINE%20HOSPITAL/PHOTOS%20AND%203D/hosp.rvt",
-      "glbOrGltf": null
+      "glbOrGltf": {
+        "url": "/projects/LIFE%20LINE%20HOSPITAL/PHOTOS%20AND%203D/hospital%20gltf.gltf",
+        "name": "hospital%20gltf.gltf"
+      }
     },
     {
       "id": "mixed-use",

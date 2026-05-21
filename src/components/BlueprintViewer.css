@@ -42,6 +42,32 @@
   letter-spacing: 0.1em;
 }
 
+.blueprint-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.blueprint-fullscreen-button {
+  background: transparent;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: rgba(212, 175, 55, 0.8);
+  font-size: 1.25rem;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-medium);
+  border-radius: 4px;
+}
+
+.blueprint-fullscreen-button:hover {
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--color-maroon);
+}
+
 .close-button {
   background: transparent;
   border: none;
@@ -178,6 +204,26 @@
 
 .error {
   color: #8b4a4a;
+}
+
+.blueprint-load-error {
+  padding: 2rem;
+  text-align: center;
+  color: rgba(212, 175, 55, 0.9);
+  font-family: var(--font-body);
+}
+
+.blueprint-load-error .hint {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: rgba(212, 175, 55, 0.7);
+}
+
+.blueprint-load-error code {
+  font-size: 0.9em;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
 }
 
 @keyframes fadeIn {

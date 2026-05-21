@@ -11,8 +11,8 @@ const pub = (...parts) => '/' + parts.map((p) => encodeURIComponent(p)).join('/'
 
 // Map project id -> { buildingType, positions } for world map (local manifest + Drive)
 const PROJECT_OVERLAY = {
-  'life-line-hospital': { buildingType: 'hospital', positions: [[-7, -2.5]] },
-  'lifeline-hospital': { buildingType: 'hospital', positions: [[-7, -2.5]] },
+  'life-line-hospital': { buildingType: 'hospital', positions: [[6.2, 7.4]] },
+  'lifeline-hospital': { buildingType: 'hospital', positions: [[6.2, 7.4]] },
   'mixed-use': { buildingType: 'mixed-use', positions: [[7, -2.5]] },
   'twin-towers': { buildingType: 'tower', positions: [[-4, -10], [4, -10]] },
 }
@@ -84,6 +84,33 @@ const PLACEHOLDER_DESCRIPTION = 'Description and media for this project will app
 
 // Fallback when no Drive data (generated.projects empty or missing) — full content so detail pages show everything
 const FALLBACK_PROJECTS = [
+  {
+    id: 'museum-loving-maram',
+    title: 'Museum of Loving Maram',
+    year: 2026,
+    concept: 'Digital Memory Palace',
+    category: 'Interactive Museum',
+    buildingType: 'museum',
+    description: 'A cinematic 3D memory palace built for Maram: eight emotional doors, one unlocked room, and a quiet moonlit beginning called Before You.',
+    materials: {
+      sustainable: ['Moonlight glass', 'Silver memory frames', 'Dream-fog ambience'],
+      reused: ['Recovered moments', 'Soft echoes', 'Unsent words'],
+      experimental: ['Living hallway', 'Daily room unlocks', 'Interactive memories'],
+    },
+    location: 'Mram City',
+    designDuration: 'Unlocking until May 29',
+    images: [
+      'https://images.unsplash.com/photo-1567597211982-341f73960c0a?w=1200',
+      'https://images.unsplash.com/photo-1574672280600-4accfa5b0c5a?w=1200',
+      'https://images.unsplash.com/photo-1615799998603-3c627b563c52?w=1200',
+    ],
+    rvtFile: null,
+    model3d: { glbOrGltf: null, rvt: null },
+    blueprints: [
+      { name: 'Site Plan', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' },
+      { name: 'Elevations', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' },
+    ],
+  },
   {
     id: 'resort',
     title: 'Desert Resort',
@@ -268,7 +295,7 @@ const FALLBACK_PROJECTS = [
       pub('projects', 'LIFE LINE HOSPITAL', 'PHOTOS AND 3D', '3D.png'),
     ],
     rvtFile: { url: pub('projects', 'LIFE LINE HOSPITAL', 'PHOTOS AND 3D', 'hosp.rvt'), name: 'hosp.rvt' },
-    model3d: { glbOrGltf: null, rvt: { downloadUrl: pub('projects', 'LIFE LINE HOSPITAL', 'PHOTOS AND 3D', 'hosp.rvt'), name: 'hosp.rvt' } },
+    model3d: { glbOrGltf: { downloadUrl: pub('projects', 'LIFE LINE HOSPITAL', 'PHOTOS AND 3D', 'hospital gltf.gltf'), name: 'hospital gltf.gltf' }, rvt: { downloadUrl: pub('projects', 'LIFE LINE HOSPITAL', 'PHOTOS AND 3D', 'hosp.rvt'), name: 'hosp.rvt' } },
     blueprints: [
       { name: 'The Poster', url: pub('projects', 'LIFE LINE HOSPITAL', 'BLUEPRINTS', 'THE POSTER.pdf') },
       { name: 'Master Plan Rendered', url: pub('projects', 'LIFE LINE HOSPITAL', 'BLUEPRINTS', 'master plan rendered.pdf') },
@@ -283,13 +310,14 @@ const FALLBACK_PROJECTS = [
 ]
 
 const FALLBACK_POSITIONS = {
-  resort: [[9, 7]],
+  resort: [[-14.65, -17.83]],
+  'museum-loving-maram': [[-7, -2.5]],
   'elementary-school': [[-8, 6]],
   'mixed-use': [[7, -2.5]],
   'tower-east': [[-4, -10]],
   'tower-west': [[4, -10]],
   'three-pyramids': [[0, -8], [-4, -8], [4, -8]],
-  hospital: [[-7, -2.5]],
+  hospital: [[6.2, 7.4]],
 }
 
 // Always show ALL buildings. Merge generated data (from manifest) into fallback so we never lose resort, pyramids, etc.
@@ -302,18 +330,23 @@ function mergeGeneratedIntoFallback() {
     if (g.id === 'life-line-hospital' || g.id === 'lifeline-hospital') {
       const i = list.findIndex((p) => p.id === 'hospital')
       if (i !== -1) {
+        const fallback = list[i]
+        const mergedModel3d = {
+          glbOrGltf: mapped.model3d?.glbOrGltf ?? fallback.model3d?.glbOrGltf,
+          rvt: mapped.model3d?.rvt ?? fallback.model3d?.rvt,
+        }
         list[i] = {
-          ...list[i],
-          title: mapped.title || list[i].title,
-          year: mapped.year ?? list[i].year,
-          concept: mapped.concept || list[i].concept,
-          description: mapped.description || list[i].description,
-          location: mapped.location || list[i].location,
-          designDuration: mapped.designDuration || list[i].designDuration,
-          images: (mapped.images?.length > 0 ? mapped.images : list[i].images) || [],
-          blueprints: (mapped.blueprints?.length > 0 ? mapped.blueprints : list[i].blueprints) || [],
-          rvtFile: mapped.rvtFile ?? list[i].rvtFile,
-          model3d: mapped.model3d ?? list[i].model3d,
+          ...fallback,
+          title: mapped.title || fallback.title,
+          year: mapped.year ?? fallback.year,
+          concept: mapped.concept || fallback.concept,
+          description: mapped.description || fallback.description,
+          location: mapped.location || fallback.location,
+          designDuration: mapped.designDuration || fallback.designDuration,
+          images: (mapped.images?.length > 0 ? mapped.images : fallback.images) || [],
+          blueprints: (mapped.blueprints?.length > 0 ? mapped.blueprints : fallback.blueprints) || [],
+          rvtFile: mapped.rvtFile ?? fallback.rvtFile,
+          model3d: mergedModel3d,
         }
       }
     } else if (g.id === 'mixed-use') {
@@ -370,5 +403,6 @@ export { projects }
 export const projectPositions = FALLBACK_POSITIONS
 
 export function getProjectById(id) {
+  if (id === 'twin-towers') return projects.find((p) => p.id === 'tower-east') ?? null
   return projects.find((p) => p.id === id)
 }

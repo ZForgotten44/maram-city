@@ -2,6 +2,34 @@ import React, { Suspense, useState, useMemo, useRef, useEffect, createContext, u
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera, useCursor } from '@react-three/drei'
 import * as THREE from 'three'
+
+// Logs map ground (x, z) to console on every click — run before any popup so you can copy coords for hospital position
+function MapClickCoordLogger() {
+  const { gl, camera } = useThree()
+  const raycaster = useRef(new THREE.Raycaster())
+  const mouse = useRef(new THREE.Vector2())
+  const groundPlane = useRef(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0))
+  const intersect = useRef(new THREE.Vector3())
+
+  useEffect(() => {
+    const el = gl.domElement
+    const onPointerDown = (e) => {
+      const rect = el.getBoundingClientRect()
+      mouse.current.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
+      mouse.current.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
+      raycaster.current.setFromCamera(mouse.current, camera)
+      if (raycaster.current.ray.intersectPlane(groundPlane.current, intersect.current)) {
+        const x = Math.round(intersect.current.x * 100) / 100
+        const z = Math.round(intersect.current.z * 100) / 100
+        console.log('[Map click] Position (use for hospital/resort):', [x, z], '— copy this array')
+      }
+    }
+    el.addEventListener('pointerdown', onPointerDown, true)
+    return () => el.removeEventListener('pointerdown', onPointerDown, true)
+  }, [gl, camera])
+
+  return null
+}
 import { projects, projectPositions } from '../data/projects'
 import { getProjectById } from '../data/projects'
 import Building from '../components/Building'
@@ -28,16 +56,24 @@ const HQ_ENTERING_DURATION = 0.6
 // Camera fly-to targets (from lighthouse map key)
 const CAMERA_TARGETS = {
   school: { target: [-8, 3, 6], pos: [6, 10, 18] },
-  hospital: { target: [-7, 3, -2.5], pos: [8, 10, 8] },
-  airport: { target: [4, 4, 17], pos: [12, 12, 28] },
+  hospital: { target: [7.677, 0.6441, 7.6371], pos: [32, 20, 28] },
+  resort: { target: [-14.65, 3, -17.83], pos: [8, 10, 8] },
+  airport: { target: [0.61, 4, 19.5], pos: [8, 12, 26] },
   volcano: { target: [48, 3, 48], pos: [55, 15, 55] },
   lighthouse: { target: [14, 4, 5], pos: [24, 10, 14] },
   towers: { target: [0, 5, -10], pos: [12, 12, 2] },
   pyramids: { target: [0, 2, -8], pos: [10, 10, 2] },
 }
 
-// Building pages: fly-to camera (target + pos) per project id — derived from projectPositions
+// Override fly-to camera per project id (used when clicking a building). Keys = project id from projects data.
+const BUILDING_FLY_CAMERAS = {
+  'life-line-hospital': { target: [7.677, 0.6441, 7.6371], pos: [32, 20, 28] },
+  'museum-loving-maram': { target: [-7, 1.45, -2.1], pos: [-7, 3.2, 2.6] },
+}
+// Building pages: fly-to camera (target + pos) per project id — override first, else derived from projectPositions
 function getBuildingFlyTarget(projectId) {
+  const override = BUILDING_FLY_CAMERAS[projectId]
+  if (override) return override
   const positions = projectPositions[projectId]
   if (!positions) return null
   const pos = Array.isArray(positions[0]) ? positions[0] : positions
@@ -68,7 +104,7 @@ const BLEND_UPDATE_INTERVAL = 6
 
 // Default view (from camera log — press P to print current)
 const DEFAULT_CAMERA_POSITION = [-0.4063, 23.0511, 50.4808]
-const DEFAULT_CAMERA_TARGET = [-0.306, -1.9175, -17.051]
+const DEFAULT_CAMERA_TARGET = [-1.2149, -4.4087, -16.133]
 
 // Intro: start in “space” looking at Earth, then zoom to city
 const INTRO_CURVE_START = [0, 70, -220]
@@ -78,6 +114,23 @@ const EARTH_CENTER = [0, 40, -150]
 function CameraControls({ controlsRef, resetCameraRef, defaultPosition, defaultTarget, enabled = true, enableDamping = true }) {
   const internalRef = useRef()
   const ref = controlsRef ?? internalRef
+
+  // Apply default camera once controls are mounted (OrbitControls often ignores initial target prop).
+  useEffect(() => {
+    let cancelled = false
+    const apply = () => {
+      const ctrl = ref.current
+      if (cancelled || !ctrl?.object?.position || !ctrl?.target) return
+      ctrl.object.position.set(...defaultPosition)
+      ctrl.target.set(...defaultTarget)
+    }
+    const id = requestAnimationFrame(() => requestAnimationFrame(apply))
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(id)
+    }
+  }, [defaultPosition, defaultTarget, ref])
+
   useEffect(() => {
     if (!resetCameraRef) return
     resetCameraRef.current = () => {
@@ -88,6 +141,7 @@ function CameraControls({ controlsRef, resetCameraRef, defaultPosition, defaultT
     }
     return () => { resetCameraRef.current = null }
   }, [resetCameraRef, defaultPosition, defaultTarget, ref])
+
   return (
     <OrbitControls
       ref={ref}
@@ -103,6 +157,36 @@ function CameraControls({ controlsRef, resetCameraRef, defaultPosition, defaultT
       target={defaultTarget}
     />
   )
+}
+
+// When camera is idle for IDLE_THRESHOLD seconds, log position/target once (then COOLDOWN before next log).
+function CameraIdleLogger({ controlsRef }) {
+  const lastKeyRef = useRef(null)
+  const idleSinceRef = useRef(null)
+  const lastLogTimeRef = useRef(0)
+  const IDLE_THRESHOLD = 2.5
+  const COOLDOWN = 15
+  useFrame((state) => {
+    const ctrl = controlsRef?.current
+    if (!ctrl?.object?.position || !ctrl?.target) return
+    const t = state.clock.elapsedTime
+    if (t - lastLogTimeRef.current < COOLDOWN) return
+    const pos = ctrl.object.position
+    const tar = ctrl.target
+    const key = [pos.x, pos.y, pos.z, tar.x, tar.y, tar.z].map((n) => Number(n.toFixed(2))).join(',')
+    if (lastKeyRef.current !== key) {
+      lastKeyRef.current = key
+      idleSinceRef.current = t
+      return
+    }
+    if (t - idleSinceRef.current < IDLE_THRESHOLD) return
+    lastLogTimeRef.current = t
+    idleSinceRef.current = null
+    console.log('%c——— Default camera (idle — copy into WorldMap.jsx) ———', 'font-weight:bold')
+    console.log('const DEFAULT_CAMERA_POSITION = [' + [pos.x, pos.y, pos.z].map((n) => Number(n.toFixed(4))).join(', ') + ']')
+    console.log('const DEFAULT_CAMERA_TARGET = [' + [tar.x, tar.y, tar.z].map((n) => Number(n.toFixed(4))).join(', ') + ']')
+  })
+  return null
 }
 
 // Procedural Earth: ocean, land (greens/sand/rock), ice caps, vertex colors
@@ -681,25 +765,24 @@ function Dolphins() {
   )
 }
 
-// Distant big ships — cargo scale, far from island, slow, silhouettes, small lights at night
-const DISTANT_SHIP_RADIUS = 62
-const DISTANT_SHIP_SPEED = 0.008
+// Distant big ships — far from city (radius 75–92), tall/long cargo look, slow, lights at night
+const DISTANT_SHIP_ROUTES = [
+  { radius: 75, speed: 0.006, offset: 0 },
+  { radius: 82, speed: -0.005, offset: Math.PI * 0.6 },
+  { radius: 88, speed: 0.007, offset: Math.PI * 1.3 },
+  { radius: 92, speed: -0.004, offset: Math.PI * 0.2 },
+]
 function DistantShips() {
   const refs = useRef([])
   const { themeBlendRef } = useTheme()
-  const routes = useMemo(() => [
-    { offset: 0 },
-    { offset: Math.PI * 0.6 },
-    { offset: Math.PI * 1.3 },
-  ], [])
   useFrame((state) => {
     const t = state.clock.elapsedTime
-    routes.forEach((r, i) => {
+    DISTANT_SHIP_ROUTES.forEach((r, i) => {
       const g = refs.current[i]
       if (!g) return
-      const angle = t * DISTANT_SHIP_SPEED + r.offset
-      const x = Math.cos(angle) * DISTANT_SHIP_RADIUS
-      const z = Math.sin(angle) * DISTANT_SHIP_RADIUS
+      const angle = t * r.speed + r.offset
+      const x = Math.cos(angle) * r.radius
+      const z = Math.sin(angle) * r.radius
       g.position.set(x, -0.38, z)
       g.rotation.y = -angle
     })
@@ -707,26 +790,41 @@ function DistantShips() {
   const night = 1 - (themeBlendRef?.current ?? 0)
   return (
     <>
-      {routes.map((r, i) => (
+      {DISTANT_SHIP_ROUTES.map((r, i) => (
         <group key={i} ref={(el) => (refs.current[i] = el)}>
-          {/* Large cargo silhouette — hull */}
-          <mesh>
-            <boxGeometry args={[5.5, 1.8, 2.2]} />
-            <meshStandardMaterial color="#1a1a22" roughness={0.9} metalness={0.1} />
+          {/* Long hull — tapered bow, high freeboard */}
+          <mesh position={[0, 0.95, 0]} castShadow>
+            <boxGeometry args={[7.5, 1.4, 2.6]} />
+            <meshStandardMaterial color="#1a1a22" roughness={0.9} metalness={0.08} />
           </mesh>
-          <mesh position={[0, 1.4, 0]}>
-            <boxGeometry args={[0.8, 1.2, 0.6]} />
+          <mesh position={[-3.2, 0.9, 0]} rotation={[0, 0, 0.12]} castShadow>
+            <boxGeometry args={[1.2, 1.1, 2.5]} />
+            <meshStandardMaterial color="#1e1e26" roughness={0.88} />
+          </mesh>
+          {/* Superstructure — bridge + cabins */}
+          <mesh position={[0.8, 2.2, 0]} castShadow>
+            <boxGeometry args={[1.4, 1.4, 1.6]} />
             <meshStandardMaterial color="#252530" roughness={0.88} />
           </mesh>
-          <mesh position={[0.6, 0.95, 0]}>
-            <boxGeometry args={[4.2, 0.5, 1.8]} />
+          <mesh position={[0.8, 3.2, 0]} castShadow>
+            <boxGeometry args={[0.9, 0.8, 1.2]} />
+            <meshStandardMaterial color="#2a2a35" roughness={0.85} />
+          </mesh>
+          {/* Funnel */}
+          <mesh position={[-0.8, 2.8, 0]} castShadow>
+            <cylinderGeometry args={[0.35, 0.42, 1.8, 8]} />
+            <meshStandardMaterial color="#2c2c38" roughness={0.8} metalness={0.12} />
+          </mesh>
+          {/* Deck cargo / hatches */}
+          <mesh position={[-2, 1.35, 0]} castShadow>
+            <boxGeometry args={[2.2, 0.4, 2.2]} />
             <meshStandardMaterial color="#1e1e28" roughness={0.9} />
           </mesh>
           {night > 0.3 && (
-            <pointLight color="#f0e6c8" intensity={0.4 * night} distance={12} position={[0.8, 1.6, 0.4]} />
-          )}
-          {night > 0.3 && (
-            <pointLight color="#e8dca8" intensity={0.25 * night} distance={8} position={[-0.6, 1.2, -0.2]} />
+            <>
+              <pointLight color="#f0e6c8" intensity={0.4 * night} distance={14} position={[1, 3.6, 0.3]} />
+              <pointLight color="#e8dca8" intensity={0.25 * night} distance={10} position={[-0.6, 2.4, -0.2]} />
+            </>
           )}
         </group>
       ))}
@@ -763,7 +861,7 @@ function SeaMountains() {
 }
 
 // Ships: different colors and styles — hull, cabin, deck per route. Stay in water only; no overlap.
-const ISLAND_HALF = 21
+const ISLAND_HALF = 25
 const SHIP_ISLAND_MARGIN = 2.2  // hull must not cross island edge (only foam may)
 const SHIP_MIN_SEP = 5
 function clampShipToWater(x, z) {
@@ -832,35 +930,64 @@ function Ships() {
         <group key={i} ref={(el) => (refs.current[i] = el)}>
           {r.size === 'big' ? (
             <>
-              <mesh castShadow>
-                <boxGeometry args={[2.8, 0.65, 1.2]} />
+              {/* Hull — main body, slightly tapered at bow */}
+              <mesh position={[0, 0.38, 0]} castShadow>
+                <boxGeometry args={[2.6, 0.6, 1.1]} />
                 <meshStandardMaterial color={r.hull} roughness={0.72} />
               </mesh>
-              <mesh position={[0, 0.7, 0]} castShadow>
-                <boxGeometry args={[0.35, 0.9, 0.25]} />
-                <meshStandardMaterial color={r.cabin} />
+              <mesh position={[-1.15, 0.32, 0]} castShadow>
+                <boxGeometry args={[0.5, 0.5, 1.05]} />
+                <meshStandardMaterial color={r.hull} roughness={0.72} />
               </mesh>
-              <mesh position={[0.7, 0.4, 0]} castShadow>
-                <boxGeometry args={[1, 0.3, 0.85]} />
+              {/* Bow */}
+              <mesh position={[1.42, 0.35, 0]} rotation={[0, 0, -0.15]} castShadow>
+                <boxGeometry args={[0.36, 0.48, 1.02]} />
+                <meshStandardMaterial color={r.hull} roughness={0.72} />
+              </mesh>
+              {/* Superstructure / bridge */}
+              <mesh position={[0.35, 0.95, 0]} castShadow>
+                <boxGeometry args={[0.5, 0.7, 0.7]} />
+                <meshStandardMaterial color={r.cabin} roughness={0.65} />
+              </mesh>
+              <mesh position={[0.35, 1.35, 0]} castShadow>
+                <boxGeometry args={[0.32, 0.35, 0.5]} />
+                <meshStandardMaterial color={r.cabin} roughness={0.65} />
+              </mesh>
+              {/* Funnel */}
+              <mesh position={[-0.4, 1.05, 0]} castShadow>
+                <cylinderGeometry args={[0.12, 0.14, 0.5, 6]} />
+                <meshStandardMaterial color={r.hull} roughness={0.7} metalness={0.15} />
+              </mesh>
+              {/* Deck */}
+              <mesh position={[0.5, 0.52, 0]} castShadow>
+                <boxGeometry args={[1.2, 0.12, 0.9]} />
                 <meshStandardMaterial color={r.deck} roughness={0.68} />
               </mesh>
               <mesh position={[-0.5, 0.02, 0]} rotation={[-Math.PI / 2, 0, Math.PI]}>
-                <planeGeometry args={[1.4, 0.8]} />
+                <planeGeometry args={[1.2, 0.7]} />
                 <meshBasicMaterial color="#e8eef4" transparent opacity={0.5} side={THREE.DoubleSide} depthWrite={false} />
               </mesh>
             </>
           ) : (
             <>
-              <mesh castShadow>
-                <boxGeometry args={[1.2, 0.35, 0.55]} />
+              <mesh position={[0, 0.2, 0]} castShadow>
+                <boxGeometry args={[1.0, 0.32, 0.5]} />
                 <meshStandardMaterial color={r.hull} roughness={0.7} />
               </mesh>
-              <mesh position={[0, 0.45, 0]} castShadow>
-                <boxGeometry args={[0.18, 0.55, 0.12]} />
-                <meshStandardMaterial color={r.cabin} />
+              <mesh position={[0.42, 0.18, 0]} castShadow>
+                <boxGeometry args={[0.28, 0.28, 0.48]} />
+                <meshStandardMaterial color={r.hull} roughness={0.7} />
+              </mesh>
+              <mesh position={[0, 0.52, 0]} castShadow>
+                <boxGeometry args={[0.22, 0.5, 0.35]} />
+                <meshStandardMaterial color={r.cabin} roughness={0.68} />
+              </mesh>
+              <mesh position={[-0.2, 0.38, 0]} castShadow>
+                <cylinderGeometry args={[0.06, 0.08, 0.28, 6]} />
+                <meshStandardMaterial color={r.hull} roughness={0.7} metalness={0.1} />
               </mesh>
               <mesh position={[-0.35, 0.02, 0]} rotation={[-Math.PI / 2, 0, Math.PI]}>
-                <planeGeometry args={[0.7, 0.4]} />
+                <planeGeometry args={[0.6, 0.35]} />
                 <meshBasicMaterial color="#dce4ec" transparent opacity={0.4} side={THREE.DoubleSide} depthWrite={false} />
               </mesh>
             </>
@@ -888,6 +1015,7 @@ const ROAD_SEGMENTS = [
   { type: 'v', x: 6, z0: -5, z1: 4, w: ROAD_W_SECONDARY },
   { type: 'v', x: 0, z0: -12, z1: -10, w: ROAD_W_SECONDARY },
   { type: 'v', x: 0, z0: 0, z1: 8, w: ROAD_W_SECONDARY },
+  { type: 'h', z: 10, x0: -10, x1: 20, w: ROAD_W_SECONDARY },
 ]
 const TRAFFIC_LIGHT_POSITIONS = [
   [-11, 8], [-11, 4], [-11, 0], [-11, -5], [11, 8], [11, 4], [11, 0], [11, -5],
@@ -1033,7 +1161,7 @@ function IslandGround() {
 
   return (
     <mesh ref={ref} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-      <planeGeometry args={[42, 42, ISLAND_SEGMENTS, ISLAND_SEGMENTS]} />
+      <planeGeometry args={[42, 50, ISLAND_SEGMENTS, 56]} />
       <meshStandardMaterial vertexColors roughness={0.88} metalness={0.08} envMapIntensity={0.35} />
     </mesh>
   )
@@ -1366,6 +1494,8 @@ const LAMP_POSITIONS = [
   [11, 4], [11, 0], [11, -5],
   [8, -12], [4, -12], [0, -12], [-4, -12], [-8, -12],
   [-11, -5], [-11, 0], [-11, 4],
+  // Hospital (at [6.2, 7.4]) entrance / plaza — 4 lamps
+  [4.6, 7.4], [7.8, 7.4], [6.2, 6], [6.2, 8.7],
 ]
 function StreetLamps() {
   const { themeBlendRef } = useTheme()
@@ -1407,10 +1537,10 @@ function StreetLamps() {
   )
 }
 
-// Ambulance parked in front of hospital
-function Ambulance() {
+// Hospital area: 2 ambulances + drop-off car (curved driveway / drop-off loop feel)
+function Ambulance({ position, rotation = 0 }) {
   return (
-    <group position={[-5.2, 0, -2.5]} rotation={[0, Math.PI, 0]}>
+    <group position={position} rotation={[0, rotation, 0]}>
       <mesh position={[0, 0.25, 0]} castShadow receiveShadow>
         <boxGeometry args={[0.9, 0.5, 0.5]} />
         <meshStandardMaterial color="#f0f0ec" roughness={0.6} metalness={0.15} />
@@ -1427,6 +1557,79 @@ function Ambulance() {
         <boxGeometry args={[0.04, 0.25, 0.04]} />
         <meshStandardMaterial color="#8C2F39" emissive="#8C2F39" emissiveIntensity={0.08} />
       </mesh>
+    </group>
+  )
+}
+function DropOffCar() {
+  return (
+    <group position={[5.4, 0, 7.85]} rotation={[0, Math.PI * 0.6, 0]}>
+      <mesh position={[0, 0.2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.55, 0.35, 0.4]} />
+        <meshStandardMaterial color="#2a2a32" roughness={0.7} metalness={0.2} />
+      </mesh>
+      <mesh position={[0, 0.42, 0.02]} castShadow>
+        <boxGeometry args={[0.4, 0.22, 0.35]} />
+        <meshStandardMaterial color="#2a2a32" roughness={0.7} metalness={0.2} />
+      </mesh>
+    </group>
+  )
+}
+function HospitalVehicles() {
+  return (
+    <>
+      <Ambulance position={[4.5, 0, 7.4]} rotation={Math.PI} />
+      <Ambulance position={[7.9, 0, 7.3]} rotation={Math.PI * 0.5} />
+      <DropOffCar />
+    </>
+  )
+}
+
+// Hospital grounds: paved plaza, parking rectangles, ambulance bay canopy
+const PLAZA_GRAY = '#9a9892'
+const PARKING_GRAY = '#6a6864'
+function HospitalLandscape() {
+  return (
+    <group>
+      {/* Paved plaza in front of hospital at [6.2, 7.4] */}
+      <mesh position={[6.2, 0.02, 8.75]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[8, 4.5]} />
+        <meshStandardMaterial color={PLAZA_GRAY} roughness={0.9} metalness={0} />
+      </mesh>
+      <mesh position={[6.2, 0.04, 7.05]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[9, 0.25]} />
+        <meshStandardMaterial color="#7a7872" roughness={0.88} />
+      </mesh>
+      {/* Green lawn patches */}
+      <mesh position={[3.6, 0.025, 7.85]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[1.8, 1.2]} />
+        <meshStandardMaterial color="#2d5a3d" roughness={0.95} />
+      </mesh>
+      <mesh position={[9, 0.025, 6.65]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[1.2, 1.5]} />
+        <meshStandardMaterial color="#2d5a3d" roughness={0.95} />
+      </mesh>
+      {/* 5 parking rectangles */}
+      {[[2, 6.15], [3.1, 6.15], [4.2, 6.15], [8.4, 6.15], [9.5, 6.15]].map(([x, z], i) => (
+        <mesh key={i} position={[x, 0.015, z]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+          <planeGeometry args={[0.7, 0.45]} />
+          <meshStandardMaterial color={PARKING_GRAY} roughness={0.9} />
+        </mesh>
+      ))}
+      {/* Ambulance bay: side canopy */}
+      <group position={[11.3, 0, 7.4]}>
+        <mesh position={[0, 0.85, 0.4]} castShadow receiveShadow>
+          <boxGeometry args={[2.2, 0.1, 1.4]} />
+          <meshStandardMaterial color="#b5b2aa" roughness={0.85} />
+        </mesh>
+        <mesh position={[-0.5, 0.45, 0.35]} castShadow>
+          <boxGeometry args={[0.12, 0.9, 0.12]} />
+          <meshStandardMaterial color={CHARCOAL} />
+        </mesh>
+        <mesh position={[0.5, 0.45, 0.35]} castShadow>
+          <boxGeometry args={[0.12, 0.9, 0.12]} />
+          <meshStandardMaterial color={CHARCOAL} />
+        </mesh>
+      </group>
     </group>
   )
 }
@@ -1497,15 +1700,16 @@ function mulberry32(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
 }
-// Building footprints (center x, z, halfW, halfD) for tree exclusion + framing
+// Building footprints — hospital at [6.2, 7.4], resort at [-14.65, -17.83], museum at [-7, -2.5]
 const BUILDING_FOOTPRINTS = [
-  [9, 7, 1.5, 1.25], [-8, 6, 1.5, 1.25], [7, -2.5, 2.1, 1.7], [-4, -10, 0.7, 0.7], [4, -10, 0.7, 0.7],
-  [0, -8, 1.1, 1.1], [-4, -8, 1.1, 1.1], [4, -8, 1.1, 1.1], [-7, -2.5, 1.9, 1.45],
+  [-8, 6, 1.5, 1.25], [7, -2.5, 2.1, 1.7], [-4, -10, 0.7, 0.7], [4, -10, 0.7, 0.7],
+  [0, -8, 1.1, 1.1], [-4, -8, 1.1, 1.1], [4, -8, 1.1, 1.1],
+  [6.2, 7.4, 5.25, 2.25], [-7, -2.5, 2.6, 2.25], [-14.65, -17.83, 1.5, 1.25],
 ]
 const TREE_BUFFER = 1.25
 const RUNWAY_MARGIN = 1.5
-const RUNWAY_WORLD = { xMin: -10.5, xMax: 18.5, zMin: 13.5, zMax: 20.5 }
-const TAXI_WORLD = { xMin: -17.5, xMax: -4.5, zMin: 10.1, zMax: 14.9 }
+const RUNWAY_WORLD = { xMin: -12.5, xMax: 14, zMin: 17.5, zMax: 21.5 }
+const TAXI_WORLD = { xMin: -17.5, xMax: -4.5, zMin: 15.5, zMax: 18.5 }
 function inRunwayOrTaxi(x, z) {
   if (x >= RUNWAY_WORLD.xMin && x <= RUNWAY_WORLD.xMax && z >= RUNWAY_WORLD.zMin && z <= RUNWAY_WORLD.zMax) return true
   if (x >= TAXI_WORLD.xMin && x <= TAXI_WORLD.xMax && z >= TAXI_WORLD.zMin && z <= TAXI_WORLD.zMax) return true
@@ -1545,6 +1749,8 @@ const ALLOWED_TREE_ZONES = [
   { xMin: -1.2, xMax: 3.5, zMin: -2.95, zMax: -2.2, n: 4 },
   // Green behind hospital (left side)
   { xMin: -11, xMax: -9, zMin: -3.5, zMax: -1.5, n: 3 },
+  // In front of hospital (curved driveway / drop-off): 2 trees
+  { xMin: -8.4, xMax: -5.8, zMin: -2.92, zMax: -2.18, n: 2 },
   // Green behind mixed-use (right side)
   { xMin: 9.5, xMax: 12, zMin: -3.2, zMax: -1.8, n: 3 },
   // Island perimeter edges — not on beach (beach is x -20 to -16, z -15..15)
@@ -1557,11 +1763,13 @@ const ALLOWED_TREE_ZONES = [
   { xMin: 10, xMax: 13, zMin: -2, zMax: 2, n: 3 },
   // Around lighthouse (green spots)
   { xMin: 12.5, xMax: 16, zMin: 4, zMax: 7, n: 4 },
-  // In front of resort (9, 7), not on road
-  { xMin: 7.5, xMax: 10.5, zMin: 7.2, zMax: 9, n: 4 },
-  // Beside airport terminal (apron side), back of airport
-  { xMin: -20, xMax: -17, zMin: 10.5, zMax: 13, n: 3 },
-  { xMin: -14, xMax: -11, zMin: 10.5, zMax: 13, n: 3 },
+  // Around hospital at [6.2, 7.4]
+  { xMin: 4, xMax: 8.3, zMin: 6.4, zMax: 9, n: 4 },
+  // Around Museum of Loving Maram at [-7, -2.5] (courtyard / palms)
+  { xMin: -9, xMax: -5, zMin: -3.2, zMax: -1.8, n: 3 },
+  // Beside airport terminal (apron side); airport at [0.61, 19.5]
+  { xMin: -23.3, xMax: -20.3, zMin: 12.8, zMax: 15.8, n: 3 },
+  { xMin: -17.3, xMax: -14.3, zMin: 12.8, zMax: 15.8, n: 3 },
   // Around construction / pyramid area (back green)
   { xMin: -6, xMax: -2, zMin: -11, zMax: -8.5, n: 3 },
   { xMin: 2, xMax: 6, zMin: -11, zMax: -8.5, n: 3 },
@@ -1876,11 +2084,12 @@ function SunAndRays({ onArchitectClick }) {
   )
 }
 
-// Horizon: 360° cylindrical silhouette so no flat “walls” from any angle
+// Back-wall mountains: vertical planes in XY at far Z (wall behind the sea). Tall in Y, wide in X; do not extend toward island.
 const MOUNTAIN_LAYER_Z = [-95, -120, -150, -185]
-const MOUNTAIN_LAYER_SCALE = [[0.92, 0.28], [1.0, 0.32], [1.18, 0.38], [1.4, 0.45]]
-const MOUNTAIN_NIGHT_COLORS = ['#3d2e24', '#4a3a2e', '#5c4838', '#6b5544']
-const MOUNTAIN_DAY_COLORS = ['#5c4a3a', '#6b5848', '#7d6b58', '#8f7d6a']
+const MOUNTAIN_WALL_HEIGHT = 100
+const MOUNTAIN_LAYER_SCALE = [[0.92, 0.52], [1.0, 0.58], [1.18, 0.68], [1.4, 0.78]]
+const MOUNTAIN_NIGHT_COLORS = ['#2e221b', '#3a2d24', '#4a3a2e', '#5c4838']
+const MOUNTAIN_DAY_COLORS = ['#3d2e24', '#4a3a2e', '#5c4838', '#6b5544']
 
 function buildJaggedRidgeGeometry(width, height, segW, segH, seed) {
   const g = new THREE.PlaneGeometry(width, height, segW, segH)
@@ -1889,7 +2098,7 @@ function buildJaggedRidgeGeometry(width, height, segW, segH, seed) {
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i)
     const y = pos.getY(i)
-    const t = y + 0.5
+    const t = y / height + 0.5
     const amp = 5 * (0.35 * Math.sin(x * 0.08) + 0.45 * Math.sin(x * 0.14 + 2 + rng() * 4) + 0.2 * Math.sin(x * 0.05 + rng() * 6) + 0.15 * (rng() - 0.5))
     pos.setY(i, y + t * amp)
   }
@@ -1897,7 +2106,7 @@ function buildJaggedRidgeGeometry(width, height, segW, segH, seed) {
   return g
 }
 
-const MOUNTAIN_GEOMS = [401, 402, 403, 404].map((s) => buildJaggedRidgeGeometry(200, 40, 72, 28, s))
+const MOUNTAIN_GEOMS = [401, 402, 403, 404].map((s) => buildJaggedRidgeGeometry(200, MOUNTAIN_WALL_HEIGHT, 72, 36, s))
 
 const MOUNTAIN_LERP_NIGHT = MOUNTAIN_NIGHT_COLORS.map((c) => new THREE.Color(c))
 const MOUNTAIN_LERP_DAY = MOUNTAIN_DAY_COLORS.map((c) => new THREE.Color(c))
@@ -1913,28 +2122,33 @@ function LayeredMountainRidges() {
     })
   })
   return (
-    <group position={[0, 2, 0]} renderOrder={-8}>
-      {MOUNTAIN_LAYER_Z.map((z, i) => (
-        <mesh
-          key={i}
-          position={[0, i * -0.8, z]}
-          rotation={[-Math.PI / 2, 0, 0]}
-          scale={[MOUNTAIN_LAYER_SCALE[i][0], MOUNTAIN_LAYER_SCALE[i][1], 1]}
-          geometry={MOUNTAIN_GEOMS[i]}
-          receiveShadow
-        >
-          <meshStandardMaterial
-            ref={(el) => { if (el) matRefs.current[i] = el }}
-            color={MOUNTAIN_NIGHT_COLORS[i]}
-            roughness={0.95}
-            metalness={0}
-            transparent={false}
-            opacity={1}
-            depthWrite={true}
-            side={THREE.FrontSide}
-          />
-        </mesh>
-      ))}
+    <group position={[0, 0, 0]} renderOrder={-8}>
+      {MOUNTAIN_LAYER_Z.map((z, i) => {
+        const scaleX = MOUNTAIN_LAYER_SCALE[i][0]
+        const scaleY = MOUNTAIN_LAYER_SCALE[i][1]
+        const halfHeight = (MOUNTAIN_WALL_HEIGHT * scaleY) / 2
+        return (
+          <mesh
+            key={i}
+            position={[0, halfHeight, z]}
+            rotation={[0, Math.PI, 0]}
+            scale={[scaleX, scaleY, 1]}
+            geometry={MOUNTAIN_GEOMS[i]}
+            receiveShadow
+          >
+            <meshStandardMaterial
+              ref={(el) => { if (el) matRefs.current[i] = el }}
+              color={MOUNTAIN_NIGHT_COLORS[i]}
+              roughness={0.95}
+              metalness={0}
+              transparent={false}
+              opacity={1}
+              depthWrite={true}
+              side={THREE.FrontSide}
+            />
+          </mesh>
+        )
+      })}
     </group>
   )
 }
@@ -1943,7 +2157,7 @@ function HorizonSilhouettes() {
   return null
 }
 
-// Clouds: more coverage, 3 types (small fast high, medium slow, large slow), varied scale/height/opacity/speed, soft parallax
+// Clouds: more coverage, 3 types + some extra-large. Varied scale/height/opacity/speed.
 function CloudLayer() {
   const { themeBlendRef } = useTheme()
   const groupRef = useRef()
@@ -1951,7 +2165,7 @@ function CloudLayer() {
     const rng = mulberry32(201)
     const list = []
     for (let i = 0; i < 28; i++) {
-      const type = i % 3
+      const type = i % 4
       let size, y, speed, opacity
       if (type === 0) {
         size = 0.5 + rng() * 0.35
@@ -1963,11 +2177,17 @@ function CloudLayer() {
         y = 11 + rng() * 1.8
         speed = 0.0006 + rng() * 0.0004
         opacity = 0.35 + rng() * 0.18
-      } else {
+      } else if (type === 2) {
         size = 1.35 + rng() * 0.45
         y = 9 + rng() * 1.5
         speed = 0.0003 + rng() * 0.0002
         opacity = 0.4 + rng() * 0.2
+      } else {
+        // Extra-large clouds — much bigger, slower
+        size = 2.4 + rng() * 1.1
+        y = 8 + rng() * 2
+        speed = 0.00015 + rng() * 0.0001
+        opacity = 0.35 + rng() * 0.15
       }
       const angle = (i / 28) * Math.PI * 2 + rng() * 0.4
       const radius = 22 + rng() * 10
@@ -2229,11 +2449,11 @@ function filterPeopleMinDist(list, minD, existing = []) {
   }
   return out
 }
-// People between control tower and terminals (apron), not on track. RUNWAY_WORLD z 13.5–20.5 — keep z < 13.5
+// People beside terminals / apron — NOT on runway (z 17.5–21.5) or taxi (z 15.5–18.5, x -17.5 to -4.5)
 const _rawAirport = [
-  { x: -8, z: 12.2, color: 0, scale: 1.02, headRotY: 0.1 }, { x: -5.5, z: 11.8, color: 2, scale: 0.95, headRotY: -0.08 },
-  { x: -3, z: 12.4, color: 5, scale: 1.08, headRotY: 0.05 }, { x: 0, z: 11.5, color: 1, scale: 0.98 }, { x: -6, z: 12.8, color: 3, scale: 1.0 },
-  { x: -4, z: 11.2, color: 4, scale: 0.92, headRotY: 0.2 }, { x: -1.5, z: 12, color: 6, scale: 0.96 },
+  { x: 0.5, z: 14.8, color: 0, scale: 1.02, headRotY: 0.1 }, { x: 1.5, z: 15, color: 2, scale: 0.95, headRotY: -0.08 },
+  { x: 2, z: 14.5, color: 5, scale: 1.08, headRotY: 0.05 }, { x: -1, z: 15.2, color: 1, scale: 0.98 }, { x: 1, z: 14.3, color: 3, scale: 1.0 },
+  { x: -2, z: 15.1, color: 4, scale: 0.92, headRotY: 0.2 }, { x: 0.5, z: 14.6, color: 6, scale: 0.96 },
 ]
 const _rawCity = [
   { x: -6.4, z: -2.1, color: 1, scale: 1.05, headRotY: -0.1 }, { x: -7.5, z: -2.8, color: 6, scale: 0.93 },
@@ -2248,6 +2468,10 @@ const _rawCity = [
 const _rawBeach = [
   { x: 15.5, z: 5.8, color: 2, scale: 1.0, headRotY: 0.15 },
 ]
+const _rawHospital = [
+  { x: 4.5, z: 7.2, color: 0, scale: 1.02 }, { x: 5.5, z: 7.8, color: 2, scale: 0.96 }, { x: 6.5, z: 6.9, color: 5, scale: 1.0 },
+  { x: 7, z: 7.5, color: 1, scale: 0.98 }, { x: 5, z: 7.6, color: 4, scale: 0.94 }, { x: 6.8, z: 8, color: 6, scale: 1.01 },
+]
 const _rawScatter = [
   { x: 2.5, z: -5, color: 3, scale: 0.91, headRotY: -0.2 }, { x: -5.5, z: 3.5, color: 7, scale: 1.06 }, { x: 11, z: -1, color: 2, scale: 0.95, headRotY: 0.15 },
   { x: 0, z: -6, color: 1, scale: 0.93 }, { x: -3, z: 4, color: 4, scale: 1.0 },
@@ -2256,10 +2480,11 @@ const _rawScatter = [
 const AIRPORT_PEOPLE = filterPeopleMinDist(_rawAirport, MIN_PERSON_DIST)
 const CITY_PEOPLE = filterPeopleMinDist(_rawCity, MIN_PERSON_DIST, AIRPORT_PEOPLE)
 const BEACH_PEOPLE = filterPeopleMinDist(_rawBeach, MIN_PERSON_DIST, [...AIRPORT_PEOPLE, ...CITY_PEOPLE])
-const SCATTER_PEOPLE = filterPeopleMinDist(_rawScatter, MIN_PERSON_DIST, [...AIRPORT_PEOPLE, ...CITY_PEOPLE, ...BEACH_PEOPLE])
+const HOSPITAL_PEOPLE = filterPeopleMinDist(_rawHospital, MIN_PERSON_DIST, [...AIRPORT_PEOPLE, ...CITY_PEOPLE, ...BEACH_PEOPLE])
+const SCATTER_PEOPLE = filterPeopleMinDist(_rawScatter, MIN_PERSON_DIST, [...AIRPORT_PEOPLE, ...CITY_PEOPLE, ...BEACH_PEOPLE, ...HOSPITAL_PEOPLE])
 const PEDESTRIAN_PATHS = [
-  { start: [4, 12], end: [4, 15.5], speed: 0.028 },
-  { start: [3, 14], end: [4.5, 15], speed: 0.035 },
+  { start: [0.61, 15.8], end: [0.61, 18.5], speed: 0.028 },
+  { start: [-0.3, 17.5], end: [1.1, 18.5], speed: 0.035 },
   { start: [-6, -2], end: [-5.5, 1.5], speed: 0.022 },
   { start: [6, -3], end: [2, 2], speed: 0.032 },
   { start: [-0.5, -2.5], end: [1, -2.2], speed: 0.038 },
@@ -2300,6 +2525,11 @@ function PeopleWalking() {
       ))}
       {BEACH_PEOPLE.map((p, i) => (
         <group key={`b-${i}`} position={[p.x, 0, p.z]}>
+          <Person color={PEDESTRIAN_COLORS[p.color]} scale={p.scale} headRotY={p.headRotY ?? 0} headRotX={p.headRotX ?? 0} />
+        </group>
+      ))}
+      {HOSPITAL_PEOPLE.map((p, i) => (
+        <group key={`h-${i}`} position={[p.x, 0, p.z]}>
           <Person color={PEDESTRIAN_COLORS[p.color]} scale={p.scale} headRotY={p.headRotY ?? 0} headRotX={p.headRotX ?? 0} />
         </group>
       ))}
@@ -2606,6 +2836,7 @@ const CRANE_HOOK_DOWN_DUR = 1.2
 const CRANE_PAUSE_DUR = 0.3
 const CRANE_HOOK_UP_DUR = 1.2
 const CRANE_CYCLE = CRANE_ROTATE_DUR + CRANE_HOOK_DOWN_DUR + CRANE_PAUSE_DUR + CRANE_HOOK_UP_DUR
+const CRANE_ARM_ANGLE_RANGE = 0.52
 function ConstructionCrane() {
   const armRef = useRef()
   const hookRef = useRef()
@@ -2617,16 +2848,16 @@ function ConstructionCrane() {
     let armY = 0
     let hookY = -0.9
     if (cycleT < CRANE_ROTATE_DUR) {
-      armY = (cycleT / CRANE_ROTATE_DUR) * 0.16 - 0.08
+      armY = (cycleT / CRANE_ROTATE_DUR) * CRANE_ARM_ANGLE_RANGE - CRANE_ARM_ANGLE_RANGE / 2
     } else if (cycleT < CRANE_ROTATE_DUR + CRANE_HOOK_DOWN_DUR) {
-      armY = 0.08
+      armY = CRANE_ARM_ANGLE_RANGE / 2
       const p = (cycleT - CRANE_ROTATE_DUR) / CRANE_HOOK_DOWN_DUR
       hookY = -0.9 - p * 0.6
     } else if (cycleT < CRANE_ROTATE_DUR + CRANE_HOOK_DOWN_DUR + CRANE_PAUSE_DUR) {
-      armY = 0.08
+      armY = CRANE_ARM_ANGLE_RANGE / 2
       hookY = -1.5
     } else {
-      armY = 0.08
+      armY = CRANE_ARM_ANGLE_RANGE / 2
       const p = (cycleT - CRANE_ROTATE_DUR - CRANE_HOOK_DOWN_DUR - CRANE_PAUSE_DUR) / CRANE_HOOK_UP_DUR
       hookY = -1.5 + p * 0.6
     }
@@ -2889,8 +3120,8 @@ const RUNWAY_GRAY = '#2a2a2a'
 const TAXIWAY_GRAY = '#353535'
 const GLASS_CYAN = '#9ddcff'
 
-// Single grouped transform: toward +Z (top/far edge), ~8–10 units from nearest road (z=8)
-const AIRPORT_GROUP_POSITION = [4, 0, 17]
+// Single grouped transform: on island (user-placed at [0.61, 19.5])
+const AIRPORT_GROUP_POSITION = [0.61, 0, 19.5]
 // Airport zone bounding box (world coords) — use to avoid spawning roads/buildings inside
 export const AIRPORT_ZONE = {
   xMin: AIRPORT_GROUP_POSITION[0] - 21,
@@ -3226,14 +3457,14 @@ function AirportPlaneMesh({ leftLightRef, rightLightRef, tailLightRef, bodyColor
   )
 }
 
-const PLANE_COUNT = 4
+const PLANE_COUNT = 2
 const PARK_RIGHT_WAIT = 1.5
 const PARK_LEFT_WAIT = 4
 const TAXI_SPEED = 0.08
 const AIRPORT_PLANE_SPEED = 0.11
-const PLANE_PHASE_OFFSET = 0.48
-const PLANE_STAGGER_SEC = 18
-const PLANE_SPEED_MULT = [0.85, 1.15, 0.9, 1.1]
+const PLANE_PHASE_OFFSET = 0.5
+const PLANE_STAGGER_SEC = 42
+const PLANE_SPEED_MULT = [0.95, 1.05]
 
 function AirportPlanes() {
   const refs = useRef([])
@@ -3783,7 +4014,13 @@ function WorldMap() {
   const flyToWorldPosRef = useRef(null)
   const introPlaying = false
 
-  const onOpenProject = useMemo(() => (id) => setActiveModal({ type: 'project', id }), [])
+  const onOpenProject = useMemo(() => (id) => {
+    if (id === 'museum-loving-maram') {
+      setActiveModal({ type: 'museum', id })
+      return
+    }
+    setActiveModal({ type: 'project', id })
+  }, [])
   const hqContextValue = useMemo(
     () => ({ hqPhase, setHQPhase, controlsRef, flyToBuildingId, setFlyToBuildingId, flyToWorldPosRef, onOpenProject }),
     [hqPhase, flyToBuildingId, onOpenProject]
@@ -3913,6 +4150,7 @@ function WorldMap() {
         >
           <color attach="background" args={[NIGHT_SKY]} />
           <PerspectiveCamera makeDefault position={DEFAULT_CAMERA_POSITION} fov={38} />
+          <MapClickCoordLogger />
           <ThemeDriver />
           <ambientLight ref={ambientRef} intensity={0.14} />
           <directionalLight
@@ -3956,7 +4194,8 @@ function WorldMap() {
               <StreetLamps />
               <CityNeonLights />
               <TrafficLights />
-              <Ambulance />
+              <HospitalVehicles />
+              <HospitalLandscape />
               <Lighthouse />
               <SkyGradient />
               <SunAndRays onArchitectClick={() => setActiveModal({ type: 'about' })} />
@@ -4005,6 +4244,7 @@ function WorldMap() {
             enabled={hqPhase === 'idle' && !flyToBuildingId}
             flying={!!flyToBuildingId}
           />
+          <CameraIdleLogger controlsRef={controlsRef} />
           <ScenePrecompile />
             </>
           )}
@@ -4062,7 +4302,7 @@ function WorldMap() {
                   const [x, , z] = position
                   const sx = x * 0.95
                   const sy = -z * 0.95
-                  const colors = { resort: '#c9a227', 'elementary-school': '#4a90d9', 'mixed-use': '#7b68a6', hospital: '#c75b5b', 'tower-east': '#5b8a72', 'tower-west': '#5b8a72', 'twin-towers': '#5b8a72', 'three-pyramids': '#b8860b', 'life-line-hospital': '#c75b5b' }
+                  const colors = { resort: '#c9a227', 'museum-loving-maram': '#7da7ff', 'elementary-school': '#4a90d9', 'mixed-use': '#7b68a6', hospital: '#c75b5b', 'tower-east': '#5b8a72', 'tower-west': '#5b8a72', 'twin-towers': '#5b8a72', 'three-pyramids': '#b8860b', 'life-line-hospital': '#c75b5b' }
                   const fill = colors[project.id] || '#e6e1da'
                   return (
                     <g key={project.id} onClick={() => { setFlyToBuildingId(project.id); setShowMapModal(false) }} style={{ cursor: 'pointer' }}>
@@ -4128,14 +4368,27 @@ function WorldMap() {
         </div>
       )}
 
+      {activeModal?.type === 'museum' && (
+        <div className="world-museum-entry" role="dialog" aria-modal="true">
+          <div className="world-museum-entry-light" aria-hidden="true" />
+          <div className="world-museum-entry-doors" aria-hidden="true">
+            <span />
+            <span />
+          </div>
+          <ProjectDetail projectId={activeModal.id} embedded onClose={() => setActiveModal(null)} />
+        </div>
+      )}
+
       {/* Content modals: project, lighthouse, about, inbox — no navigation */}
-      {activeModal && (
+      {activeModal && activeModal.type !== 'museum' && (
         <div className="world-content-modal-overlay" onClick={() => setActiveModal(null)} role="dialog" aria-modal="true">
           <div
             className={`world-content-modal-panel ${activeModal.type === 'about' ? 'world-content-modal-panel-architect' : ''} ${activeModal.type === 'lighthouse' ? 'world-content-modal-panel-lighthouse' : ''}`}
             onClick={(e) => e.stopPropagation()}
           >
-            <button type="button" className="world-content-modal-close" onClick={() => setActiveModal(null)} aria-label="Close">×</button>
+            <div className="world-content-modal-close-wrap">
+              <button type="button" className="world-content-modal-close" onClick={() => setActiveModal(null)} aria-label="Close">×</button>
+            </div>
             {activeModal.type === 'project' && (
               <div className="world-content-modal-inner">
                 <ProjectDetail projectId={activeModal.id} embedded onClose={() => setActiveModal(null)} />

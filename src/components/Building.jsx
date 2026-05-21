@@ -23,7 +23,7 @@ const MOONLIGHT_DAY = '#b8c8d8'
 
 const TOWER_EAST_DAY = '#181C22'
 const TOWER_WEST_DAY = '#1C1F26'
-const HOSPITAL_DAY = '#E8ECEF'
+const HOSPITAL_DAY = '#B7422E' // deep red brick (day base)
 const PYRAMID_BASE_DAY = '#D6B98C'
 const MIXEDUSE_DAY = '#2A3655'
 
@@ -88,6 +88,8 @@ function Building({
 
   const renderBuilding = () => {
     if (buildingType === "resort") return <Resort material={palette} importance={importance} />
+    if (buildingType === "museum") return <MuseumOfLovingMaramBuilding material={palette} importance={importance} />
+    if (buildingType === "mosque") return <Mosque material={palette} importance={importance} />
     if (buildingType === "school") return <School material={palette} importance={importance} />
     if (buildingType === "mixed-use") return <MixedUse material={palette} importance={importance} />
     if (buildingType === "tower") return <Tower material={palette} importance={importance} projectId={project?.id} />
@@ -130,13 +132,13 @@ export default memo(Building)
 
 function getBuildingHeight(type, importance) {
   const pyramidH = importance === 3 ? 4.2 : importance === 2 ? 3.2 : 2.2
-  const h = { resort: 2.5, school: 3, 'mixed-use': 4, tower: 9 + importance * 1.2, pyramid: pyramidH, hospital: 3.12, default: 4 }
+  const h = { resort: 2.5, museum: 4.6, mosque: 5.5, school: 3, 'mixed-use': 4, tower: 9 + importance * 1.2, pyramid: pyramidH, hospital: 4.2, default: 4 }
   return h[type] ?? 4 + importance
 }
 
 function OutlineBox({ height, buildingType, isSelected }) {
-  const w = buildingType === 'tower' ? 1.4 : buildingType === 'hospital' ? 3.8 : buildingType === 'mixed-use' ? 4.2 : buildingType === 'pyramid' ? 1.8 : 3
-  const d = buildingType === 'tower' ? 1.4 : buildingType === 'hospital' ? 2.9 : buildingType === 'mixed-use' ? 3.4 : buildingType === 'pyramid' ? 1.8 : 2.5
+  const w = buildingType === 'tower' ? 1.4 : buildingType === 'hospital' ? 12 : buildingType === 'mixed-use' ? 4.2 : buildingType === 'pyramid' ? 1.8 : buildingType === 'museum' ? 6.4 : buildingType === 'mosque' ? 5.2 : 3
+  const d = buildingType === 'tower' ? 1.4 : buildingType === 'hospital' ? 5.2 : buildingType === 'mixed-use' ? 3.4 : buildingType === 'pyramid' ? 1.8 : buildingType === 'museum' ? 5.15 : buildingType === 'mosque' ? 4.5 : 2.5
   const color = HOVER_GREEN
   const opacity = isSelected ? 0.35 : 0.25
   return (
@@ -279,117 +281,232 @@ function GothicChurch({ material, importance = 1 }) {
   )
 }
 
-const HOSPITAL_SECONDARY = '#C9D6DF'
-const HOSPITAL_ACCENT = '#4DA3FF'
-const HOSPITAL_WINDOW_DAY = '#FFDFA3'
+// Life Line Hospital — proportion guide: main bar 10×4×2.2, bridge 6×2×1.2, V columns H1.5 base 0.3
+const HOSPITAL_BRICK = '#B7422E'
+const HOSPITAL_MORTAR = '#8A2C1F'
+const HOSPITAL_BRICK_NIGHT = '#5a1f18'
+const HOSPITAL_WHITE = '#E7E2D8'
+const HOSPITAL_WHITE_NIGHT = '#8a8580'
+const HOSPITAL_GLASS = '#7E9FB5'
+const HOSPITAL_ROOF = '#E2DDD3'
+const HOSPITAL_ROOF_NIGHT = '#7a7570'
+const HOSPITAL_SIGNAGE = '#222222'
+const HOSPITAL_TRIM = '#1a1a1a'
+const HOSPITAL_HVAC = '#a8a8a0'
 function Hospital({ material, importance = 1 }) {
   const { themeBlend } = useTheme()
-  const h = (2.8 + importance * 0.7) * 0.82
-  const wingMat = useMemo(() => ({ ...material, base: themeBlend > 0 ? HOSPITAL_SECONDARY : material.base }), [material, themeBlend])
-  const winCount = 12
-  const winMats = useMemo(() => Array.from({ length: winCount }, () => new THREE.MeshBasicMaterial({ color: WINDOW_DARK })), [])
-  const lastThrottleRef = useRef(0)
-  const modesRef = useRef(getWindowModes(winCount, 7))
-  const currentBrightnessRef = useRef([])
-  useFrame((state) => {
-    const t = state.clock.elapsedTime
-    if (themeBlend < 0.5) {
-      if (t - lastThrottleRef.current > FLICKER_INTERVAL_MIN + pseudoRand(Math.floor(t * 2)) * (FLICKER_INTERVAL_MAX - FLICKER_INTERVAL_MIN)) {
-        modesRef.current = getWindowModes(winCount, 7 + Math.floor(t))
-        lastThrottleRef.current = t
-      }
-      if (currentBrightnessRef.current.length !== winCount) currentBrightnessRef.current = Array(winCount).fill(0)
-      winMats.forEach((mat, i) => {
-        const targetB = brightnessForMode(modesRef.current[i], t)
-        let cur = currentBrightnessRef.current[i]
-        cur += (targetB - cur) * FLICKER_LERP_SPEED
-        currentBrightnessRef.current[i] = cur
-        mat.color.lerpColors(new THREE.Color(WINDOW_DARK), new THREE.Color(WINDOW_LIT), cur)
-      })
-    } else {
-      winMats.forEach((mat) => mat.color.set(HOSPITAL_WINDOW_DAY))
-    }
-  })
+  // Civic anchor scale: +15–20% footprint, +10% height vs base proportion
+  const MAIN_W = 11.5
+  const MAIN_D = 4.6
+  const FLOOR_H = 1.21
+  const PARAPET_H = 0.26
+  const totalBrickH = FLOOR_H * 2 + PARAPET_H
+  const LEVEL_INSET = 0.05
+  const BRIDGE_W = 7
+  const BRIDGE_D = 2.3
+  const BRIDGE_H = 1.35
+  const V_COLUMN_H = 1.8
+  const BRIDGE_BOTTOM = V_COLUMN_H
+  const WING_W = 2.8
+  const WING_D = 4
+  const WING_H = 1.15
+  const RECESS_DEPTH = 0.5
+  const brickColor = themeBlend > 0.5 ? HOSPITAL_BRICK : HOSPITAL_BRICK_NIGHT
+  const whiteColor = themeBlend > 0.5 ? HOSPITAL_WHITE : HOSPITAL_WHITE_NIGHT
+  const roofColor = themeBlend > 0.5 ? HOSPITAL_ROOF : HOSPITAL_ROOF_NIGHT
+  const glassColor = themeBlend > 0.4 ? HOSPITAL_GLASS : '#4a5a68'
+  const glassEmissive = themeBlend < 0.5 ? '#ffcc66' : null
+  const glassEmissiveIntensity = themeBlend < 0.5 ? 1.15 : 0
+  const ribDepth = 0.3
+  const ribW = 0.2
+  const ribSpacing = 0.25
+  const zigzagSegs = 12
+  const zigzagSegW = MAIN_W / zigzagSegs
+  const vCount = 5
+  const vBaseW = 0.36
+  const vSpacing = MAIN_W / (vCount + 1)
+  const winStripY = [FLOOR_H + FLOOR_H * 0.25, FLOOR_H + FLOOR_H * 0.55, FLOOR_H + FLOOR_H * 0.88]
+
   return (
     <group>
-      {/* Base plinth */}
-      <Box args={[3.8, 0.15, 3]} position={[0, 0.075, 0]} castShadow receiveShadow>
-        <meshStandardMaterial color={TRIM_DARK} roughness={0.9} metalness={0.05} />
+      {/* —— 1) Main two-story brick bar — clear 2 floors, 0.05 inset between levels —— */}
+      <Box args={[MAIN_W, FLOOR_H, MAIN_D]} position={[0, FLOOR_H / 2, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={brickColor} roughness={0.88} metalness={0.02} />
       </Box>
-      <Box args={[3.6, h, 2.8]} position={[0, 0.15 + h / 2, 0]} castShadow receiveShadow>
-        <StdMat material={material} />
+      <Box args={[MAIN_W - LEVEL_INSET * 2, FLOOR_H, MAIN_D - LEVEL_INSET * 2]} position={[0, FLOOR_H + FLOOR_H / 2, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={brickColor} roughness={0.88} metalness={0.02} />
       </Box>
-      <Box args={[1.3, h * 0.7, 1.8]} position={[-2.5, 0.15 + (h * 0.7) / 2, 0]} castShadow receiveShadow>
-        <StdMat material={wingMat} />
-      </Box>
-      <Box args={[1.3, h * 0.7, 1.8]} position={[2.5, 0.15 + (h * 0.7) / 2, 0]} castShadow receiveShadow>
-        <StdMat material={wingMat} />
-      </Box>
-      {/* Clear entrance + recessed door */}
-      <Box args={[1.1, 1.0, 0.12]} position={[0, 0.15 + 0.7, 1.42]} castShadow={false} receiveShadow={false}>
-        <meshStandardMaterial color={TRIM_DARK} roughness={0.85} />
-      </Box>
-      <Box args={[0.75, 0.9, 0.04]} position={[0, 0.15 + 0.65, 1.44]} castShadow={false} receiveShadow={false}>
-        <meshStandardMaterial color={CHARCOAL} roughness={0.9} />
-      </Box>
-      {/* Ambulance bay canopy */}
-      <Box args={[1.6, 0.08, 1.2]} position={[-1.6, 0.15 + 0.95, 1.52]} castShadow receiveShadow>
-        <meshStandardMaterial color={TRIM_DARK} roughness={0.85} />
-      </Box>
-      {/* Horizontal façade lines */}
-      {[0.4, 0.65, 0.88].map((frac, i) => (
-        <mesh key={i} position={[0, 0.15 + h * frac, 1.42]} castShadow={false} receiveShadow={false}>
-          <boxGeometry args={[3.5, 0.04, 0.06]} />
-          <meshStandardMaterial color={TRIM_DARK} roughness={0.88} />
+      {/* Horizontal brick courses — aligned with window strips, equal spacing —— */}
+      {[
+        ...winStripY.map((y) => y - 0.06),
+        ...winStripY.map((y) => y + 0.06),
+        0.2, 0.5, 0.8, FLOOR_H - 0.04,
+        FLOOR_H * 2 - 0.08,
+      ].sort((a, b) => a - b).map((y, i) => (
+        <mesh key={i} position={[0, y, MAIN_D / 2 + 0.02]} castShadow={false} receiveShadow={false}>
+          <boxGeometry args={[MAIN_W * 1.01, 0.04, 0.03]} />
+          <meshStandardMaterial color={HOSPITAL_MORTAR} roughness={0.92} />
         </mesh>
       ))}
-      {/* Vertical blue accent strips / window strips */}
-      {themeBlend > 0.2 && (
-        <>
-          <mesh position={[-0.7, 0.15 + h * 0.5, 1.43]} castShadow={false} receiveShadow={false}>
-            <boxGeometry args={[0.06, h * 0.85, 0.02]} />
-            <meshBasicMaterial color={HOSPITAL_ACCENT} />
-          </mesh>
-          <mesh position={[0, 0.15 + h * 0.5, 1.43]} castShadow={false} receiveShadow={false}>
-            <boxGeometry args={[0.06, h * 0.85, 0.02]} />
-            <meshBasicMaterial color={HOSPITAL_ACCENT} />
-          </mesh>
-          <mesh position={[0.7, 0.15 + h * 0.5, 1.43]} castShadow={false} receiveShadow={false}>
-            <boxGeometry args={[0.06, h * 0.85, 0.02]} />
-            <meshBasicMaterial color={HOSPITAL_ACCENT} />
-          </mesh>
-        </>
-      )}
-      {/* Full-height window rows — upper 60–90% of building */}
-      {[0, 1, 2, 3].map((col) => (
-        [0, 1, 2].map((row) => {
-          const i = col * 3 + row
-          const yStart = 0.15 + h * 0.55
-          const yEnd = 0.15 + h * 0.92
-          const rowY = yStart + (yEnd - yStart) * (row / 2)
-          return (
-            <mesh key={i} position={[-1.2 + col * 0.85, rowY, 1.44]} castShadow={false} receiveShadow={false}>
-              <boxGeometry args={[0.35, 0.5, 0.04]} />
-              {themeBlend > 0.4 ? <meshBasicMaterial color={HOSPITAL_WINDOW_DAY} /> : <primitive object={winMats[i]} attach="material" />}
-            </mesh>
-          )
-        })
-      ))}
-      {/* Red cross — slight emissive in day */}
-      <Box args={[0.5, 0.08, 0.04]} position={[0, 0.15 + h * 0.5, 1.44]} castShadow={false} receiveShadow={false}>
-        <meshStandardMaterial color={OXIDE} emissive={OXIDE} emissiveIntensity={themeBlend > 0.3 ? 0.12 : 0} roughness={0.9} metalness={0} />
+
+      {/* —— 2) Secondary wing (attached) —— */}
+      <Box args={[WING_W, WING_H, WING_D]} position={[MAIN_W / 2 + WING_W / 2 + 0.1, WING_H / 2, -0.1]} castShadow receiveShadow>
+        <meshStandardMaterial color={brickColor} roughness={0.88} metalness={0.02} />
       </Box>
-      <Box args={[0.08, 0.7, 0.04]} position={[0, 0.15 + h * 0.5, 1.44]} castShadow={false} receiveShadow={false}>
-        <meshStandardMaterial color={OXIDE} emissive={OXIDE} emissiveIntensity={themeBlend > 0.3 ? 0.12 : 0} roughness={0.9} metalness={0} />
+      <Box args={[WING_W * 0.7, 0.55, 0.05]} position={[MAIN_W / 2 + WING_W / 2 + 0.1, 0.5, WING_D / 2 + 0.02]} castShadow={false} receiveShadow={false}>
+        <meshStandardMaterial color={glassColor} roughness={0.3} metalness={0.05} emissive={glassEmissive} emissiveIntensity={glassEmissiveIntensity} />
       </Box>
-      {/* Roofline + roof edge trim */}
-      <Box args={[3.65, 0.1, 2.85]} position={[0, 0.15 + h + 0.05, 0]} castShadow receiveShadow>
-        <meshStandardMaterial color={TRIM_DARK} roughness={0.85} metalness={0.06} />
+
+      {/* —— 3) Left mass: vertical brick ribs + window strip + signage —— */}
+      {Array.from({ length: 8 }, (_, i) => {
+        const z = -MAIN_D / 2 + 0.4 + i * (ribSpacing + ribW)
+        if (z > MAIN_D / 2 - 0.35) return null
+        return (
+          <mesh key={`rib-${i}`} position={[-MAIN_W / 2 - ribDepth / 2, FLOOR_H, z]} castShadow receiveShadow>
+            <boxGeometry args={[ribDepth, FLOOR_H * 2, ribW]} />
+            <meshStandardMaterial color={HOSPITAL_MORTAR} roughness={0.9} metalness={0} />
+          </mesh>
+        )
+      })}
+      <Box args={[0.05, FLOOR_H * 1.9, MAIN_D * 0.9]} position={[-MAIN_W / 2 + 0.025, FLOOR_H, 0]} castShadow={false} receiveShadow={false}>
+        <meshStandardMaterial color={glassColor} roughness={0.35} metalness={0.05} emissive={glassEmissive} emissiveIntensity={glassEmissiveIntensity} />
       </Box>
-      <mesh position={[0, 0.15 + h + 0.08, 1.44]} castShadow={false} receiveShadow={false}>
-        <boxGeometry args={[3.7, 0.04, 0.04]} />
-        <meshStandardMaterial color={TRIM_DARK} roughness={0.86} />
+      {/* Signage: BLOOD BANK, PHARMACY, LIFELINE HOSPITAL, VASCULAR DEPARTMENT — dark gray, 3D extrusion —— */}
+      <group position={[-MAIN_W / 2 - 0.18, FLOOR_H * 0.55, 0.7]}>
+        <mesh castShadow receiveShadow>
+          <boxGeometry args={[0.1, 0.32, 1.1]} />
+          <meshStandardMaterial color={HOSPITAL_SIGNAGE} roughness={0.95} />
+        </mesh>
+      </group>
+      <group position={[-MAIN_W / 2 - 0.18, FLOOR_H * 0.55, -0.55]}>
+        <mesh castShadow receiveShadow>
+          <boxGeometry args={[0.1, 0.32, 0.85]} />
+          <meshStandardMaterial color={HOSPITAL_SIGNAGE} roughness={0.95} />
+        </mesh>
+      </group>
+      {/* VASCULAR DEPARTMENT on bridge (smaller label) —— */}
+      <group position={[0, BRIDGE_BOTTOM + BRIDGE_H / 2 - 0.1, MAIN_D / 2 + 0.5 + BRIDGE_D / 2 + 0.04]}>
+        <mesh castShadow receiveShadow>
+          <boxGeometry args={[2.2, 0.14, 0.05]} />
+          <meshStandardMaterial color={HOSPITAL_SIGNAGE} roughness={0.95} />
+        </mesh>
+      </group>
+      {/* LIFELINE HOSPITAL on WHITE bridge north facade — centered on white panel, above V columns, below roof —— */}
+      <group position={[0, BRIDGE_BOTTOM + BRIDGE_H / 2, MAIN_D / 2 + 0.5 + BRIDGE_D / 2 + 0.06]}>
+        <mesh castShadow receiveShadow>
+          <boxGeometry args={[BRIDGE_W * 0.65, BRIDGE_H * 0.38, 0.08]} />
+          <meshStandardMaterial color={brickColor} roughness={0.95} />
+        </mesh>
+      </group>
+
+      {/* —— 4) Zigzag roof edge _|‾|_|‾|_ — continuous, even spacing, same depth —— */}
+      {Array.from({ length: zigzagSegs }, (_, i) => {
+        const x = -MAIN_W / 2 + zigzagSegW * (i + 0.5)
+        const up = (i % 2) * 0.12
+        const segH = PARAPET_H + up
+        return (
+          <mesh key={`zig-${i}`} position={[x, FLOOR_H * 2 + segH / 2 + up * 0.5, MAIN_D / 2 + 0.03]} castShadow receiveShadow>
+            <boxGeometry args={[zigzagSegW * 0.98, segH, 0.28]} />
+            <meshStandardMaterial color={brickColor} roughness={0.88} metalness={0} />
+          </mesh>
+        )
+      })}
+      <mesh position={[0, FLOOR_H * 2 - 0.02, MAIN_D / 2]} castShadow={false} receiveShadow={false}>
+        <boxGeometry args={[MAIN_W + 0.06, 0.04, 0.04]} />
+        <meshStandardMaterial color={HOSPITAL_TRIM} roughness={0.9} />
       </mesh>
+      <Box args={[MAIN_W, 0.1, MAIN_D]} position={[0, FLOOR_H * 2 + PARAPET_H / 2, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={roofColor} roughness={0.85} metalness={0} />
+      </Box>
+      {[[-2, 0.2], [-0.5, -0.15], [1, 0.18], [2.2, -0.12]].map(([ox, oz], i) => (
+        <Box key={i} args={[0.5, 0.28, 0.45]} position={[ox, FLOOR_H * 2 + PARAPET_H + 0.18, oz]} castShadow receiveShadow>
+          <meshStandardMaterial color={HOSPITAL_HVAC} roughness={0.8} metalness={0.05} />
+        </Box>
+      ))}
+      <Box args={[MAIN_W * 0.45, 0.06, 0.08]} position={[0, FLOOR_H * 2 + PARAPET_H + 0.08, -0.35]} castShadow={false} receiveShadow={false}>
+        <meshStandardMaterial color={glassColor} roughness={0.3} metalness={0.08} emissive={glassEmissive} emissiveIntensity={glassEmissiveIntensity} />
+      </Box>
+
+      {/* —— 5) White vascular bridge: 6×2×1.2, heavy, elevated at 1.5 —— */}
+      <Box args={[BRIDGE_W, BRIDGE_H, BRIDGE_D]} position={[0, BRIDGE_BOTTOM + BRIDGE_H / 2, MAIN_D / 2 + 0.5]} castShadow receiveShadow>
+        <meshStandardMaterial color={whiteColor} roughness={0.82} metalness={0.03} />
+      </Box>
+      {/* V-shaped columns: thicker, clean, extend to bridge underside; no glass behind —— */}
+      {Array.from({ length: vCount }, (_, i) => {
+        const x = -MAIN_W / 2 + vSpacing * (i + 1)
+        return (
+          <group key={`v-${i}`} position={[x, 0, MAIN_D / 2 + 0.18]}>
+            <mesh position={[-vBaseW / 2 - 0.02, V_COLUMN_H / 2, 0.06]} rotation={[0, 0, 0.14]} castShadow receiveShadow>
+              <boxGeometry args={[vBaseW, V_COLUMN_H, 0.24]} />
+              <meshStandardMaterial color={whiteColor} roughness={0.82} />
+            </mesh>
+            <mesh position={[vBaseW / 2 + 0.02, V_COLUMN_H / 2, 0.06]} rotation={[0, 0, -0.14]} castShadow receiveShadow>
+              <boxGeometry args={[vBaseW, V_COLUMN_H, 0.24]} />
+              <meshStandardMaterial color={whiteColor} roughness={0.82} />
+            </mesh>
+          </group>
+        )
+      })}
+
+      {/* Canopy slab in front (supported by V columns); nothing between columns and recess —— */}
+      <group position={[0, 0, MAIN_D / 2 + 0.12]}>
+        <Box args={[2.9, 0.16, 0.5]} position={[0, FLOOR_H * 2 + 0.02, 0.15]} castShadow receiveShadow>
+          <meshStandardMaterial color={whiteColor} roughness={0.85} />
+        </Box>
+      </group>
+
+      {/* Recessed entrance: glass and fins only at back of recess (no glass behind V columns) —— */}
+      <group position={[0, 0, MAIN_D / 2 - RECESS_DEPTH]}>
+        <mesh position={[0, FLOOR_H, -0.02]} castShadow={false} receiveShadow={false}>
+          <boxGeometry args={[2.65, FLOOR_H * 2.02, 0.04]} />
+          <meshStandardMaterial color={brickColor} roughness={0.95} />
+        </mesh>
+        <Box args={[2.6, FLOOR_H * 1.98, 0.06]} position={[0, FLOOR_H, 0.02]} castShadow={false} receiveShadow={false}>
+          <meshStandardMaterial color={glassColor} roughness={0.3} metalness={0.05} emissive={glassEmissive} emissiveIntensity={glassEmissiveIntensity} />
+        </Box>
+        {[-0.6, -0.3, 0, 0.3, 0.6].map((ox, i) => (
+          <Box key={i} args={[0.12, FLOOR_H * 1.95, 0.12]} position={[ox, FLOOR_H, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color={whiteColor} roughness={0.8} />
+          </Box>
+        ))}
+        <Box args={[0.5, 0.08, 0.04]} position={[0.15, FLOOR_H * 1.12, 0.04]} castShadow={false} receiveShadow={false}>
+          <meshStandardMaterial color={OXIDE} emissive={OXIDE} emissiveIntensity={themeBlend > 0.3 ? 0.1 : 0.05} roughness={0.9} />
+        </Box>
+        <Box args={[0.08, 0.6, 0.04]} position={[0.15, FLOOR_H * 0.82, 0.04]} castShadow={false} receiveShadow={false}>
+          <meshStandardMaterial color={OXIDE} emissive={OXIDE} emissiveIntensity={themeBlend > 0.3 ? 0.1 : 0.05} roughness={0.9} />
+        </Box>
+      </group>
+
+      {/* —— 7) Windows: upper strips aligned with brick bands; lower = large curtain —— */}
+      {winStripY.map((y, i) => (
+        <mesh key={i} position={[0, y, MAIN_D / 2 + 0.03]} castShadow={false} receiveShadow={false}>
+          <boxGeometry args={[MAIN_W * 0.88, 0.12, 0.05]} />
+          <meshStandardMaterial color={glassColor} roughness={0.35} metalness={0.05} emissive={glassEmissive} emissiveIntensity={glassEmissiveIntensity} />
+        </mesh>
+      ))}
+      {[0, 1].map((row) => (
+        <mesh key={row} position={[-2.5 + row * 2.2, FLOOR_H * 0.5, MAIN_D / 2 + 0.025]} castShadow={false} receiveShadow={false}>
+          <boxGeometry args={[1.4, 0.75, 0.04]} />
+          <meshStandardMaterial color={glassColor} roughness={0.35} metalness={0.05} emissive={glassEmissive} emissiveIntensity={glassEmissiveIntensity} />
+        </mesh>
+      ))}
+      {Array.from({ length: 6 }, (_, i) => {
+        const x = -MAIN_W / 2 + (MAIN_W / 7) * (i + 1)
+        return (
+          <mesh key={i} position={[x, FLOOR_H, MAIN_D / 2 + 0.026]} castShadow receiveShadow>
+            <boxGeometry args={[0.08, FLOOR_H * 2, 0.03]} />
+            <meshStandardMaterial color={brickColor} roughness={0.88} />
+          </mesh>
+        )
+      })}
+
+      {/* —— 8) Walkway + plinth —— */}
+      <Box args={[2.2, 0.04, 1]} position={[0, 0.02, MAIN_D / 2 + 0.4]} castShadow receiveShadow>
+        <meshStandardMaterial color="#b0b0a8" roughness={0.9} metalness={0} />
+      </Box>
+      <Box args={[MAIN_W + WING_W + 0.4, 0.06, MAIN_D + 0.25]} position={[WING_W * 0.15, -0.03, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={HOSPITAL_MORTAR} roughness={0.92} metalness={0} />
+      </Box>
     </group>
   )
 }
@@ -760,6 +877,391 @@ function DefaultBuilding({ material, importance = 1 }) {
       {/* Roofline — parapet / cornice */}
       <Box args={[w + 0.12, 0.12, d + 0.12]} position={[0, 0.18 + h + 0.06, 0]} castShadow receiveShadow>
         <meshStandardMaterial color={TRIM_DARK} roughness={0.85} metalness={0.06} />
+      </Box>
+    </group>
+  )
+}
+
+function MuseumOfLovingMaramBuilding({ material, importance = 1 }) {
+  const { themeBlend } = useTheme()
+  const birthdayRefs = useRef([])
+  useFrame((state) => {
+    const t = state.clock.elapsedTime
+    birthdayRefs.current.forEach((mesh, i) => {
+      if (!mesh) return
+      mesh.position.y = mesh.userData.baseY + Math.sin(t * 0.32 + i) * 0.08
+      mesh.rotation.y = Math.sin(t * 0.18 + i) * 0.08
+    })
+  })
+
+  const night = themeBlend < 0.5
+  const limestone = night ? '#d2c7b7' : '#f0eadf'
+  const travertine = night ? '#b9aa94' : '#d8cdbd'
+  const plaster = night ? '#efe6d8' : '#f7f1e8'
+  const shadowStone = night ? '#a99982' : '#c9b9a3'
+  const maroon = '#5b1f2d'
+  const maroonDark = '#321018'
+  const brass = '#b99962'
+  const champagne = '#d6be92'
+  const warmLight = '#ffe2b5'
+  const glass = night ? '#d8d2c6' : '#e7e1d8'
+
+  return (
+    <group>
+      {/* Pale stone forecourt: quiet approach instead of a game-like moat. */}
+      <Box args={[6.4, 0.18, 5.15]} position={[0, 0.09, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={travertine} roughness={0.88} metalness={0.02} />
+      </Box>
+      <Box args={[1.55, 0.035, 3.1]} position={[0, 0.2, 3.15]} receiveShadow>
+        <meshStandardMaterial color={plaster} roughness={0.82} metalness={0.02} />
+      </Box>
+      <Box args={[1.95, 0.12, 0.42]} position={[0, 0.29, 2.15]} castShadow receiveShadow>
+        <meshStandardMaterial color={shadowStone} roughness={0.86} metalness={0.02} />
+      </Box>
+      <Box args={[1.55, 0.1, 0.36]} position={[0, 0.39, 1.86]} castShadow receiveShadow>
+        <meshStandardMaterial color={travertine} roughness={0.86} metalness={0.02} />
+      </Box>
+
+      {/* Main pavilion: calm symmetry, warm limestone, and soft shadow lines. */}
+      <Box args={[5.35, 0.32, 3.95]} position={[0, 0.36, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={shadowStone} roughness={0.9} metalness={0.02} />
+      </Box>
+      <Box args={[4.75, 3.05, 3.28]} position={[0, 1.98, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={limestone} roughness={0.84} metalness={0.02} />
+      </Box>
+      <Box args={[1.05, 2.36, 2.92]} position={[-2.9, 1.68, -0.06]} castShadow receiveShadow>
+        <meshStandardMaterial color={plaster} roughness={0.86} metalness={0.02} />
+      </Box>
+      <Box args={[1.05, 2.36, 2.92]} position={[2.9, 1.68, -0.06]} castShadow receiveShadow>
+        <meshStandardMaterial color={plaster} roughness={0.86} metalness={0.02} />
+      </Box>
+      <Box args={[5.55, 0.18, 3.75]} position={[0, 3.6, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={travertine} roughness={0.78} metalness={0.03} />
+      </Box>
+      <Box args={[4.85, 0.055, 0.08]} position={[0, 2.92, 1.7]} castShadow={false} receiveShadow={false}>
+        <meshStandardMaterial color={champagne} roughness={0.42} metalness={0.32} />
+      </Box>
+
+      {/* Recessed private-gallery entrance. */}
+      <group position={[0, 1.64, 1.75]}>
+        <Box args={[2.35, 2.75, 0.34]} position={[0, 0.15, 0]} castShadow receiveShadow>
+          <meshStandardMaterial color={plaster} roughness={0.82} metalness={0.02} />
+        </Box>
+        <Box args={[1.78, 2.2, 0.18]} position={[0, 0.02, 0.12]} castShadow receiveShadow>
+          <meshStandardMaterial color={shadowStone} roughness={0.86} metalness={0.02} />
+        </Box>
+        <Box args={[1.22, 1.74, 0.08]} position={[0, -0.28, 0.25]} castShadow receiveShadow>
+          <meshStandardMaterial color={maroon} emissive={night ? maroonDark : '#000000'} emissiveIntensity={night ? 0.08 : 0} roughness={0.72} metalness={0.04} />
+        </Box>
+        <Box args={[0.035, 0.55, 0.045]} position={[0.42, -0.24, 0.31]} castShadow={false} receiveShadow={false}>
+          <meshStandardMaterial color={brass} roughness={0.32} metalness={0.48} />
+        </Box>
+        <Box args={[1.42, 0.045, 0.07]} position={[0, 0.72, 0.31]} castShadow={false} receiveShadow={false}>
+          <meshStandardMaterial color={warmLight} emissive={warmLight} emissiveIntensity={night ? 0.28 : 0.08} roughness={0.55} />
+        </Box>
+        <Box args={[0.06, 2.28, 0.07]} position={[-0.94, 0.02, 0.28]} castShadow={false} receiveShadow={false}>
+          <meshStandardMaterial color={brass} roughness={0.38} metalness={0.38} />
+        </Box>
+        <Box args={[0.06, 2.28, 0.07]} position={[0.94, 0.02, 0.28]} castShadow={false} receiveShadow={false}>
+          <meshStandardMaterial color={brass} roughness={0.38} metalness={0.38} />
+        </Box>
+      </group>
+
+      {/* Minimal recessed gallery windows with warm interior light. */}
+      {[
+        [-1.55, 1.76, 1.72],
+        [1.55, 1.76, 1.72],
+        [-2.9, 1.54, 1.42],
+        [2.9, 1.54, 1.42],
+      ].map(([x, y, z], i) => (
+        <group key={`museum-window-${i}`} position={[x, y, z]}>
+          <Box args={[0.46, 1.45, 0.12]} position={[0, 0, 0]} castShadow={false} receiveShadow={false}>
+            <meshStandardMaterial color={shadowStone} roughness={0.88} metalness={0.02} />
+          </Box>
+          <Box args={[0.32, 1.2, 0.06]} position={[0, 0, 0.08]} castShadow={false} receiveShadow={false}>
+            <meshStandardMaterial color={maroonDark} emissive={warmLight} emissiveIntensity={night ? 0.18 : 0.05} roughness={0.44} metalness={0.06} />
+          </Box>
+          <Box args={[0.02, 1.25, 0.08]} position={[0, 0, 0.12]} castShadow={false} receiveShadow={false}>
+            <meshStandardMaterial color={champagne} roughness={0.42} metalness={0.34} />
+          </Box>
+        </group>
+      ))}
+
+      {/* Frosted glass skylight: integrated museum dome, not a sci-fi beacon. */}
+      <mesh position={[0, 3.86, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[0.98, 1.08, 0.35, 32]} />
+        <meshStandardMaterial color={glass} emissive={warmLight} emissiveIntensity={night ? 0.08 : 0.02} roughness={0.34} metalness={0.08} transparent opacity={0.72} />
+      </mesh>
+      <mesh position={[0, 4.08, 0]} castShadow={false} receiveShadow={false}>
+        <sphereGeometry args={[0.98, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <meshStandardMaterial color={glass} emissive={warmLight} emissiveIntensity={night ? 0.12 : 0.03} roughness={0.24} metalness={0.06} transparent opacity={0.62} />
+      </mesh>
+      {[0, 1, 2, 3].map((i) => (
+        <mesh key={`skylight-rib-${i}`} position={[0, 4.13, 0]} rotation={[0, (Math.PI / 4) * i, 0]} castShadow={false} receiveShadow={false}>
+          <boxGeometry args={[0.018, 0.045, 1.95]} />
+          <meshStandardMaterial color={brass} roughness={0.36} metalness={0.4} />
+        </mesh>
+      ))}
+
+      {/* Curated birthday details: restrained balloons, flowers, and candle-like path lights. */}
+      {[
+        [-2.35, 3.0, 1.95, '#f1d6d4'],
+        [-2.08, 3.2, 1.8, '#f6eadb'],
+        [2.35, 2.9, 1.95, '#6b2736'],
+        [2.08, 3.12, 1.78, '#d7bd88'],
+      ].map(([x, y, z, color], i) => (
+        <group key={`birthday-balloon-${i}`} ref={(el) => { if (el) { el.userData.baseY = y; birthdayRefs.current[i] = el } }} position={[x, y, z]}>
+          <mesh castShadow={false} receiveShadow={false}>
+            <sphereGeometry args={[0.16, 16, 12]} />
+            <meshStandardMaterial color={color} transparent opacity={0.72} roughness={0.2} metalness={0.04} />
+          </mesh>
+          <mesh position={[0, -0.34, 0]} castShadow={false} receiveShadow={false}>
+            <cylinderGeometry args={[0.005, 0.005, 0.62, 4]} />
+            <meshBasicMaterial color={champagne} transparent opacity={0.65} />
+          </mesh>
+        </group>
+      ))}
+      {[-1.45, 1.45].map((x, i) => (
+        <group key={`floral-${i}`} position={[x, 0.46, 2.02]}>
+          <Box args={[0.42, 0.12, 0.18]} position={[0, 0, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color={travertine} roughness={0.84} />
+          </Box>
+          {[-0.14, 0, 0.14].map((dx, j) => (
+            <mesh key={j} position={[dx, 0.13 + j * 0.02, 0]} castShadow={false} receiveShadow={false}>
+              <sphereGeometry args={[0.055, 8, 6]} />
+              <meshStandardMaterial color={j === 1 ? '#f1d6d4' : '#f8f0e5'} roughness={0.7} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+      {[-2.1, -1.25, 1.25, 2.1].map((x, i) => (
+        <mesh key={`path-light-${i}`} position={[x, 0.34, 2.75]} castShadow={false} receiveShadow={false}>
+          <sphereGeometry args={[0.065, 10, 8]} />
+          <meshStandardMaterial color={warmLight} emissive={warmLight} emissiveIntensity={night ? 0.32 : 0.08} transparent opacity={0.86} roughness={0.4} />
+        </mesh>
+      ))}
+
+      {/* Minimal landscape and benches keep the pavilion quiet inside the city. */}
+      {[-2.35, 2.35].map((x, i) => (
+        <group key={`museum-bench-${i}`} position={[x, 0.36, 2.55]}>
+          <Box args={[0.9, 0.1, 0.25]} position={[0, 0, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color={travertine} roughness={0.78} />
+          </Box>
+          <Box args={[0.08, 0.22, 0.2]} position={[-0.32, -0.13, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color={shadowStone} roughness={0.82} />
+          </Box>
+          <Box args={[0.08, 0.22, 0.2]} position={[0.32, -0.13, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color={shadowStone} roughness={0.82} />
+          </Box>
+        </group>
+      ))}
+      {[
+        [-2.95, 0.48],
+        [2.95, 0.48],
+        [-2.95, -1.15],
+        [2.95, -1.15],
+      ].map(([x, z], i) => (
+        <group key={`soft-planting-${i}`} position={[x, 0.27, z]}>
+          <Box args={[0.54, 0.08, 0.34]} position={[0, 0, 0]} receiveShadow>
+            <meshStandardMaterial color={shadowStone} roughness={0.9} />
+          </Box>
+          {[0, 1, 2, 3].map((j) => (
+            <mesh key={j} position={[-0.18 + j * 0.12, 0.1, (j % 2) * 0.08 - 0.04]} castShadow={false} receiveShadow={false}>
+              <sphereGeometry args={[0.055, 8, 6]} />
+              <meshStandardMaterial color={j % 2 ? '#e9cfcc' : '#f8f3ea'} roughness={0.75} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+    </group>
+  )
+}
+
+// Mosque: single root group, all Y from structural hierarchy (foundation → body → roof → drum → dome)
+const MOSQUE_WALL = '#E8E3DA'
+const MOSQUE_DOME = '#DAD6CE'
+const MOSQUE_DOOR = '#4A2E1F'
+const MOSQUE_METAL = '#1F1F1F'
+const MOSQUE_FINIAL = '#C7A63A'
+function Mosque({ material, importance = 1 }) {
+  const { themeBlend } = useTheme()
+
+  // ——— STRUCTURAL HEIGHTS (every Y is derived from these) ———
+  const foundationH = 0.6
+  const bodyH = 2.24
+  const bodyW = 5
+  const bodyD = 4.5
+  const roofSlabH = 0.08
+  const roofTop = foundationH + bodyH + roofSlabH
+
+  const centralDrumH = 1.0
+  const centralDrumR = 1.0
+  const centralDomeR = 1.1
+  const drumTop = roofTop + centralDrumH
+  const centralDomeCenterY = drumTop + centralDomeR
+  const centralFinialH = 0.2
+
+  const smallBaseH = 0.3
+  const smDrumH = 0.15
+  const smDomeR = 0.26
+  const smDrumR = smDomeR * 0.95
+  const cornerOffset = 0.55
+  const smallCornerX = bodyW / 2 - cornerOffset
+  const smallCornerZ = bodyD / 2 - cornerOffset
+
+  const mainDomeTotalH = centralDrumH + centralDomeR
+  const minaretTotalH = mainDomeTotalH * 1.5 * 1.6
+  const minaretBaseH = 0.25
+  const minaretBaseR = 0.22
+  const minaretShaftR = 0.14
+  const minaretShaftH = minaretTotalH - minaretBaseH - 0.16 - 0.55 - 0.24 - 0.2
+  const minaretBalconyH = 0.16
+  const minaretBalconyR = 0.22
+  const minaretUpperH = 0.55
+  const minaretUpperR = 0.11
+  const minaretOnionH = 0.24
+  const minaretTipH = 0.2
+  const minaretX = bodyW / 2 + 0.3
+  const minaretZ = bodyD / 2 + 0.35
+
+  const wallColor = themeBlend > 0.5 ? MOSQUE_WALL : '#a8a49c'
+  const domeColor = themeBlend > 0.5 ? MOSQUE_DOME : '#9a9690'
+  const doorColor = MOSQUE_DOOR
+  const finialColor = MOSQUE_FINIAL
+  const glassEmissive = themeBlend < 0.5 ? '#ffe8b8' : null
+  const glassEi = themeBlend < 0.5 ? 0.5 : 0
+
+  return (
+    <group>
+      {/* 1. Foundation — anchor, slightly wider, everything sits on this */}
+      <Box args={[bodyW + 0.5, foundationH, bodyD + 0.5]} position={[0, foundationH / 2, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={wallColor} roughness={0.9} metalness={0.02} />
+      </Box>
+
+      {/* 2. Main cube body — sits on foundation */}
+      <Box args={[bodyW, bodyH, bodyD]} position={[0, foundationH + bodyH / 2, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={wallColor} roughness={0.88} metalness={0.02} />
+      </Box>
+
+      {/* 3. Roof slab — sits on body */}
+      <Box args={[bodyW, roofSlabH, bodyD]} position={[0, roofTop - roofSlabH / 2, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={domeColor} roughness={0.88} />
+      </Box>
+      <Box args={[bodyW + 0.1, 0.04, bodyD + 0.1]} position={[0, roofTop, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color={domeColor} roughness={0.9} />
+      </Box>
+
+      {/* 4. Central drum — on roof, centered */}
+      <mesh position={[0, roofTop + centralDrumH / 2, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[centralDrumR, centralDrumR * 1.02, centralDrumH, 20]} />
+        <meshStandardMaterial color={domeColor} roughness={0.85} metalness={0} />
+      </mesh>
+
+      {/* 5. Big dome — bottom exactly on drum top: center Y = drumTop + domeR */}
+      <mesh position={[0, centralDomeCenterY, 0]} castShadow receiveShadow>
+        <sphereGeometry args={[centralDomeR, 24, 18, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <meshStandardMaterial color={domeColor} roughness={0.85} metalness={0} />
+      </mesh>
+      <mesh position={[0, centralDomeCenterY + centralDomeR + 0.06, 0]} castShadow>
+        <sphereGeometry args={[0.12, 10, 8]} />
+        <meshStandardMaterial color={finialColor} roughness={0.4} metalness={0.3} />
+      </mesh>
+      <mesh position={[0, centralDomeCenterY + centralDomeR + 0.06 + centralFinialH / 2 + 0.06, 0]} castShadow>
+        <cylinderGeometry args={[0.035, 0.035, centralFinialH, 8]} />
+        <meshStandardMaterial color={finialColor} roughness={0.4} metalness={0.3} />
+      </mesh>
+
+      {/* 6. Four small domes — each: cylindrical base on roof, mini drum, dome; corners x = ±(bodyW/2 - offset), z = ±(bodyD/2 - offset) */}
+      {[[-1, -1], [-1, 1], [1, -1], [1, 1]].map(([sx, sz], i) => (
+        <group key={`sm-${i}`} position={[sx * smallCornerX, roofTop, sz * smallCornerZ]}>
+          <mesh position={[0, smallBaseH / 2, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[smDrumR * 1.4, smDrumR * 1.4, smallBaseH, 12]} />
+            <meshStandardMaterial color={domeColor} roughness={0.88} />
+          </mesh>
+          <mesh position={[0, smallBaseH + smDrumH / 2, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[smDrumR, smDrumR, smDrumH, 12]} />
+            <meshStandardMaterial color={domeColor} roughness={0.85} />
+          </mesh>
+          <mesh position={[0, smallBaseH + smDrumH + smDomeR, 0]} castShadow receiveShadow>
+            <sphereGeometry args={[smDomeR, 12, 10, 0, Math.PI * 2, 0, Math.PI / 2]} />
+            <meshStandardMaterial color={domeColor} roughness={0.85} />
+          </mesh>
+          <mesh position={[0, smallBaseH + smDrumH + smDomeR + 0.05, 0]} castShadow>
+            <sphereGeometry args={[0.05, 6, 4]} />
+            <meshStandardMaterial color={finialColor} roughness={0.4} metalness={0.3} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* 7. Minarets — base Y = foundation top (anchored to ground); all parts stacked in local space */}
+      {[-1, 1].map((side, i) => (
+        <group key={`min-${i}`} position={[side * minaretX, foundationH, minaretZ]}>
+          <mesh position={[0, minaretBaseH / 2, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[minaretBaseR, minaretBaseR * 1.05, minaretBaseH, 12]} />
+            <meshStandardMaterial color={wallColor} roughness={0.88} />
+          </mesh>
+          <mesh position={[0, minaretBaseH + minaretShaftH / 2, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[minaretShaftR, minaretShaftR * 1.02, minaretShaftH, 12]} />
+            <meshStandardMaterial color={wallColor} roughness={0.88} />
+          </mesh>
+          <mesh position={[0, minaretBaseH + minaretShaftH + minaretBalconyH / 2, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[minaretBalconyR, minaretBalconyR, minaretBalconyH, 12]} />
+            <meshStandardMaterial color={wallColor} roughness={0.88} />
+          </mesh>
+          <mesh position={[0, minaretBaseH + minaretShaftH + minaretBalconyH + minaretUpperH / 2, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[minaretUpperR, minaretUpperR * 0.98, minaretUpperH, 12]} />
+            <meshStandardMaterial color={wallColor} roughness={0.88} />
+          </mesh>
+          <mesh position={[0, minaretBaseH + minaretShaftH + minaretBalconyH + minaretUpperH + minaretOnionH / 2, 0]} castShadow>
+            <sphereGeometry args={[minaretUpperR * 1.8, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
+            <meshStandardMaterial color={domeColor} roughness={0.85} />
+          </mesh>
+          <mesh position={[0, minaretBaseH + minaretShaftH + minaretBalconyH + minaretUpperH + minaretOnionH + minaretTipH / 2, 0]} castShadow>
+            <cylinderGeometry args={[0.03, 0.03, minaretTipH, 6]} />
+            <meshStandardMaterial color={finialColor} roughness={0.4} metalness={0.3} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Entrance — Y from foundation + half body */}
+      <group position={[0, foundationH + bodyH / 2, bodyD / 2 + 0.01]}>
+        <mesh position={[0, 0.2, 0.14]} castShadow receiveShadow>
+          <boxGeometry args={[1.7, 1.85, 0.28]} />
+          <meshStandardMaterial color={wallColor} roughness={0.88} />
+        </mesh>
+        <mesh position={[0, 0.05, 0.18]} castShadow>
+          <boxGeometry args={[1.2, 1.35, 0.06]} />
+          <meshStandardMaterial color={doorColor} roughness={0.9} />
+        </mesh>
+        <mesh position={[0, 0.95, 0.18]} castShadow={false} receiveShadow={false}>
+          <boxGeometry args={[1.1, 0.18, 0.03]} />
+          <meshStandardMaterial color={MOSQUE_METAL} roughness={0.9} />
+        </mesh>
+      </group>
+
+      {/* Side windows — Y from foundation + body */}
+      {[-1, 1].map((side, i) => (
+        <group key={`win-${i}`} position={[side * (bodyW / 2 + 0.02), foundationH + bodyH * 0.58, 0.25]}>
+          <mesh castShadow={false} receiveShadow={false}>
+            <boxGeometry args={[0.1, 0.75, 0.05]} />
+            <meshStandardMaterial color={wallColor} roughness={0.88} />
+          </mesh>
+          <mesh position={[0, 0, 0.03]} castShadow={false} receiveShadow={false}>
+            <boxGeometry args={[0.06, 0.6, 0.02]} />
+            <meshStandardMaterial color="#2a3540" emissive={glassEmissive} emissiveIntensity={glassEi} roughness={0.4} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* 3 front steps — on foundation top */}
+      <Box args={[bodyW * 0.4, 0.08, 0.3]} position={[0, foundationH + 0.04, bodyD / 2 + 0.28]} castShadow receiveShadow>
+        <meshStandardMaterial color={domeColor} roughness={0.92} />
+      </Box>
+      <Box args={[bodyW * 0.43, 0.08, 0.3]} position={[0, foundationH + 0.12, bodyD / 2 + 0.25]} castShadow receiveShadow>
+        <meshStandardMaterial color={domeColor} roughness={0.92} />
+      </Box>
+      <Box args={[bodyW * 0.46, 0.08, 0.3]} position={[0, foundationH + 0.2, bodyD / 2 + 0.22]} castShadow receiveShadow>
+        <meshStandardMaterial color={domeColor} roughness={0.92} />
       </Box>
     </group>
   )

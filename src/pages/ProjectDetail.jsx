@@ -1,4 +1,4 @@
-import { useState, Suspense, useEffect } from 'react'
+import { useState, Suspense, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera, Environment } from '@react-three/drei'
@@ -40,6 +40,10 @@ function ProjectDetail({ embedded, projectId: projectIdProp, onClose }) {
     )
   }
 
+  if (project.buildingType === 'museum') {
+    return <MuseumOfLovingMaram embedded={embedded} onClose={onClose} theme={theme} />
+  }
+
   const isDay = theme === 'day'
   const images = project.images || []
 
@@ -53,11 +57,6 @@ function ProjectDetail({ embedded, projectId: projectIdProp, onClose }) {
         <div className="voxel-grid-bg" />
         <div className="building-silhouette" data-building={project.buildingType} />
       </div>
-
-      {/* Sticky close (X) — always visible when scrolling */}
-      {(embedded && onClose) && (
-        <button type="button" className="project-close-sticky" onClick={onClose} aria-label="Close">×</button>
-      )}
 
       {/* Title + description always under title; metadata right */}
       <header className="project-header">
@@ -283,3 +282,314 @@ function ProjectDetail({ embedded, projectId: projectIdProp, onClose }) {
 }
 
 export default ProjectDetail
+
+const museumDoors = [
+  { title: 'Before You', unlocked: false, tone: 'moonlit', unlock: 'Opens tomorrow', symbol: 'I' },
+  { title: 'The Smile Exhibit', unlocked: false, tone: 'gold', unlock: 'Opens May 23', symbol: 'II' },
+  { title: 'Little Things', unlocked: false, tone: 'amber', unlock: 'Opens May 24', symbol: 'III' },
+  { title: 'You Changed My Life', unlocked: false, tone: 'rose', unlock: 'Opens May 25', symbol: 'IV' },
+  { title: 'Constellation Room', unlocked: false, tone: 'starlit', unlock: 'Opens May 26', symbol: 'V' },
+  { title: 'Sound of Us', unlocked: false, tone: 'violet', unlock: 'Opens May 27', symbol: 'VI' },
+  { title: '100 Years Together', unlocked: false, tone: 'sacred', unlock: 'Opens May 29', symbol: 'VII' },
+]
+
+const beforeYouPoem = `Before I knew your name,
+life was crowded, loud, aflame.
+Rooms overflowed, the tables wide,
+yet something starving lived inside.
+
+I laughed the loudest in the hall,
+the boy they swore could charm them all.
+I wore my joy like borrowed clothes,
+while emptiness beneath it froze.
+
+Room 206 would breathe at night,
+drowned in smoke and restless light.
+Voices crashing wall to wall,
+yet somehow I was not there at all.
+
+The laughter rang, the music swayed,
+young hearts performed, young egos played.
+And there I stood among the noise,
+a king surrounded by his toys?
+
+I thought that this was what life meant:
+a loud applause, a quick event.
+A racing pulse, a sleepless high,
+never asking myself why.
+
+But darkness is a patient art,
+it builds its home inside the heart.
+Sometimes a boy can glow for years
+while quietly dissolving into cheers.
+
+Then came that corridor one night,
+half asleep in silver light.
+The music room. The whole school.
+The air so cold, the dark so blue.
+
+And there you were.
+So simple. Unaware.
+As if God had hidden spring itself
+inside a girl with midnight hair.
+
+No orchestra announced your face.
+No thunder split the sky in place.
+Yet when your fingers touched my hand,
+something eternal chose to land.
+
+A simple touch. A passing thing.
+No violins or flutes began to sing.
+Yet when your hand fell into mine,
+the stars and moons rearranged their design.
+
+And Oh God, how strange the air became,
+how suddenly I just knew my name.
+As if my chest, for all those years,
+had only borrowed breath and gears.
+
+As if my soul, for all those years,
+had only practiced being here.
+As if my lungs had learned to live
+the moment you appeared.
+
+I carried that touch for months like fire,
+a quiet wound, a sacred wire.
+I replayed it before I’d sleep,
+the way starving men remember feast.
+
+Before you, mornings used to pass
+like trains disappearing behind glass.
+Now dawn itself began to bloom
+because one day it might lead to you.
+
+I used to worship crowds and noise,
+the reckless glow of boys with boys.
+Now place me where your soul is not,
+and every color starts to rot.
+
+My friends still laugh the way they did,
+repeat the same old drunken bits.
+But if your name is not somewhere near,
+their voices fade against my ear.
+
+I became the boy who checks his phone
+in rooms where he once ruled alone.
+The boy who leaves the brightest place
+just to wait for your typing pace.
+
+And God, how deeply you have grown
+through every corner I call home.
+You live inside my smallest ways,
+inside my work, my nights, my days.
+
+At work, while people speak and move,
+I build our future in my head like truth.
+Curtains dancing in softened light,
+your sleepy voice at two past night.
+
+You do not know how much you changed.
+How every wire rearranged.
+How ambition bent its knee
+the moment it included “we.”
+
+Facebook once was lifeless blue,
+a graveyard scrolling people through.
+Now Messenger became the sea
+where every wave carried you to me.
+
+I wait for your replies like a flower waits for rain,
+like deserts ache through months of pain.
+One little notification sound
+could pull my world back around.
+
+And slowly, frighteningly, it grew,
+this life that only blooms with you.
+Food lost flavor. Cities dimmed.
+Songs went quiet at the brim.
+
+Because nothing shines the way it did
+once my heart learned where it lived.
+You became my favorite place.
+My silence. My escape. My grace.
+
+Not just the girl I wished to hold,
+but the first warmth in a freezing world.
+And if you built a cage from your arms,
+I would mistake those bars for stars.
+
+Lock every door and keep the key,
+The only freedom with you near me.`
+
+function MuseumOfLovingMaram({ embedded, onClose, theme }) {
+  const [enteredRoom, setEnteredRoom] = useState(false)
+  const [countdown, setCountdown] = useState(() => getMuseumCountdown())
+  const museumAudioRef = useRef(null)
+
+  useEffect(() => {
+    const id = setInterval(() => setCountdown(getMuseumCountdown()), 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  useEffect(() => {
+    const audio = new Audio('/audio/song1.mp3')
+    audio.loop = true
+    audio.preload = 'auto'
+    audio.volume = 0
+    museumAudioRef.current = audio
+
+    let fadeFrame
+    let started = false
+    const fadeIn = () => {
+      const targetVolume = 0.26
+      const duration = 5200
+      const startedAt = performance.now()
+      const tick = (now) => {
+        const progress = Math.min(1, (now - startedAt) / duration)
+        audio.volume = targetVolume * progress
+        if (progress < 1) fadeFrame = requestAnimationFrame(tick)
+      }
+      fadeFrame = requestAnimationFrame(tick)
+    }
+    const playMuseumSong = () => {
+      if (started) return
+      started = true
+      audio.play().then(fadeIn).catch(() => {
+        started = false
+      })
+    }
+
+    playMuseumSong()
+    window.addEventListener('pointerdown', playMuseumSong, { once: true })
+    window.addEventListener('keydown', playMuseumSong, { once: true })
+
+    return () => {
+      window.removeEventListener('pointerdown', playMuseumSong)
+      window.removeEventListener('keydown', playMuseumSong)
+      if (fadeFrame) cancelAnimationFrame(fadeFrame)
+      audio.pause()
+      audio.src = ''
+      museumAudioRef.current = null
+    }
+  }, [])
+
+  return (
+    <div className="museum-experience" data-theme={theme}>
+      <div className="museum-aurora" aria-hidden="true" />
+      <div className="museum-dust" aria-hidden="true">
+        {Array.from({ length: 34 }, (_, i) => (
+          <span key={i} style={{ '--i': i, left: `${(i * 29) % 100}%`, top: `${(i * 47) % 100}%` }} />
+        ))}
+      </div>
+
+      <header className="museum-topbar">
+        {embedded && onClose ? (
+          <button type="button" className="museum-close" onClick={onClose}>Close</button>
+        ) : (
+          <Link className="museum-close" to="/world">Return to World</Link>
+        )}
+      </header>
+
+      {!enteredRoom ? (
+        <section className="museum-hall" aria-label="Museum hallway with seven memory doors">
+          <div className="museum-ceiling" aria-hidden="true">
+            <span className="museum-oculus" />
+            <span className="museum-balcony-ring" />
+            <span className="museum-chandelier" />
+          </div>
+          <div className="museum-architecture" aria-hidden="true">
+            {Array.from({ length: 7 }, (_, i) => <span key={i} />)}
+          </div>
+          <div className="museum-hall-depth" aria-hidden="true" />
+          <div className="museum-floor" aria-hidden="true">
+            {Array.from({ length: 12 }, (_, i) => <span key={i} style={{ '--i': i }} />)}
+          </div>
+          <div className="museum-light-rays" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
+          <div className="museum-centerpiece" aria-hidden="true">
+            <span className="museum-star-heart" />
+            <span className="museum-orbit museum-orbit-one" />
+            <span className="museum-orbit museum-orbit-two" />
+          </div>
+          <div className="museum-countdown" aria-label="Countdown to Maram birthday, EEST">
+            <p>almost May 29</p>
+            <b>waiting for her birthday</b>
+            <div>
+              <span><strong>{countdown.days}</strong><em>days</em></span>
+              <span><strong>{countdown.hours}</strong><em>hours</em></span>
+              <span><strong>{countdown.minutes}</strong><em>minutes</em></span>
+              <span><strong>{countdown.seconds}</strong><em>seconds</em></span>
+            </div>
+          </div>
+          <div className="museum-doors">
+            {museumDoors.map((door, i) => (
+              <button
+                key={i}
+                type="button"
+                className={`museum-door museum-door-${door.tone} ${door.unlocked ? 'unlocked' : 'locked'} ${i === museumDoors.length - 1 ? 'final-door' : ''}`}
+                onClick={() => door.unlocked && setEnteredRoom(true)}
+                aria-label={door.unlocked ? 'Enter Before You' : 'Locked memory door'}
+              >
+                <span className="museum-door-niche" />
+                <span className="museum-door-interior" />
+                <span className="museum-door-number">{String(i + 1).padStart(2, '0')}</span>
+                <span className="museum-door-glow" />
+                <span className="museum-door-symbol">{door.symbol}</span>
+                <span className="museum-door-handle" />
+                <span className="museum-door-threshold" />
+                <span className="museum-door-lock">{door.unlock}</span>
+                <span className="museum-door-room-particles" />
+                {!door.unlocked && <span className="museum-door-seal" />}
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <section className="before-you-room" aria-label="Before You room">
+          <button type="button" className="museum-back" onClick={() => setEnteredRoom(false)}>Back to hallway</button>
+          <div className="before-you-room-title">
+            <p>Room 01</p>
+            <h2>Before You</h2>
+            <span>A quiet room for the life before your name arrived.</span>
+          </div>
+
+          <div className="before-you-poem-room">
+            <div className="before-you-poem-wall" aria-label="Before You poem">
+              {beforeYouPoem.split('\n\n').map((stanza, i) => (
+                <p key={i}>
+                  {stanza.split('\n').map((line, lineIndex) => (
+                    <span key={lineIndex}>{line}</span>
+                  ))}
+                </p>
+              ))}
+            </div>
+            <div className="before-you-signature" aria-label="Museum signatures">
+              <span>Maram</span>
+              <b>&</b>
+              <span>Mansy</span>
+            </div>
+          </div>
+        </section>
+      )}
+    </div>
+  )
+}
+
+function getMuseumCountdown() {
+  // May 29, 2026 at 12:00 AM in UTC+3/EEST is May 28, 21:00 UTC.
+  const targetTime = Date.UTC(2026, 4, 28, 21, 0, 0)
+  const totalSeconds = Math.max(0, Math.floor((targetTime - Date.now()) / 1000))
+  const days = Math.floor(totalSeconds / 86400)
+  const hours = Math.floor((totalSeconds % 86400) / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+  return {
+    days: String(days).padStart(2, '0'),
+    hours: String(hours).padStart(2, '0'),
+    minutes: String(minutes).padStart(2, '0'),
+    seconds: String(seconds).padStart(2, '0'),
+  }
+}
