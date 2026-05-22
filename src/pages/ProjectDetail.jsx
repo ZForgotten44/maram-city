@@ -284,7 +284,7 @@ function ProjectDetail({ embedded, projectId: projectIdProp, onClose }) {
 export default ProjectDetail
 
 const museumDoors = [
-  { title: 'Before You', unlocked: false, tone: 'moonlit', unlock: 'Opens tomorrow', symbol: 'I' },
+  { title: 'Before You', unlocked: true, tone: 'moonlit', unlock: 'Enter', symbol: 'I' },
   { title: 'The Smile Exhibit', unlocked: false, tone: 'gold', unlock: 'Opens May 23', symbol: 'II' },
   { title: 'Little Things', unlocked: false, tone: 'amber', unlock: 'Opens May 24', symbol: 'III' },
   { title: 'You Changed My Life', unlocked: false, tone: 'rose', unlock: 'Opens May 25', symbol: 'IV' },
@@ -294,12 +294,12 @@ const museumDoors = [
 ]
 
 const beforeYouPoem = `Before I knew your name,
-life was crowded, loud, aflame.
-Rooms overflowed, the tables wide,
+life was crowded. Loud, Aflame.
+Rooms overflowed. The tables wide,
 yet something starving lived inside.
 
 I laughed the loudest in the hall,
-the boy they swore could charm them all.
+that boy they swore could charm them all.
 I wore my joy like borrowed clothes,
 while emptiness beneath it froze.
 
@@ -311,15 +311,15 @@ yet somehow I was not there at all.
 The laughter rang, the music swayed,
 young hearts performed, young egos played.
 And there I stood among the noise,
-a king surrounded by his toys?
+a mighty king surrounded by his toys?
 
 I thought that this was what life meant:
-a loud applause, a quick event.
-A racing pulse, a sleepless high,
-never asking myself why.
+A loud applause. A quick event.
+A racing pulse. A sleepless high,
+Never asking myself how or why.
 
-But darkness is a patient art,
-it builds its home inside the heart.
+But darkness is the patient part,
+it builds a new home inside my heart.
 Sometimes a boy can glow for years
 while quietly dissolving into cheers.
 
@@ -341,17 +341,12 @@ something eternal chose to land.
 A simple touch. A passing thing.
 No violins or flutes began to sing.
 Yet when your hand fell into mine,
-the stars and moons rearranged their design.
+the stars rearranged their design.
 
 And Oh God, how strange the air became,
 how suddenly I just knew my name.
 As if my chest, for all those years,
 had only borrowed breath and gears.
-
-As if my soul, for all those years,
-had only practiced being here.
-As if my lungs had learned to live
-the moment you appeared.
 
 I carried that touch for months like fire,
 a quiet wound, a sacred wire.
@@ -393,38 +388,30 @@ How every wire rearranged.
 How ambition bent its knee
 the moment it included “we.”
 
-Facebook once was lifeless blue,
-a graveyard scrolling people through.
-Now Messenger became the sea
-where every wave carried you to me.
-
 I wait for your replies like a flower waits for rain,
 like deserts ache through months of pain.
 One little notification sound
 could pull my world back around.
 
-And slowly, frighteningly, it grew,
-this life that only blooms with you.
-Food lost flavor. Cities dimmed.
-Songs went quiet at the brim.
-
-Because nothing shines the way it did
-once my heart learned where it lived.
 You became my favorite place.
 My silence. My escape. My grace.
-
 Not just the girl I wished to hold,
 but the first warmth in a freezing world.
+
 And if you built a cage from your arms,
 I would mistake those bars for stars.
-
 Lock every door and keep the key,
 The only freedom with you near me.`
 
 function MuseumOfLovingMaram({ embedded, onClose, theme }) {
   const [enteredRoom, setEnteredRoom] = useState(false)
   const [countdown, setCountdown] = useState(() => getMuseumCountdown())
-  const museumAudioRef = useRef(null)
+  const [isMuted, setIsMuted] = useState(() => window.localStorage.getItem('museum-muted') === 'true')
+  const [roomProgress, setRoomProgress] = useState(0)
+  const hallAudioRef = useRef(null)
+  const roomAudioRef = useRef(null)
+  const audioFadeRef = useRef({})
+  const roomRef = useRef(null)
 
   useEffect(() => {
     const id = setInterval(() => setCountdown(getMuseumCountdown()), 1000)
@@ -432,46 +419,80 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
   }, [])
 
   useEffect(() => {
-    const audio = new Audio('/audio/song1.mp3')
-    audio.loop = true
-    audio.preload = 'auto'
-    audio.volume = 0
-    museumAudioRef.current = audio
+    const hallAudio = new Audio('/audio/song1.mp3')
+    const roomAudio = new Audio('/audio/door1.mp3')
+    ;[hallAudio, roomAudio].forEach((audio) => {
+      audio.loop = true
+      audio.preload = 'auto'
+      audio.volume = 0
+    })
+    hallAudioRef.current = hallAudio
+    roomAudioRef.current = roomAudio
 
-    let fadeFrame
-    let started = false
-    const fadeIn = () => {
-      const targetVolume = 0.26
-      const duration = 5200
+    return () => {
+      Object.values(audioFadeRef.current).forEach(cancelAnimationFrame)
+      ;[hallAudio, roomAudio].forEach((audio) => {
+        audio.pause()
+        audio.src = ''
+      })
+      hallAudioRef.current = null
+      roomAudioRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    window.localStorage.setItem('museum-muted', String(isMuted))
+  }, [isMuted])
+
+  useEffect(() => {
+    const hallAudio = hallAudioRef.current
+    const roomAudio = roomAudioRef.current
+    if (!hallAudio || !roomAudio) return undefined
+
+    const fadeAudio = (audio, targetVolume, duration = 1800, pauseAtEnd = false) => {
+      if (audioFadeRef.current[audio.src]) cancelAnimationFrame(audioFadeRef.current[audio.src])
+      const startVolume = audio.volume
       const startedAt = performance.now()
       const tick = (now) => {
         const progress = Math.min(1, (now - startedAt) / duration)
-        audio.volume = targetVolume * progress
-        if (progress < 1) fadeFrame = requestAnimationFrame(tick)
+        audio.volume = startVolume + (targetVolume - startVolume) * progress
+        if (progress < 1) {
+          audioFadeRef.current[audio.src] = requestAnimationFrame(tick)
+        } else if (pauseAtEnd) {
+          audio.pause()
+        }
       }
-      fadeFrame = requestAnimationFrame(tick)
-    }
-    const playMuseumSong = () => {
-      if (started) return
-      started = true
-      audio.play().then(fadeIn).catch(() => {
-        started = false
-      })
+      audioFadeRef.current[audio.src] = requestAnimationFrame(tick)
     }
 
-    playMuseumSong()
-    window.addEventListener('pointerdown', playMuseumSong, { once: true })
-    window.addEventListener('keydown', playMuseumSong, { once: true })
+    const activeAudio = enteredRoom ? roomAudio : hallAudio
+    const inactiveAudio = enteredRoom ? hallAudio : roomAudio
+    const activeVolume = isMuted ? 0 : enteredRoom ? 0.24 : 0.22
+
+    const syncAudio = () => {
+      if (!isMuted) {
+        activeAudio.play().catch(() => {})
+      }
+      fadeAudio(activeAudio, activeVolume, 3200)
+      fadeAudio(inactiveAudio, 0, 1600, true)
+    }
+
+    syncAudio()
+    window.addEventListener('pointerdown', syncAudio, { once: true })
+    window.addEventListener('keydown', syncAudio, { once: true })
 
     return () => {
-      window.removeEventListener('pointerdown', playMuseumSong)
-      window.removeEventListener('keydown', playMuseumSong)
-      if (fadeFrame) cancelAnimationFrame(fadeFrame)
-      audio.pause()
-      audio.src = ''
-      museumAudioRef.current = null
+      window.removeEventListener('pointerdown', syncAudio)
+      window.removeEventListener('keydown', syncAudio)
     }
-  }, [])
+  }, [enteredRoom, isMuted])
+
+  const updateRoomProgress = () => {
+    const room = roomRef.current
+    if (!room) return
+    const maxScroll = Math.max(1, room.scrollHeight - room.clientHeight)
+    setRoomProgress(Math.min(1, room.scrollTop / maxScroll))
+  }
 
   return (
     <div className="museum-experience" data-theme={theme}>
@@ -489,6 +510,15 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
           <Link className="museum-close" to="/world">Return to World</Link>
         )}
       </header>
+      <button
+        type="button"
+        className="museum-audio-toggle"
+        onClick={() => setIsMuted((muted) => !muted)}
+        aria-label={isMuted ? 'Unmute museum music' : 'Mute museum music'}
+        aria-pressed={isMuted}
+      >
+        {isMuted ? '♪' : '♫'}
+      </button>
 
       {!enteredRoom ? (
         <section className="museum-hall" aria-label="Museum hallway with seven memory doors">
@@ -548,8 +578,25 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
           </div>
         </section>
       ) : (
-        <section className="before-you-room" aria-label="Before You room">
+        <section
+          ref={roomRef}
+          className="before-you-room"
+          aria-label="Before You room"
+          onScroll={updateRoomProgress}
+          style={{ '--room-progress': roomProgress }}
+        >
           <button type="button" className="museum-back" onClick={() => setEnteredRoom(false)}>Back to hallway</button>
+          <div className="before-you-room-architecture" aria-hidden="true">
+            <span className="before-you-sun" />
+            <span className="before-you-floor" />
+            <span className="before-you-bench before-you-bench-left" />
+            <span className="before-you-flower-line" />
+            <span className="before-you-note before-you-note-one" />
+            <span className="before-you-note before-you-note-two" />
+            {Array.from({ length: 9 }, (_, i) => (
+              <span key={i} className="before-you-petal" style={{ '--i': i }} />
+            ))}
+          </div>
           <div className="before-you-room-title">
             <p>Room 01</p>
             <h2>Before You</h2>
@@ -567,9 +614,8 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
               ))}
             </div>
             <div className="before-you-signature" aria-label="Museum signatures">
-              <span>Maram</span>
-              <b>&</b>
-              <span>Mansy</span>
+              <span>your lover forever,</span>
+              <strong>Mahmoud</strong>
             </div>
           </div>
         </section>
