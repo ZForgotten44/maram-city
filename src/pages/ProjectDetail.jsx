@@ -284,9 +284,9 @@ function ProjectDetail({ embedded, projectId: projectIdProp, onClose }) {
 export default ProjectDetail
 
 const museumDoors = [
-  { title: 'Before You', unlocked: true, tone: 'moonlit', unlock: 'Enter', symbol: 'I' },
-  { title: 'The Smile Exhibit', unlocked: false, tone: 'gold', unlock: 'Opens May 23', symbol: 'II' },
-  { title: 'Little Things', unlocked: false, tone: 'amber', unlock: 'Opens May 24', symbol: 'III' },
+  { title: 'Before You', unlocked: true, tone: 'moonlit', unlock: 'Enter', symbol: 'I', roomId: 'before-you' },
+  { title: 'Little Things', unlocked: true, tone: 'gold', unlock: 'Enter', symbol: 'II', roomId: 'balloon-notes' },
+  { title: 'The Smile Exhibit', unlocked: false, tone: 'amber', unlock: 'Opens May 24', symbol: 'III' },
   { title: 'You Changed My Life', unlocked: false, tone: 'rose', unlock: 'Opens May 25', symbol: 'IV' },
   { title: 'Constellation Room', unlocked: false, tone: 'starlit', unlock: 'Opens May 26', symbol: 'V' },
   { title: 'Sound of Us', unlocked: false, tone: 'violet', unlock: 'Opens May 27', symbol: 'VI' },
@@ -403,13 +403,148 @@ I would mistake those bars for stars.
 Lock every door and keep the key,
 The only freedom with you near me.`
 
+const balloonNotes = [
+  'The way your voice becomes softer when you talk to me, as if your heart changes clothes around me.',
+  'The way you come to me when you are sad or complaining. I could genuinely listen to you for hours without getting tired. Even your complaints sound adorable. Especially your complaints.',
+  'Your reels are the second cutest thing in the world after the girl sending them.',
+  'The amount of patience you have with my late replies because of work still confuses me. You give me grace in a world that rushes everyone.',
+  'The way you get genuinely grateful over the smallest things I do for you makes me want to do a million more.',
+  'Your face when you join a call with me. The smile. The eyes. The excitement. It genuinely makes me feel like the luckiest man alive.',
+  'The colorful emoji messages after I get you something make my entire day look like butterflies and fireworks.',
+  'Your snap hauls and reviews deserve their own Netflix series.',
+  'The way you get angry is so peaceful. You are genuinely a cute criminal.',
+  'Every outfit on you looks illegal. I still do not understand how one person can wear anything and somehow become prettier.',
+  'The way you instantly say “yes” whenever I ask you for something… then only later realize you have absolutely no idea how you’re going to do it.',
+  'The way you handle stress by immediately coming to me. Excellent decision-making by the way.',
+  'You are genuinely the most talented architect I know, and one day the world will have buildings standing because your mind existed.',
+  'Your gossip sessions deserve podcast sponsorships.',
+  'You speak at x4 speed and expect me to survive.',
+  'Your movie taste is terrifyingly good.',
+  'Your series taste… Allah yehdeeki.',
+  'Your random songs always somehow arrive exactly when I need them.',
+  'Your random “I love you” messages could fix entire wars.',
+  '14-hour Discord calls somehow still feel too short.',
+  'Sleeping on your voice gives me the most vivid dreams. This is scientifically true.',
+  'YOUR DRESSES. That’s it. That’s the note.',
+  'I have traveled to different countries and met thousands of people, and somehow your beauty still feels unfair compared to all of them.',
+  'The way you pronounce words with your own personal dictionary and still defend it confidently like a lawyer.',
+  'The way you stare at my lips while I’m talking sometimes. (Yes, I notice. Yes, I do the same thing.)',
+  'The way you become interested in literally anything I’m interested in.',
+  'The way you ask me to teach you everything I know feels like my heart is raising another heart.',
+  'The way you naturally became my princess without either of us even discussing it.',
+  'The child inside you is unbelievably innocent and soft. The world better never ruin that part of you.',
+  'Your wink attempts are genuinely one of the funniest cute things I’ve ever witnessed.',
+  'The way you send selfies just to show me the tiniest detail of your day.',
+  'Your nicknames for me would probably cure a dying Victorian child.',
+  'Your tone with me versus your tone with everyone else. I notice it every single time.',
+  'The juice you drink during movie nights somehow became part of the memory itself.',
+  'The way you watch all the horrible “eye pollution” videos I send while I eat quickly just because you know I enjoy them.',
+  'The way you care about feeding me feels like love in its purest form.',
+  'The way you “give me space” by only asking: where, why, how, with who, when, how long, what if, why her, why there, and what are you eating.',
+  'When you ask me for help, I swear my entire brain becomes a superhero montage.',
+  'Reading Quran together heals parts of me I cannot explain.',
+  'You make me happy. Not normal happy. Scary happy.',
+  'Every time I look at you I genuinely say Alhamdulillah because there is absolutely no logical explanation for how I got you.',
+  'The way you say “حاضر” feels softer than music.',
+  'The way you overuse everything I get you makes me feel like the smallest things I do matter.',
+  'Your oversized cozy home shirts deserve their own museum section.',
+  'I love being your personal Google search engine.',
+  'Your duas for me melt me completely.',
+  'Waking up and reading your long updates about your day first thing in the morning feels like opening the window after a long winter.',
+  'Your notifications genuinely change my mood instantly.',
+  'You have the kindest heart I have ever met in a human being.',
+  'Your family feels warm in the same way you do.',
+  'You are art pretending to be a person.',
+  'The way you catch my Quran mistakes with full confidence.',
+  'Your virtual kisses somehow still feel real.',
+  'Every request you make is adorable even when it ruins my schedule.',
+  'Picking pictures for you to post is one of my favorite side quests in life.',
+  'Every picture you post somehow looks like it belongs in a perfume ad.',
+  'You are incredibly smart but somehow still have the brain of an innocent child.',
+  'Watching you learn something new with zero ego is one of the prettiest things about you.',
+  'You are genuinely the light of my life. Like actually. This is not poetry anymore.',
+  'Your jokes are so bad they became cute.',
+  'Every atom in you deserves a paragraph but HR policies prevent me from continuing.',
+  'Your soul is prettier than your face, which is honestly terrifying considering your face.',
+  'The way you love babies makes me accidentally imagine entire futures.',
+  'The way you love animals just because I showed them to you.',
+  'The way you love nature like it personally wrote you a thank-you letter.',
+  'You somehow have your own way of doing literally everything.',
+  'Hello Kitty was definitely inspired by you somehow.',
+  'Your FBI-level stalking skills should concern me more than they do.',
+  'The way you automatically respect the people I love and dislike the people I dislike.',
+  'The way you buy things and then return to me with a full courtroom presentation explaining why it was “actually necessary.”',
+  'The thing I love most about your relationship with money is that your happiness matters more to you than showing off.',
+  'Your shyness is so cute it physically hurts me sometimes.',
+  'The way you get surprised like a little kid on Eid morning.',
+  'Your random “I miss you” messages ruin my ability to focus for the next three business days.',
+  'Your emojis somehow sound like you.',
+  'Your humor is terrible. I’m crying. Please continue forever.',
+  'The way I can fully be myself with you without performing, pretending, or shrinking parts of me.',
+  'The way your face changes when you’re trying not to laugh.',
+  'The tiny silence before you say “okay” when you’re pretending not to be jealous.',
+  'The way your sleepy voice sounds like home after a long day.',
+  'The way you ask “did you eat?” like it carries the weight of a love language.',
+  'The way you become softer after we solve an argument.',
+  'The way your eyes search for my reaction first.',
+  'The way your happiness instantly becomes my happiness.',
+  'The way your sadness physically changes my day.',
+  'The way your existence made the future stop feeling scary.',
+  'The way I no longer dream alone in any dream I have.',
+  'The way loving you made me understand why poets ruined their lives writing.',
+]
+
+const balloonPalette = ['#e9b8bd', '#f6ecd9', '#f2eadf', '#7a2c3d', '#d6bd8d']
+
+function getBalloonStyle(index) {
+  const lanes = [18, 37, 62, 81, 27, 52, 73]
+  const x = lanes[index % lanes.length] + (((index * 7) % 9) - 4)
+  const top = 28 + index * 28 + (index % 3) * 6
+  const note = balloonNotes[index]
+  const important = isImportantBalloonNote(note)
+  return {
+    '--x': `${Math.max(10, Math.min(90, x))}%`,
+    '--top': `${top}vh`,
+    '--delay': `${-(index % 9) * 0.55}s`,
+    '--size': `${1.1 + (index % 5) * 0.04 + (important ? 0.1 : 0)}`,
+    '--note-angle': `${((index * 11) % 10) - 5}deg`,
+    '--balloon-color': balloonPalette[index % balloonPalette.length],
+    '--paper-width': `${getBalloonNoteWidth(note)}px`,
+  }
+}
+
+function getBalloonCount(note) {
+  if (note.length > 135 || isImportantBalloonNote(note)) return 3
+  if (note.length > 74) return 2
+  return 1
+}
+
+function getBalloonNoteWidth(note) {
+  if (note.length > 135 || isImportantBalloonNote(note)) return 390
+  if (note.length > 74) return 330
+  return 270
+}
+
+function isImportantBalloonNote(note) {
+  return [
+    'light of my life',
+    'favorite place',
+    'kindest heart',
+    'Alhamdulillah',
+    'future stop feeling scary',
+    'poets ruined their lives',
+  ].some((phrase) => note.includes(phrase))
+}
+
 function MuseumOfLovingMaram({ embedded, onClose, theme }) {
-  const [enteredRoom, setEnteredRoom] = useState(false)
+  const [activeRoom, setActiveRoom] = useState(null)
   const [countdown, setCountdown] = useState(() => getMuseumCountdown())
   const [isMuted, setIsMuted] = useState(() => window.localStorage.getItem('museum-muted') === 'true')
   const [roomProgress, setRoomProgress] = useState(0)
+  const [selectedBalloonNote, setSelectedBalloonNote] = useState(null)
   const hallAudioRef = useRef(null)
   const roomAudioRef = useRef(null)
+  const roomTwoAudioRef = useRef(null)
   const audioFadeRef = useRef({})
   const roomRef = useRef(null)
 
@@ -421,22 +556,25 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
   useEffect(() => {
     const hallAudio = new Audio('/audio/song1.mp3')
     const roomAudio = new Audio('/audio/door1.mp3')
-    ;[hallAudio, roomAudio].forEach((audio) => {
+    const roomTwoAudio = new Audio('/audio/door2.mp3')
+    ;[hallAudio, roomAudio, roomTwoAudio].forEach((audio) => {
       audio.loop = true
       audio.preload = 'auto'
       audio.volume = 0
     })
     hallAudioRef.current = hallAudio
     roomAudioRef.current = roomAudio
+    roomTwoAudioRef.current = roomTwoAudio
 
     return () => {
       Object.values(audioFadeRef.current).forEach(cancelAnimationFrame)
-      ;[hallAudio, roomAudio].forEach((audio) => {
+      ;[hallAudio, roomAudio, roomTwoAudio].forEach((audio) => {
         audio.pause()
         audio.src = ''
       })
       hallAudioRef.current = null
       roomAudioRef.current = null
+      roomTwoAudioRef.current = null
     }
   }, [])
 
@@ -447,7 +585,8 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
   useEffect(() => {
     const hallAudio = hallAudioRef.current
     const roomAudio = roomAudioRef.current
-    if (!hallAudio || !roomAudio) return undefined
+    const roomTwoAudio = roomTwoAudioRef.current
+    if (!hallAudio || !roomAudio || !roomTwoAudio) return undefined
 
     const fadeAudio = (audio, targetVolume, duration = 1800, pauseAtEnd = false) => {
       if (audioFadeRef.current[audio.src]) cancelAnimationFrame(audioFadeRef.current[audio.src])
@@ -465,16 +604,16 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
       audioFadeRef.current[audio.src] = requestAnimationFrame(tick)
     }
 
-    const activeAudio = enteredRoom ? roomAudio : hallAudio
-    const inactiveAudio = enteredRoom ? hallAudio : roomAudio
-    const activeVolume = isMuted ? 0 : enteredRoom ? 0.24 : 0.22
+    const activeAudio = activeRoom === 'before-you' ? roomAudio : activeRoom === 'balloon-notes' ? roomTwoAudio : hallAudio
+    const inactiveAudios = [hallAudio, roomAudio, roomTwoAudio].filter((audio) => audio !== activeAudio)
+    const activeVolume = isMuted ? 0 : activeRoom === 'before-you' ? 0.24 : activeRoom === 'balloon-notes' ? 0.23 : 0.22
 
     const syncAudio = () => {
       if (!isMuted) {
         activeAudio.play().catch(() => {})
       }
       fadeAudio(activeAudio, activeVolume, 3200)
-      fadeAudio(inactiveAudio, 0, 1600, true)
+      inactiveAudios.forEach((audio) => fadeAudio(audio, 0, 1600, true))
     }
 
     syncAudio()
@@ -485,7 +624,7 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
       window.removeEventListener('pointerdown', syncAudio)
       window.removeEventListener('keydown', syncAudio)
     }
-  }, [enteredRoom, isMuted])
+  }, [activeRoom, isMuted])
 
   const updateRoomProgress = () => {
     const room = roomRef.current
@@ -520,7 +659,7 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
         {isMuted ? '♪' : '♫'}
       </button>
 
-      {!enteredRoom ? (
+      {!activeRoom ? (
         <section className="museum-hall" aria-label="Museum hallway with seven memory doors">
           <div className="museum-ceiling" aria-hidden="true">
             <span className="museum-oculus" />
@@ -560,8 +699,12 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
                 key={i}
                 type="button"
                 className={`museum-door museum-door-${door.tone} ${door.unlocked ? 'unlocked' : 'locked'} ${i === museumDoors.length - 1 ? 'final-door' : ''}`}
-                onClick={() => door.unlocked && setEnteredRoom(true)}
-                aria-label={door.unlocked ? 'Enter Before You' : 'Locked memory door'}
+                onClick={() => {
+                  if (!door.unlocked) return
+                  setRoomProgress(0)
+                  setActiveRoom(door.roomId)
+                }}
+                aria-label={door.unlocked ? `Enter ${door.title}` : 'Locked memory door'}
               >
                 <span className="museum-door-niche" />
                 <span className="museum-door-interior" />
@@ -577,7 +720,7 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
             ))}
           </div>
         </section>
-      ) : (
+      ) : activeRoom === 'before-you' ? (
         <section
           ref={roomRef}
           className="before-you-room"
@@ -585,7 +728,7 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
           onScroll={updateRoomProgress}
           style={{ '--room-progress': roomProgress }}
         >
-          <button type="button" className="museum-back" onClick={() => setEnteredRoom(false)}>Back to hallway</button>
+          <button type="button" className="museum-back" onClick={() => setActiveRoom(null)}>Back to hallway</button>
           <div className="before-you-room-architecture" aria-hidden="true">
             <span className="before-you-sun" />
             <span className="before-you-floor" />
@@ -619,6 +762,65 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
             </div>
           </div>
         </section>
+      ) : (
+        <section
+          ref={roomRef}
+          className={`balloon-notes-room ${selectedBalloonNote ? 'has-open-note' : ''}`}
+          aria-label="Room II floating balloon notes"
+          onScroll={updateRoomProgress}
+          style={{ '--room-progress': roomProgress }}
+        >
+          <button type="button" className="museum-back" onClick={() => setActiveRoom(null)}>Back to hallway</button>
+          <div className="balloon-room-architecture" aria-hidden="true">
+            <span className="balloon-room-sun" />
+            <span className="balloon-room-floor" />
+            <span className="balloon-room-flowers" />
+          </div>
+          <div className="balloon-room-title">
+            <p>Room 02</p>
+            <h2>Little Things</h2>
+            <span>Things I love about you.</span>
+            <em>Scroll down and click any note to read it.</em>
+          </div>
+          <div className="balloon-notes-field" style={{ height: `calc(${balloonNotes.length * 28}vh + 115vh)` }}>
+            {balloonNotes.map((note, i) => (
+              <button
+                key={`${note.slice(0, 24)}-${i}`}
+                type="button"
+                className="balloon-note"
+                style={getBalloonStyle(i)}
+                onClick={() => setSelectedBalloonNote(note)}
+                aria-label={`Open note ${i + 1}`}
+              >
+                <span className={`balloon-cluster balloon-cluster-${getBalloonCount(note)}`}>
+                  {Array.from({ length: getBalloonCount(note) }, (_, balloonIndex) => (
+                    <span key={balloonIndex} className="balloon-shape" style={{ '--balloon-index': balloonIndex }} />
+                  ))}
+                </span>
+                <span className={`balloon-string balloon-string-${getBalloonCount(note)}`} />
+                <span className="balloon-paper">{note}</span>
+              </button>
+            ))}
+            <div className="balloon-goodbye" aria-label="Final Room II note">
+              <span className="balloon-goodbye-shape" />
+              <span className="balloon-goodbye-string" />
+              <span className="balloon-goodbye-paper">
+                I’ve officially run out of balloons…
+                <br />
+                see you tomorrow ♡
+              </span>
+            </div>
+          </div>
+        </section>
+      )}
+      {selectedBalloonNote && (
+        <div className="balloon-note-modal" role="dialog" aria-modal="true" aria-label="Opened balloon note">
+          <button type="button" className="balloon-note-backdrop" onClick={() => setSelectedBalloonNote(null)} aria-label="Close note" />
+          <article className="balloon-note-expanded">
+            <button type="button" className="balloon-note-close" onClick={() => setSelectedBalloonNote(null)}>Close</button>
+            <p>{selectedBalloonNote}</p>
+          </article>
+        </div>
       )}
     </div>
   )
