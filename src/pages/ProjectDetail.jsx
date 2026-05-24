@@ -286,7 +286,7 @@ export default ProjectDetail
 const museumDoors = [
   { title: 'Before You', unlocked: true, tone: 'moonlit', unlock: 'Enter', symbol: 'I', roomId: 'before-you' },
   { title: 'Little Things', unlocked: true, tone: 'gold', unlock: 'Enter', symbol: 'II', roomId: 'balloon-notes' },
-  { title: 'The Smile Exhibit', unlocked: false, tone: 'amber', unlock: 'Opens May 24', symbol: 'III' },
+  { title: 'The Rule of Three', unlocked: true, tone: 'amber', unlock: 'Enter', symbol: 'III', roomId: 'rule-of-three' },
   { title: 'You Changed My Life', unlocked: false, tone: 'rose', unlock: 'Opens May 25', symbol: 'IV' },
   { title: 'Constellation Room', unlocked: false, tone: 'starlit', unlock: 'Opens May 26', symbol: 'V' },
   { title: 'Sound of Us', unlocked: false, tone: 'violet', unlock: 'Opens May 27', symbol: 'VI' },
@@ -491,6 +491,165 @@ const balloonNotes = [
 
 const balloonPalette = ['#e9b8bd', '#f6ecd9', '#f2eadf', '#7a2c3d', '#d6bd8d']
 
+const ruleOfThreeFrames = [
+  {
+    id: 'past',
+    title: 'PAST',
+    subtitle: 'The first frame found us.',
+    image: '/pics/door3/pic1.jpg',
+    alt: 'A memory from the beginning',
+  },
+  {
+    id: 'present',
+    title: 'PRESENT',
+    subtitle: 'The second frame kept us.',
+    image: '/pics/door3/pic2.jpeg',
+    alt: 'A present memory of love and recognition',
+  },
+  {
+    id: 'future',
+    title: 'FUTURE',
+    subtitle: 'The third frame is waiting for us.',
+    image: null,
+    alt: '',
+  },
+]
+
+const ruleOfThreePoem = `The world has always hidden its strongest things in threes.
+
+Beginning.
+Middle.
+End.
+
+Past.
+Present.
+Future.
+
+A match needs three things before it becomes fire.
+A painting survives through three hands:
+the one who creates it,
+the one who keeps it,
+and the one who understands it.
+
+Maybe that is why I keep thinking about that drawing of yours.
+
+Not because of the paper itself.
+Not because of the colors.
+
+But because somehow, out of an entire school,
+out of hundreds of rooms and hundreds of careless days,
+it ended up in mine.
+
+No explanation.
+
+Just your name sitting quietly on my desk
+like the universe had signed something before we did.
+
+And maybe that was the first time love touched us—
+not dramatically,
+not loudly,
+just gently enough to be mistaken for coincidence.
+
+I still think about that sometimes.
+
+How many impossible things had to happen
+for me to hold a reason to talk to you in my hands.
+
+A misplaced painting.
+A shared committee.
+A conversation that could have ended normally
+but never really ended after that.
+
+And now look at us.
+
+The second frame exists because the first one did.
+
+Two people sitting together,
+rings resting quietly between their fingers
+like they had always belonged there.
+
+There is something terrifyingly soft about that picture.
+
+Not the rings themselves.
+Not the camera.
+Not even the smiles.
+
+It is the safety in it.
+
+The kind of safety people spend entire lifetimes searching for.
+
+The kind that makes the world outside the room feel smaller.
+
+I look at that frame
+and suddenly every difficult thing in life
+feels negotiable.
+
+Because your hand in mine
+has slowly taught my heart a dangerous habit:
+
+peace.
+
+And maybe that is what love actually is.
+
+Not fireworks.
+Not grand speeches.
+
+Just finding one person
+whose presence lowers the volume of the world.
+
+Then there is the third frame.
+
+Empty.
+For now.
+
+And somehow that empty frame moves me the most.
+
+Because it is not empty in the way strangers would think.
+
+I already see things inside it.
+
+A home that still does not exist yet.
+ Your laughter somewhere in another room.
+ Half-finished coffees going cold beside us.
+ Paintings on walls we have not chosen yet.
+ Arguments about curtains.
+ Late nights.
+ Slow mornings.
+ A thousand ordinary Tuesdays that will quietly become my favorite memories.
+
+I think that is the strangest thing about loving you.
+
+You made me excited for ordinary life.
+
+Not the loud moments.
+Not the cinematic moments.
+
+The small ones.
+
+The grocery lists.
+ The tired evenings.
+ The asking you how your day was for the ten thousandth time.
+ The reaching for your hand without thinking.
+
+Because I do not just want one future with you.
+
+I want enough futures
+to fill an entire museum.
+
+And if the world truly trusts the things that arrive in threes,
+then maybe it was never:
+ past, present, future.
+
+maybe it was always:
+ I, Love, You.
+
+The first frame found us.
+The second frame kept us.
+The third frame is waiting for us.
+
+And for the first time in my life,
+I am no longer afraid of forever.`
+
 function getBalloonStyle(index) {
   const lanes = [18, 37, 62, 81, 27, 52, 73]
   const x = lanes[index % lanes.length] + (((index * 7) % 9) - 4)
@@ -540,6 +699,7 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
   const hallAudioRef = useRef(null)
   const roomAudioRef = useRef(null)
   const roomTwoAudioRef = useRef(null)
+  const roomThreeAudioRef = useRef(null)
   const audioFadeRef = useRef({})
   const roomRef = useRef(null)
 
@@ -552,7 +712,8 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     const hallAudio = new Audio('/audio/song1.mp3')
     const roomAudio = new Audio('/audio/door1.mp3')
     const roomTwoAudio = new Audio('/audio/door2.mp3')
-    ;[hallAudio, roomAudio, roomTwoAudio].forEach((audio) => {
+    const roomThreeAudio = new Audio('/audio/door3.mp3')
+    ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio].forEach((audio) => {
       audio.loop = true
       audio.preload = 'auto'
       audio.volume = 0
@@ -560,16 +721,18 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     hallAudioRef.current = hallAudio
     roomAudioRef.current = roomAudio
     roomTwoAudioRef.current = roomTwoAudio
+    roomThreeAudioRef.current = roomThreeAudio
 
     return () => {
       Object.values(audioFadeRef.current).forEach(cancelAnimationFrame)
-      ;[hallAudio, roomAudio, roomTwoAudio].forEach((audio) => {
+      ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio].forEach((audio) => {
         audio.pause()
         audio.src = ''
       })
       hallAudioRef.current = null
       roomAudioRef.current = null
       roomTwoAudioRef.current = null
+      roomThreeAudioRef.current = null
     }
   }, [])
 
@@ -581,7 +744,8 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     const hallAudio = hallAudioRef.current
     const roomAudio = roomAudioRef.current
     const roomTwoAudio = roomTwoAudioRef.current
-    if (!hallAudio || !roomAudio || !roomTwoAudio) return undefined
+    const roomThreeAudio = roomThreeAudioRef.current
+    if (!hallAudio || !roomAudio || !roomTwoAudio || !roomThreeAudio) return undefined
 
     const fadeAudio = (audio, targetVolume, duration = 1800, pauseAtEnd = false) => {
       if (audioFadeRef.current[audio.src]) cancelAnimationFrame(audioFadeRef.current[audio.src])
@@ -599,9 +763,23 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
       audioFadeRef.current[audio.src] = requestAnimationFrame(tick)
     }
 
-    const activeAudio = activeRoom === 'before-you' ? roomAudio : activeRoom === 'balloon-notes' ? roomTwoAudio : hallAudio
-    const inactiveAudios = [hallAudio, roomAudio, roomTwoAudio].filter((audio) => audio !== activeAudio)
-    const activeVolume = isMuted ? 0 : activeRoom === 'before-you' ? 0.24 : activeRoom === 'balloon-notes' ? 0.23 : 0.22
+    const activeAudio = activeRoom === 'before-you'
+      ? roomAudio
+      : activeRoom === 'balloon-notes'
+        ? roomTwoAudio
+        : activeRoom === 'rule-of-three'
+          ? roomThreeAudio
+          : hallAudio
+    const inactiveAudios = [hallAudio, roomAudio, roomTwoAudio, roomThreeAudio].filter((audio) => audio !== activeAudio)
+    const activeVolume = isMuted
+      ? 0
+      : activeRoom === 'before-you'
+        ? 0.24
+        : activeRoom === 'balloon-notes'
+          ? 0.23
+          : activeRoom === 'rule-of-three'
+            ? 0.24
+            : 0.22
 
     const syncAudio = () => {
       if (!isMuted) {
@@ -697,6 +875,7 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
                 onClick={() => {
                   if (!door.unlocked) return
                   setRoomProgress(0)
+                  setSelectedBalloonNote(null)
                   setActiveRoom(door.roomId)
                 }}
                 aria-label={door.unlocked ? `Enter ${door.title}` : 'Locked memory door'}
@@ -757,7 +936,7 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
             </div>
           </div>
         </section>
-      ) : (
+      ) : activeRoom === 'balloon-notes' ? (
         <section
           ref={roomRef}
           className={`balloon-notes-room ${selectedBalloonNote ? 'has-open-note' : ''}`}
@@ -805,6 +984,82 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
                 see you tomorrow ♡
               </span>
             </div>
+          </div>
+        </section>
+      ) : (
+        <section
+          ref={roomRef}
+          className="rule-three-room"
+          aria-label="Room III, The Rule of Three"
+          onScroll={updateRoomProgress}
+          style={{ '--room-progress': roomProgress }}
+        >
+          <button type="button" className="museum-back" onClick={() => setActiveRoom(null)}>Back to hallway</button>
+          <div className="rule-three-architecture" aria-hidden="true">
+            <span className="rule-three-light rule-three-light-one" />
+            <span className="rule-three-light rule-three-light-two" />
+            <span className="rule-three-light rule-three-light-three" />
+            <span className="rule-three-floor" />
+            <span className="rule-three-ceiling-cut rule-three-ceiling-one" />
+            <span className="rule-three-ceiling-cut rule-three-ceiling-two" />
+            <span className="rule-three-ceiling-cut rule-three-ceiling-three" />
+            <span className="rule-three-flower rule-three-flower-one" />
+            <span className="rule-three-flower rule-three-flower-two" />
+            <span className="rule-three-flower rule-three-flower-three" />
+          </div>
+
+          <div className="rule-three-title">
+            <p>Room 03</p>
+            <h2>The Rule of Three</h2>
+            <span>The world hides its strongest things in threes.</span>
+          </div>
+
+          <div className="rule-three-axis" aria-label="Past, future, and present frames">
+            {ruleOfThreeFrames.map((frame, index) => (
+              <article key={frame.id} className={`rule-three-frame rule-three-frame-${frame.id}`} style={{ '--frame-index': index }}>
+                <div className="rule-three-frame-shell">
+                  <div className="rule-three-frame-inner">
+                    {frame.image ? (
+                      <img src={frame.image} alt={frame.alt} loading="lazy" />
+                    ) : (
+                      <div className="rule-three-future-canvas" aria-label="An illuminated empty frame for the future">
+                        <span className="future-reflection" />
+                        <span className="future-sketch future-sketch-one" />
+                        <span className="future-sketch future-sketch-two" />
+                        <span className="future-sketch future-sketch-three" />
+                        <span className="future-moving-light" />
+                        <span className="future-dust future-dust-one" />
+                        <span className="future-dust future-dust-two" />
+                        <span className="future-dust future-dust-three" />
+                        <span className="future-dust future-dust-four" />
+                        <span className="future-dust future-dust-five" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="rule-three-frame-caption">
+                  <strong>{frame.title}</strong>
+                  <span>{frame.subtitle}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="rule-three-poem" aria-label="Room III poem">
+            {ruleOfThreePoem.split('\n\n').map((stanza, index) => (
+              <p key={index} style={{ '--line-index': index }}>
+                {stanza.split('\n').map((line, lineIndex) => (
+                  <span key={lineIndex}>{line}</span>
+                ))}
+              </p>
+            ))}
+          </div>
+
+          <div className="rule-three-ending">
+            <span>Past</span>
+            <span>Present</span>
+            <span>Future</span>
+            <strong>The rest stays open.</strong>
           </div>
         </section>
       )}
