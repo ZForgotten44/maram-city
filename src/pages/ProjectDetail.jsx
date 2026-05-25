@@ -287,7 +287,7 @@ const museumDoors = [
   { title: 'Before You', unlocked: true, tone: 'moonlit', unlock: 'Enter', symbol: 'I', roomId: 'before-you' },
   { title: 'Little Things', unlocked: true, tone: 'gold', unlock: 'Enter', symbol: 'II', roomId: 'balloon-notes' },
   { title: 'The Rule of Three', unlocked: true, tone: 'amber', unlock: 'Enter', symbol: 'III', roomId: 'rule-of-three' },
-  { title: 'You Changed My Life', unlocked: false, tone: 'rose', unlock: 'Opens May 25', symbol: 'IV' },
+  { title: 'The Poem That Answers Back', unlocked: true, tone: 'rose', unlock: 'Enter', symbol: 'IV', roomId: 'poem-answers' },
   { title: 'Constellation Room', unlocked: false, tone: 'starlit', unlock: 'Opens May 26', symbol: 'V' },
   { title: 'Sound of Us', unlocked: false, tone: 'violet', unlock: 'Opens May 27', symbol: 'VI' },
   { title: '100 Years Together', unlocked: false, tone: 'sacred', unlock: 'Opens May 29', symbol: 'VII' },
@@ -650,6 +650,410 @@ The third frame is waiting for us.
 And for the first time in my life,
 I am no longer afraid of forever.`
 
+const doorFourPoem = `There are songs older than our parents
+that somehow knew you before I did.
+
+That thought genuinely unsettles me sometimes.
+
+Because it means somewhere, decades ago,
+a stranger sat alone under dim light,
+trying to survive a feeling large enough to rearrange his nervous system,
+and without realizing it,
+he began writing fragments of you.
+
+Not your face.
+
+Faces are easy.
+
+The world has always had beautiful women.
+
+No—
+he wrote the aftermath.
+
+The psychological damage of meeting someone
+capable of making reality itself feel altered.
+
+That is rarer.
+
+And maybe that is why these verses followed me for years
+before I understood them.
+
+A sentence means nothing
+until one human being arrives
+and suddenly gives it blood circulation.
+
+Before you, songs were songs.
+
+After you, they became documents.
+
+Evidence left behind by people
+who clearly did not survive love quietly either.
+
+I think that is why [1] had to come first.
+
+Because distance is the first thing love humiliates.
+
+Not immediately.
+
+At first distance behaves normally.
+Miles remain miles.
+Countries remain countries.
+Airports remain airports.
+
+Then one person enters your life deeply enough
+and suddenly geography starts malfunctioning.
+
+You begin hearing them in silence.
+
+Seeing them in objects.
+
+Missing them with specific body parts.
+
+And somehow a human being starts existing inside you continuously,
+regardless of location.
+
+That should not be biologically possible.
+
+Yet every person who has truly loved someone understands it instantly.
+
+The terrifying thing is that I was not empty before you.
+
+I need you to understand that.
+
+My life was not tragic enough to explain this transformation neatly.
+
+I had friends.
+Movement.
+Noise.
+Goals.
+Rooms loud enough to drown thought itself.
+
+I genuinely believed fullness and aliveness were synonyms.
+
+Then one evening beside a music room,
+you touched my hand casually enough
+to ruin that illusion forever.
+
+There should have been orchestras.
+
+Warnings.
+
+Structural failure.
+
+Instead the world continued normally,
+which is horrifying in retrospect.
+
+Because it means the biggest events in human life
+often arrive dressed as ordinary seconds.
+
+And that is exactly why [3] belongs there.
+
+Not because it is romantic.
+
+Because it captures the collapse of resistance.
+
+The moment intelligence becomes irrelevant.
+
+The moment you realize your heart has already crossed a border
+your mind is still pretending to approach carefully.
+
+And once that border disappears,
+something even more dangerous begins.
+
+Because eventually love stops asking politely.
+
+Eventually it says: [4]
+
+And suddenly sacrifice stops sounding heroic.
+
+It starts sounding obvious.
+
+People think falling in love feels dramatic.
+
+It does not.
+
+Real love feels terrifyingly natural.
+
+Like discovering your soul had already signed something
+before you consciously read the contract.
+
+And after that moment,
+everything started reorganizing itself around you quietly.
+
+Not through obsession.
+
+Through gravity.
+
+There is a difference.
+
+Obsession is loud.
+Temporary.
+Self-consuming.
+
+Gravity is patient.
+
+Gravity simply makes every object in the system begin leaning unconsciously toward one center.
+
+That is what happened to my life.
+
+My mornings lean toward you now.
+
+My work does too.
+
+Even my ambitions changed shape around your existence.
+
+People think ambition is built from ego.
+
+Mine became architectural after you.
+
+Suddenly success stopped looking like achievement
+and started looking like warm lighting touching your face correctly in an apartment we have not entered yet.
+
+A kitchen where your voice exists.
+A couch where your legs end up across mine during movies.
+Your dresses hanging somewhere nearby like physical proof that loneliness finally lost.
+
+That is why [12] matters.
+
+Because we truly were children standing beside consequences too large for us to measure.
+
+People underestimate how terrifying that is.
+
+To realize years later
+that your future may have quietly begun
+before you even understood the word “future” correctly.
+
+And maybe that is why [14] hurts so much too.
+
+Because the deepest love always feels strangely ancient.
+
+Not old.
+
+Ancient.
+
+As if your soul recognized something before your memory did.
+
+As if every version of you had been slowly walking toward one person unknowingly.
+
+I think that is why your smile unsettles me sometimes.
+
+Not aesthetically.
+
+Existentially.
+
+Because [7] is true in a way that embarrasses me.
+
+There are moments where it genuinely feels like you know me
+from somewhere beyond experience.
+
+Like somewhere inside your face
+exists information about me
+I have not confessed yet.
+
+And once that kind of recognition enters your life,
+ordinary attraction becomes impossible to respect again.
+
+Because attraction notices beauty.
+
+Recognition notices being.
+
+That is rarer.
+
+Far rarer.
+
+And perhaps that is what all these songs were trying to describe unsuccessfully.
+
+Not romance.
+
+Recognition.
+
+The terrifying relief of discovering another consciousness
+where your soul does not feel translated poorly.
+
+Which explains why silence changed after you.
+
+Before you, silence was absence of sound.
+
+After you, silence became emotional topography.
+
+There is silence after your call ends.
+Silence waiting for your notifications.
+Silence during long nights where distance suddenly becomes physically measurable inside the chest.
+
+And then there is the worst silence of all:
+
+the silence where beautiful things happen
+and your first instinct is reaching for someone who is not there to witness them with you.
+
+That silence created [9].
+
+Because eventually love stops being about desire.
+
+It becomes about sharing existence itself.
+
+Not wanting someone beside you.
+
+Wanting reality to pass through them first.
+
+A song sounds incomplete until they hear it.
+A sunset feels undocumented until they see it.
+Even your own thoughts start feeling unfinished without their presence touching them somewhere.
+
+That is an insane way for a human being to exist inside another human being.
+
+Yet people have been writing about it for centuries because it keeps happening.
+
+That is why [5] belongs there too.
+
+Not as flattery.
+
+As observation.
+
+Because once someone becomes emotionally integrated into your perception correctly,
+life itself changes texture around them.
+
+Food tastes more alive.
+Cities become less mechanical.
+Time softens.
+
+Even suffering becomes strangely survivable
+because somewhere inside the pain exists another person’s voice waiting at the end of it.
+
+That is what nobody explains about love.
+
+Real love does not remove suffering.
+
+It makes suffering feel inhabited.
+
+And God—
+your face.
+
+There are moments where I look at you
+and understand exactly why [11] had to be written.
+
+Not because you are beautiful.
+
+That sentence is insufficient.
+
+The real problem is that your beauty interrupts thought.
+
+That is different.
+
+Real beauty causes temporary cognitive failure.
+
+The mind stalls for half a second trying to process something emotionally overwhelming.
+
+You smiling unexpectedly.
+You getting excited over tiny things.
+You asking whether you look okay while reality itself is struggling to answer honestly.
+
+And that question—
+“Do I look okay?”—
+
+might genuinely be one of the strangest things you do.
+
+Because there are moments where asking you that feels like asking sunlight whether it is bright enough.
+
+That is why [8] exists.
+
+Not as reassurance.
+
+As confusion.
+
+The confusion of someone trying to explain to another person
+that they have become visually inseparable from beauty itself.
+
+And somehow, despite all that,
+the deepest part was never visual.
+
+It was behavioral.
+
+The terrifying way you entered routine.
+
+That is where love becomes irreversible.
+
+Not in dramatic moments.
+
+In repetition.
+
+In how your notifications began controlling entire moods.
+How exhaustion became easier after hearing your voice.
+How even work transformed into an extension of caring for a future version of us.
+
+You became infrastructure.
+
+Part of the operating system itself.
+
+That is why [6] feels devastatingly accurate.
+
+Because loneliness is not always sadness.
+
+Sometimes loneliness is simply the absence of recognition.
+
+And the moment somebody truly recognizes you,
+something ancient inside the body unclenches.
+
+Like your soul finally setting down weight
+it forgot it had been carrying.
+
+And maybe that is why [13] exists too.
+
+Because eventually love reaches a point
+where the universe genuinely appears visually altered around one person.
+
+Light changes.
+
+Time changes.
+
+Even memory changes color afterward.
+
+And perhaps that is why [10] belongs here too.
+
+Because once you meet someone capable of understanding you deeply enough,
+crowds begin feeling strangely insufficient.
+
+Noise becomes exhausting.
+
+Performance becomes tiring.
+
+You start wanting to disappear from the world correctly.
+
+Not alone.
+
+With them.
+
+Away from all the unnecessary sound.
+
+Just two people existing honestly enough
+to hear each other think.
+
+That kind of intimacy is rarer than love itself.
+
+And perhaps that is the final tragedy of loving someone correctly:
+
+the world before them remains technically visible,
+but emotionally,
+it never becomes fully inhabitable again.
+
+That is why [2] belongs at the end.
+
+Not as devotion.
+
+As consequence.
+
+Because after a certain point,
+loving someone stops becoming a choice you repeatedly make.
+
+It becomes a condition of consciousness itself.
+
+Like breathing.
+Like gravity.
+Like time.
+
+Something no longer performed.
+
+Only lived inside.`
+
 function getBalloonStyle(index) {
   const lanes = [18, 37, 62, 81, 27, 52, 73]
   const x = lanes[index % lanes.length] + (((index * 7) % 9) - 4)
@@ -696,12 +1100,19 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
   const [isMuted, setIsMuted] = useState(() => window.localStorage.getItem('museum-muted') === 'true')
   const [roomProgress, setRoomProgress] = useState(0)
   const [selectedBalloonNote, setSelectedBalloonNote] = useState(null)
+  const [activePoemReference, setActivePoemReference] = useState(null)
+  const [hasSeenDoorFourEnding, setHasSeenDoorFourEnding] = useState(false)
+  const [doorFourSymbolHeight, setDoorFourSymbolHeight] = useState(3600)
   const hallAudioRef = useRef(null)
   const roomAudioRef = useRef(null)
   const roomTwoAudioRef = useRef(null)
   const roomThreeAudioRef = useRef(null)
+  const roomFourAudioRef = useRef(null)
+  const poemReferenceAudioRefs = useRef({})
   const audioFadeRef = useRef({})
+  const poemAudioFadeRef = useRef({})
   const roomRef = useRef(null)
+  const doorFourEndingRef = useRef(null)
 
   useEffect(() => {
     const id = setInterval(() => setCountdown(getMuseumCountdown()), 1000)
@@ -713,7 +1124,8 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     const roomAudio = new Audio('/audio/door1.mp3')
     const roomTwoAudio = new Audio('/audio/door2.mp3')
     const roomThreeAudio = new Audio('/audio/door3.mp3')
-    ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio].forEach((audio) => {
+    const roomFourAudio = new Audio('/audio/door4/door4.mp3')
+    ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio].forEach((audio) => {
       audio.loop = true
       audio.preload = 'auto'
       audio.volume = 0
@@ -722,10 +1134,16 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     roomAudioRef.current = roomAudio
     roomTwoAudioRef.current = roomTwoAudio
     roomThreeAudioRef.current = roomThreeAudio
+    roomFourAudioRef.current = roomFourAudio
 
     return () => {
       Object.values(audioFadeRef.current).forEach(cancelAnimationFrame)
-      ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio].forEach((audio) => {
+      Object.values(poemAudioFadeRef.current).forEach(cancelAnimationFrame)
+      ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio].forEach((audio) => {
+        audio.pause()
+        audio.src = ''
+      })
+      Object.values(poemReferenceAudioRefs.current).forEach((audio) => {
         audio.pause()
         audio.src = ''
       })
@@ -733,6 +1151,8 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
       roomAudioRef.current = null
       roomTwoAudioRef.current = null
       roomThreeAudioRef.current = null
+      roomFourAudioRef.current = null
+      poemReferenceAudioRefs.current = {}
     }
   }, [])
 
@@ -745,7 +1165,8 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     const roomAudio = roomAudioRef.current
     const roomTwoAudio = roomTwoAudioRef.current
     const roomThreeAudio = roomThreeAudioRef.current
-    if (!hallAudio || !roomAudio || !roomTwoAudio || !roomThreeAudio) return undefined
+    const roomFourAudio = roomFourAudioRef.current
+    if (!hallAudio || !roomAudio || !roomTwoAudio || !roomThreeAudio || !roomFourAudio) return undefined
 
     const fadeAudio = (audio, targetVolume, duration = 1800, pauseAtEnd = false) => {
       if (audioFadeRef.current[audio.src]) cancelAnimationFrame(audioFadeRef.current[audio.src])
@@ -769,8 +1190,10 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
         ? roomTwoAudio
         : activeRoom === 'rule-of-three'
           ? roomThreeAudio
-          : hallAudio
-    const inactiveAudios = [hallAudio, roomAudio, roomTwoAudio, roomThreeAudio].filter((audio) => audio !== activeAudio)
+          : activeRoom === 'poem-answers'
+            ? roomFourAudio
+            : hallAudio
+    const inactiveAudios = [hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio].filter((audio) => audio !== activeAudio)
     const activeVolume = isMuted
       ? 0
       : activeRoom === 'before-you'
@@ -779,7 +1202,9 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
           ? 0.23
           : activeRoom === 'rule-of-three'
             ? 0.24
-            : 0.22
+            : activeRoom === 'poem-answers'
+              ? 0.12
+              : 0.22
 
     const syncAudio = () => {
       if (!isMuted) {
@@ -799,11 +1224,207 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     }
   }, [activeRoom, isMuted])
 
+  useEffect(() => {
+    if (activeRoom !== 'poem-answers') {
+      stopAllPoemReferenceAudio()
+    }
+  }, [activeRoom])
+
+  useEffect(() => {
+    if (activeRoom !== 'poem-answers') return undefined
+    const ending = doorFourEndingRef.current
+    if (!ending) return undefined
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setHasSeenDoorFourEnding(true)
+      },
+      { threshold: 0.45 }
+    )
+    observer.observe(ending)
+    return () => observer.disconnect()
+  }, [activeRoom])
+
+  useEffect(() => {
+    if (activeRoom !== 'poem-answers') return undefined
+    const updateSymbolHeight = () => {
+      const room = roomRef.current
+      if (!room) return
+      setDoorFourSymbolHeight(Math.max(room.scrollHeight, room.clientHeight))
+    }
+    updateSymbolHeight()
+    const id = setTimeout(updateSymbolHeight, 80)
+    window.addEventListener('resize', updateSymbolHeight)
+    return () => {
+      clearTimeout(id)
+      window.removeEventListener('resize', updateSymbolHeight)
+    }
+  }, [activeRoom])
+
+  useEffect(() => {
+    const activeAudio = activePoemReference ? poemReferenceAudioRefs.current[activePoemReference] : null
+    if (activeAudio) {
+      fadePoemReferenceAudio(activeAudio, isMuted ? 0 : 0.82, 500)
+    }
+  }, [activePoemReference, isMuted])
+
   const updateRoomProgress = () => {
     const room = roomRef.current
     if (!room) return
     const maxScroll = Math.max(1, room.scrollHeight - room.clientHeight)
     setRoomProgress(Math.min(1, room.scrollTop / maxScroll))
+  }
+
+  const fadePoemReferenceAudio = (audio, targetVolume, duration = 900, resetAtEnd = false) => {
+    if (poemAudioFadeRef.current[audio.src]) cancelAnimationFrame(poemAudioFadeRef.current[audio.src])
+    const startVolume = audio.volume
+    const startedAt = performance.now()
+    const tick = (now) => {
+      const progress = Math.min(1, (now - startedAt) / duration)
+      audio.volume = startVolume + (targetVolume - startVolume) * progress
+      if (progress < 1) {
+        poemAudioFadeRef.current[audio.src] = requestAnimationFrame(tick)
+      } else if (resetAtEnd) {
+        audio.pause()
+        audio.currentTime = 0
+      }
+    }
+    poemAudioFadeRef.current[audio.src] = requestAnimationFrame(tick)
+  }
+
+  const stopAllPoemReferenceAudio = (exceptReference = null) => {
+    Object.entries(poemReferenceAudioRefs.current).forEach(([reference, audio]) => {
+      if (Number(reference) === exceptReference) return
+      fadePoemReferenceAudio(audio, 0, 650, true)
+    })
+    if (exceptReference == null) {
+      setActivePoemReference(null)
+      const roomFourAudio = roomFourAudioRef.current
+      if (activeRoom === 'poem-answers' && roomFourAudio && !isMuted) {
+        roomFourAudio.play().catch(() => {})
+        fadePoemReferenceAudio(roomFourAudio, 0.12, 900)
+      }
+    }
+  }
+
+  const handlePoemReferenceClick = (referenceNumber) => {
+    const existingAudio = poemReferenceAudioRefs.current[referenceNumber]
+
+    if (activePoemReference === referenceNumber && existingAudio) {
+      fadePoemReferenceAudio(existingAudio, 0, 650, true)
+      setActivePoemReference(null)
+      const roomFourAudio = roomFourAudioRef.current
+      if (roomFourAudio && !isMuted) {
+        roomFourAudio.play().catch(() => {})
+        fadePoemReferenceAudio(roomFourAudio, 0.12, 900)
+      }
+      return
+    }
+
+    stopAllPoemReferenceAudio(referenceNumber)
+    const roomFourAudio = roomFourAudioRef.current
+    if (roomFourAudio) fadePoemReferenceAudio(roomFourAudio, 0, 650)
+    const audio = existingAudio || new Audio(`/audio/door4/${referenceNumber}.mp3`)
+    audio.loop = false
+    audio.preload = 'auto'
+    audio.volume = 0
+    audio.currentTime = 0
+    audio.onerror = () => {
+      setActivePoemReference((currentReference) => (
+        currentReference === referenceNumber ? null : currentReference
+      ))
+      if (roomFourAudio && !isMuted) {
+        roomFourAudio.play().catch(() => {})
+        fadePoemReferenceAudio(roomFourAudio, 0.12, 900)
+      }
+    }
+    audio.onended = () => {
+      setActivePoemReference((currentReference) => (
+        currentReference === referenceNumber ? null : currentReference
+      ))
+      if (roomFourAudio && !isMuted) {
+        roomFourAudio.play().catch(() => {})
+        fadePoemReferenceAudio(roomFourAudio, 0.12, 1200)
+      }
+    }
+    poemReferenceAudioRefs.current[referenceNumber] = audio
+    setActivePoemReference(referenceNumber)
+    audio.load()
+    audio.play().catch(() => {
+      setActivePoemReference(null)
+      if (roomFourAudio && !isMuted) {
+        roomFourAudio.play().catch(() => {})
+        fadePoemReferenceAudio(roomFourAudio, 0.12, 900)
+      }
+    })
+    fadePoemReferenceAudio(audio, isMuted ? 0 : 0.82, 1000)
+  }
+
+  const renderDoorFourLine = (line, keyPrefix) => {
+    const parts = line.split(/(\[\d+\])/g)
+    return parts.map((part, index) => {
+      const match = part.match(/^\[(\d+)\]$/)
+      if (!match) {
+        return part.split(/(\b(?:you|You|her|Her|she|She)\b)/g).map((wordPart, wordIndex) => (
+          /^(?:you|You|her|Her|she|She)$/.test(wordPart) ? (
+            <span key={`${keyPrefix}-${index}-${wordIndex}`} className="door-four-her-word">{wordPart}</span>
+          ) : (
+            <span key={`${keyPrefix}-${index}-${wordIndex}`}>{wordPart}</span>
+          )
+        ))
+      }
+      const referenceNumber = Number(match[1])
+      return (
+        <button
+          key={`${keyPrefix}-${index}`}
+          type="button"
+          className={`door-four-reference ${activePoemReference === referenceNumber ? 'active' : ''}`}
+          onClick={() => handlePoemReferenceClick(referenceNumber)}
+          aria-label={`Play poem response ${referenceNumber}`}
+          aria-pressed={activePoemReference === referenceNumber}
+        >
+          <span className="door-four-reference-note">♪</span>
+          <span className="door-four-reference-number">{referenceNumber}</span>
+          <span className="door-four-reference-fall" aria-hidden="true">
+            <span>♪</span>
+            <span>♡</span>
+            <span>♫</span>
+          </span>
+        </button>
+      )
+    })
+  }
+
+  const renderDoorFourMusicSymbols = (side) => {
+    const symbols = ['♪', '♫', '♩', '♬', '𝄞']
+    const colors = ['#6b1f35', '#7a2740', '#8b2f4a', '#3f2b25', '#b89455', '#c8aa85', '#b98b8f']
+    const count = 112
+    return Array.from({ length: count }, (_, i) => {
+      const seed = side === 'left' ? i : i + 97
+      const sizeOptions = [14, 18, 24, 32, 40, 52, 60, 84]
+      const usableHeight = Math.max(1, doorFourSymbolHeight - 160)
+      return (
+        <span
+          key={`${side}-${i}`}
+          className="door-four-floating-symbol"
+          style={{
+            '--top': `${48 + (i / (count - 1)) * usableHeight + ((seed * 29) % 90 - 45)}px`,
+            '--x': `${10 + ((seed * 53) % 80)}%`,
+            '--size': `${sizeOptions[seed % sizeOptions.length]}px`,
+            '--symbol-color': colors[seed % colors.length],
+            '--symbol-opacity': `${0.12 + ((seed * 17) % 38) / 100}`,
+            '--duration': `${[6, 9, 14, 20][seed % 4] + (seed % 5) * 0.7}s`,
+            '--delay': `${-(seed % 17) * 0.55}s`,
+            '--drift': `${side === 'left' ? 1 : -1}`,
+            '--sway': `${4 + (seed % 9) * 5}px`,
+            '--rise': `${8 + (seed % 8) * 7}px`,
+            '--blur': `${(seed % 5) * 0.32}px`,
+            '--rotate': `${((seed % 11) - 5) * 5}deg`,
+          }}
+        >
+          {symbols[seed % symbols.length]}
+        </span>
+      )
+    })
   }
 
   return (
@@ -876,6 +1497,8 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
                   if (!door.unlocked) return
                   setRoomProgress(0)
                   setSelectedBalloonNote(null)
+                  setActivePoemReference(null)
+                  setHasSeenDoorFourEnding(false)
                   setActiveRoom(door.roomId)
                 }}
                 aria-label={door.unlocked ? `Enter ${door.title}` : 'Locked memory door'}
@@ -986,7 +1609,7 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
             </div>
           </div>
         </section>
-      ) : (
+      ) : activeRoom === 'rule-of-three' ? (
         <section
           ref={roomRef}
           className="rule-three-room"
@@ -1060,6 +1683,86 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
             <span>Present</span>
             <span>Future</span>
             <strong>The rest stays open.</strong>
+          </div>
+        </section>
+      ) : (
+        <section
+          ref={roomRef}
+          className={`door-four-room ${activePoemReference ? 'has-speaking-reference' : ''}`}
+          aria-label="Room IV, The Poem That Answers Back"
+          onScroll={updateRoomProgress}
+          style={{ '--room-progress': roomProgress }}
+        >
+          <button type="button" className="museum-back door-four-back" onClick={() => setActiveRoom(null)}>Back to hallway</button>
+          <div
+            className="door-four-symbol-field music-symbols-left"
+            style={{ height: `${doorFourSymbolHeight}px` }}
+            aria-hidden="true"
+          >
+            {renderDoorFourMusicSymbols('left')}
+          </div>
+          <div
+            className="door-four-symbol-field music-symbols-right"
+            style={{ height: `${doorFourSymbolHeight}px` }}
+            aria-hidden="true"
+          >
+            {renderDoorFourMusicSymbols('right')}
+          </div>
+          <div className="door-four-architecture" aria-hidden="true">
+            <span className="door-four-shadow door-four-shadow-one" />
+            <span className="door-four-shadow door-four-shadow-two" />
+            <span className="door-four-wall-curve door-four-wall-curve-left" />
+            <span className="door-four-wall-curve door-four-wall-curve-right" />
+            <span className="door-four-lamp door-four-lamp-one" />
+            <span className="door-four-lamp door-four-lamp-two" />
+            <span className="door-four-lamp door-four-lamp-three" />
+            <span className="door-four-table-light" />
+            <span className="door-four-bridge-light" />
+            <span className="door-four-ceiling-wave door-four-ceiling-wave-one" />
+            <span className="door-four-ceiling-wave door-four-ceiling-wave-two" />
+            <span className="door-four-ceiling-wave door-four-ceiling-wave-three" />
+            <span className="door-four-suspended-lines" />
+            <span className="door-four-floor-resonance">
+              {Array.from({ length: 6 }, (_, i) => <span key={i} style={{ '--i': i }} />)}
+            </span>
+            <span className="door-four-sound-thread door-four-sound-thread-one" />
+            <span className="door-four-sound-thread door-four-sound-thread-two" />
+            <span className="door-four-sound-thread door-four-sound-thread-three" />
+            <span className="door-four-resonance door-four-resonance-one" />
+            <span className="door-four-resonance door-four-resonance-two" />
+            <span className="door-four-resonance door-four-resonance-three" />
+            {Array.from({ length: 28 }, (_, i) => (
+              <span key={i} className="door-four-dust" style={{ '--i': i }} />
+            ))}
+          </div>
+
+          <div className="door-four-title">
+            <p>Room 04</p>
+            <h2>The Poem That Answers Back</h2>
+            <span>Click the quiet numbers. Let the poem answer.</span>
+          </div>
+
+          <article className="door-four-manuscript" aria-label="The Poem That Answers Back poem">
+            {doorFourPoem.split('\n\n').map((stanza, stanzaIndex) => {
+              const isActive = activePoemReference != null && stanza.includes(`[${activePoemReference}]`)
+              return (
+                <p
+                  key={stanzaIndex}
+                  className={`door-four-stanza-${stanzaIndex % 5} ${isActive ? 'active-stanza' : ''}`}
+                  style={{ '--stanza-index': stanzaIndex }}
+                >
+                  {stanza.split('\n').map((line, lineIndex) => (
+                    <span key={lineIndex} className={line.includes(`[${activePoemReference}]`) ? 'active-line' : ''}>
+                      {renderDoorFourLine(line, `${stanzaIndex}-${lineIndex}`)}
+                    </span>
+                  ))}
+                </p>
+              )
+            })}
+          </article>
+
+          <div ref={doorFourEndingRef} className={`door-four-ending ${hasSeenDoorFourEnding ? 'revealed' : ''}`}>
+            <span>Some poems are meant to be heard.</span>
           </div>
         </section>
       )}
