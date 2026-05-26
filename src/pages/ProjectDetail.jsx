@@ -288,7 +288,7 @@ const museumDoors = [
   { title: 'Little Things', unlocked: true, tone: 'gold', unlock: 'Enter', symbol: 'II', roomId: 'balloon-notes' },
   { title: 'The Rule of Three', unlocked: true, tone: 'amber', unlock: 'Enter', symbol: 'III', roomId: 'rule-of-three' },
   { title: 'The Poem That Answers Back', unlocked: true, tone: 'rose', unlock: 'Enter', symbol: 'IV', roomId: 'poem-answers' },
-  { title: 'Constellation Room', unlocked: false, tone: 'starlit', unlock: 'Opens May 26', symbol: 'V' },
+  { title: 'Arafah', unlocked: true, tone: 'starlit', unlock: 'Enter', symbol: 'V', roomId: 'arafah' },
   { title: 'Sound of Us', unlocked: false, tone: 'violet', unlock: 'Opens May 27', symbol: 'VI' },
   { title: '100 Years Together', unlocked: false, tone: 'sacred', unlock: 'Opens May 29', symbol: 'VII' },
 ]
@@ -1094,6 +1094,381 @@ function isImportantBalloonNote(note) {
   ].some((phrase) => note.includes(phrase))
 }
 
+const arafahSkyLines = [
+  { text: 'فَاذْكُرُونِي أَذْكُرْكُمْ', size: 20 },
+  { text: 'وَخَلَقْنَاكُمْ أَزْوَاجًا', size: 20 },
+  { text: 'اللهم اجعلنا ممن تحبهم وترضى عنهم', size: 17 },
+  { text: 'هُنَّ لِبَاسٌ لَّكُمْ\nوَأَنتُمْ لِبَاسٌ لَّهُنَّ', size: 19 },
+  { text: 'وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً', size: 20 },
+  { text: 'خيركم خيركم لأهله', size: 18 },
+  { text: 'الأرواح جنود مجندة', size: 18 },
+  { text: 'اللهم اجعل بيننا مودة\nورحمة لا تنقطع', size: 17 },
+  { text: 'سَلَامٌ قَوْلًا مِن رَّبٍّ رَّحِيمٍ', size: 19 },
+  { text: 'اللهم اجعل حبنا عونًا على طاعتك', size: 17 },
+  { text: 'رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا\nوَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنٍ', size: 18 },
+  { text: 'اللهم اجمعنا في خير وعلى خير وإلى خير', size: 17 },
+  { text: 'وَأَلَّفَ بَيْنَ قُلُوبِهِمْ', size: 20 },
+  { text: 'اللهم بارك لنا في عمرنا وحبنا وأيامنا', size: 17 },
+  { text: 'واجعلنا للمتقين إمامًا', size: 18 },
+  { text: 'ادْخُلُوهَا بِسَلَامٍ آمِنِينَ', size: 19 },
+  { text: 'اللهم ارزقنا ذرية صالحة تقرّ بها أعيننا', size: 17 },
+  { text: 'اللهم اجعل بيتنا سكنًا ورحمةً ونورًا', size: 17 },
+  { text: 'اللهم لا تجعل في قلوبنا إلا ما يرضيك', size: 17 },
+  { text: 'اللهم اجعلنا خيرًا لبعضنا', size: 19 },
+  { text: 'وَإِلَىٰ رَبِّكَ فَارْغَب', size: 20 },
+  { text: 'وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم\nمِّنْ أَنفُسِكُمْ أَزْوَاجًا', size: 17 },
+  { text: 'اللهم اجعلنا لباسًا وسكنًا وأمانًا لبعضنا', size: 17 },
+]
+
+function ArafahRoomScene() {
+  const canvasRef = useRef(null)
+  const scrollAreaRef = useRef(null)
+  const scrollTrackRef = useRef(null)
+  const skyLayerRef = useRef(null)
+  const promptRef = useRef(null)
+  const finalRef = useRef(null)
+  const cursorRef = useRef(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const scrollArea = scrollAreaRef.current
+    const scrollTrack = scrollTrackRef.current
+    const skyLayer = skyLayerRef.current
+    const prompt = promptRef.current
+    const final = finalRef.current
+    const cursor = cursorRef.current
+    if (!canvas || !scrollArea || !scrollTrack || !skyLayer || !prompt || !final || !cursor) return undefined
+
+    const ctx = canvas.getContext('2d')
+    let width = 0
+    let height = 0
+    let time = 0
+    let scrollProgress = 0
+    let mouseX = 0.5
+    let mouseY = 0.5
+    let targetMouseX = 0.5
+    let targetMouseY = 0.5
+    let rawMouseX = 0
+    let rawMouseY = 0
+    let frameId = 0
+    let revealTimeout = 0
+    let disposed = false
+    const particles = []
+    const placedBoxes = []
+    const lineEls = []
+    const ease = (value) => (value < 0.5 ? 2 * value * value : -1 + (4 - 2 * value) * value)
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
+    const lerp = (a, b, amount) => a + (b - a) * amount
+    const colorStep = (value) => Math.round(value)
+
+    const resize = () => {
+      width = canvas.width = window.innerWidth
+      height = canvas.height = window.innerHeight
+      placeLines()
+    }
+
+    const overlaps = (x, y, w, h) => placedBoxes.some((box) => {
+      const dx = Math.abs((x + w / 2) - (box.x + box.w / 2))
+      const dy = Math.abs((y + h / 2) - (box.y + box.h / 2))
+      return dx < (w + box.w) / 2 + 20 && dy < (h + box.h) / 2 + 20
+    })
+
+    const placeLines = () => {
+      placedBoxes.length = 0
+      const skyHeight = height * 0.5
+      const padX = width * 0.05
+      lineEls.forEach((el) => {
+        const rect = el.getBoundingClientRect()
+        const elWidth = Math.max(rect.width, 10)
+        const elHeight = Math.max(rect.height, 14)
+        let x = padX
+        let y = 24
+        for (let attempt = 0; attempt < 260; attempt += 1) {
+          x = padX + Math.random() * Math.max(1, width - padX * 2 - elWidth)
+          y = 20 + Math.random() * Math.max(1, skyHeight - elHeight - 28)
+          if (!overlaps(x, y, elWidth, elHeight)) break
+        }
+        el.dataset.baseLeft = String(x)
+        el.dataset.baseTop = String(y)
+        el.style.left = `${x}px`
+        el.style.top = `${y}px`
+        el.classList.add('placed')
+        placedBoxes.push({ x, y, w: elWidth, h: elHeight })
+      })
+    }
+
+    const spawnParticle = (x, y, burst = false) => {
+      const count = burst ? 12 : 1
+      for (let i = 0; i < count; i += 1) {
+        const angle = burst ? (Math.PI * 2 / count) * i + Math.random() * 0.3 : -Math.PI / 2
+        const speed = burst ? 1.5 + Math.random() * 2.5 : Math.random() * 0.8 + 0.2
+        particles.push({
+          x,
+          y,
+          vx: burst ? Math.cos(angle) * speed : (Math.random() - 0.5) * 0.5,
+          vy: burst ? Math.sin(angle) * speed : -speed,
+          radius: Math.random() * 1.8 + 0.5,
+          life: 1,
+          decay: 0.02 + Math.random() * 0.02,
+          burst,
+        })
+      }
+    }
+
+    const revealLines = () => {
+      const order = [...lineEls.keys()].sort(() => Math.random() - 0.5)
+      let index = 0
+      const revealNext = () => {
+        const el = lineEls[order[index]]
+        if (!el) {
+          prompt.classList.add('visible')
+          return
+        }
+        el.style.opacity = el.dataset.baseOpacity || '0.78'
+        el.classList.add('shown')
+        const rect = el.getBoundingClientRect()
+        for (let i = 0; i < 5; i += 1) {
+          spawnParticle(rect.left + rect.width / 2 + (Math.random() - 0.5) * rect.width, rect.top + rect.height / 2, true)
+        }
+        index += 1
+        revealTimeout = window.setTimeout(revealNext, 4000)
+      }
+      revealTimeout = window.setTimeout(revealNext, 1600)
+    }
+
+    const updateScroll = () => {
+      const max = scrollTrack.offsetHeight - height
+      scrollProgress = max > 0 ? Math.min(scrollArea.scrollTop / max, 1) : 0
+      const skyOpacity = 1 - clamp((scrollProgress - 0.06) / 0.28, 0, 1)
+      lineEls.forEach((el) => {
+        if (el.classList.contains('shown')) {
+          el.style.opacity = String(Number(el.dataset.baseOpacity || 0.78) * skyOpacity)
+        }
+      })
+      if (prompt.classList.contains('visible')) {
+        prompt.style.opacity = String(Math.max(0, 1 - clamp((scrollProgress - 0.04) / 0.14, 0, 1)))
+      }
+      const finalOpacity = clamp((scrollProgress - 0.88) / 0.08, 0, 1)
+      final.style.opacity = String(finalOpacity)
+      final.classList.toggle('visible', finalOpacity > 0.04)
+    }
+
+    const drawFigures = (horizon, skyPower) => {
+      const groundY = horizon + 2
+      const scale = lerp(1, 0.72, scrollProgress)
+      const figureHeight = height * 0.082 * scale
+      const centerX = width * 0.498
+      const gap = figureHeight * 0.52
+      const sway = Math.sin(time * 0.38) * 1.4
+      const alpha = lerp(0.76, 0.92, skyPower)
+      const drawPerson = (x, tall, feminine) => {
+        const figureWidth = tall * (feminine ? 0.28 : 0.32)
+        ctx.save()
+        ctx.translate(x + sway * (feminine ? 0.25 : 0.2), groundY)
+        ctx.beginPath()
+        ctx.moveTo(-figureWidth * 0.58, 0)
+        ctx.bezierCurveTo(-figureWidth * 0.88, -tall * 0.36, -figureWidth * 0.72, -tall * 0.76, -figureWidth * 0.16, -tall * 0.88)
+        ctx.bezierCurveTo(-figureWidth * 0.05, -tall * 0.94, figureWidth * 0.05, -tall * 0.94, figureWidth * 0.16, -tall * 0.88)
+        ctx.bezierCurveTo(figureWidth * 0.72, -tall * 0.76, figureWidth * 0.88, -tall * 0.36, figureWidth * 0.58, 0)
+        ctx.closePath()
+        ctx.fillStyle = `rgba(234,224,206,${alpha})`
+        ctx.fill()
+        ctx.beginPath()
+        ctx.arc(0, -tall * 0.92, figureWidth * 0.3, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.restore()
+      }
+      drawPerson(centerX - gap, figureHeight * 0.9, true)
+      drawPerson(centerX + gap, figureHeight, false)
+      if (scrollProgress > 0.12) {
+        const progress = clamp((scrollProgress - 0.12) / 0.22, 0, 1)
+        const handY = groundY - figureHeight * 0.22
+        const x1 = centerX - gap + figureHeight * 0.13
+        const x2 = centerX + gap - figureHeight * 0.14
+        ctx.beginPath()
+        ctx.moveTo(x1, handY)
+        ctx.lineTo(lerp(x1, x2, progress), handY)
+        ctx.strokeStyle = `rgba(222,208,180,${progress * 0.65 * alpha})`
+        ctx.lineWidth = figureHeight * 0.045
+        ctx.lineCap = 'round'
+        ctx.stroke()
+        if (progress > 0.82) {
+          const heartAlpha = clamp((progress - 0.82) / 0.18, 0, 1) * alpha
+          const pulse = 1 + 0.16 * Math.pow(Math.max(0, Math.sin(time * Math.PI * 1.1)), 2)
+          const radius = figureHeight * 0.26 * pulse
+          ctx.save()
+          ctx.translate(centerX, handY - figureHeight * 0.38)
+          ctx.beginPath()
+          ctx.moveTo(0, radius * 0.65)
+          ctx.bezierCurveTo(-radius * 1.25, -radius * 0.05, -radius * 1.25, -radius * 0.95, 0, -radius * 0.38)
+          ctx.bezierCurveTo(radius * 1.25, -radius * 0.95, radius * 1.25, -radius * 0.05, 0, radius * 0.65)
+          ctx.strokeStyle = `rgba(218,185,112,${heartAlpha})`
+          ctx.fillStyle = `rgba(230,192,118,${heartAlpha * 0.22})`
+          ctx.lineWidth = Math.max(1.2, radius * 0.09)
+          ctx.stroke()
+          ctx.fill()
+          ctx.restore()
+        }
+      }
+    }
+
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height)
+      const skyProgress = ease(clamp(scrollProgress * 1.35, 0, 1))
+      const breath = Math.sin(time * 0.07) * 0.012 + Math.sin(time * 0.031) * 0.008
+      const skyPower = clamp(skyProgress + breath, 0, 1)
+      const horizon = height * 0.525 + (mouseY - 0.5) * height * 0.018
+      const gradient = ctx.createLinearGradient(0, 0, 0, horizon)
+      gradient.addColorStop(0, `rgb(${colorStep(lerp(5, 26, skyPower))},${colorStep(lerp(3, 14, skyPower))},${colorStep(lerp(9, 22, skyPower))})`)
+      gradient.addColorStop(0.45, `rgb(${colorStep(lerp(11, 78, skyPower))},${colorStep(lerp(7, 44, skyPower))},${colorStep(lerp(15, 38, skyPower))})`)
+      gradient.addColorStop(1, `rgb(${colorStep(lerp(28, 205, skyPower))},${colorStep(lerp(16, 108, skyPower))},${colorStep(lerp(22, 52, skyPower))})`)
+      ctx.fillStyle = gradient
+      ctx.fillRect(0, 0, width, horizon + 1)
+
+      const halo = ctx.createRadialGradient(width / 2, horizon, 0, width / 2, horizon, width * 0.8)
+      halo.addColorStop(0, `rgba(255,192,85,${clamp((skyPower - 0.06) / 0.5, 0, 1) * 0.12})`)
+      halo.addColorStop(1, 'rgba(0,0,0,0)')
+      ctx.fillStyle = halo
+      ctx.fillRect(0, 0, width, horizon)
+
+      const ground = ctx.createLinearGradient(0, horizon, 0, height)
+      ground.addColorStop(0, `rgb(${colorStep(lerp(9, 55, skyPower))},${colorStep(lerp(6, 42, skyPower))},${colorStep(lerp(6, 32, skyPower))})`)
+      ground.addColorStop(1, `rgb(${colorStep(lerp(5, 24, skyPower))},${colorStep(lerp(3, 17, skyPower))},${colorStep(lerp(3, 13, skyPower))})`)
+      ctx.fillStyle = ground
+      ctx.fillRect(0, horizon, width, height - horizon)
+
+      const centerX = width * 0.505 + (mouseX - 0.5) * width * 0.012
+      const peakHeight = lerp(height * 0.13, height * 0.3, scrollProgress)
+      const peakY = horizon - peakHeight
+      const mountainWidth = width * lerp(0.28, 0.44, scrollProgress)
+      ctx.beginPath()
+      ctx.moveTo(centerX - mountainWidth, horizon + 1)
+      ctx.bezierCurveTo(centerX - mountainWidth * 0.75, horizon - peakHeight * 0.28, centerX - mountainWidth * 0.22, peakY + peakHeight * 0.08, centerX + mountainWidth * 0.04, peakY)
+      ctx.bezierCurveTo(centerX + mountainWidth * 0.28, peakY + peakHeight * 0.07, centerX + mountainWidth * 0.78, horizon - peakHeight * 0.25, centerX + mountainWidth, horizon + 1)
+      ctx.closePath()
+      ctx.fillStyle = `rgba(${colorStep(lerp(18, 78, skyPower))},${colorStep(lerp(14, 56, skyPower))},${colorStep(lerp(12, 44, skyPower))},0.95)`
+      ctx.fill()
+
+      drawFigures(horizon, skyPower)
+
+      if (rawMouseX > 0 && time % 0.08 < 0.018) spawnParticle(rawMouseX, rawMouseY)
+      for (let i = particles.length - 1; i >= 0; i -= 1) {
+        const particle = particles[i]
+        particle.x += particle.vx
+        particle.y += particle.vy
+        particle.vy += 0.04
+        particle.life -= particle.decay
+        if (particle.life <= 0) {
+          particles.splice(i, 1)
+        } else {
+          ctx.beginPath()
+          ctx.arc(particle.x, particle.y, particle.radius * particle.life, 0, Math.PI * 2)
+          ctx.fillStyle = particle.burst ? `rgba(255,215,140,${particle.life * 0.7})` : `rgba(235,210,155,${particle.life * 0.35})`
+          ctx.fill()
+        }
+      }
+
+      const vignette = ctx.createRadialGradient(width / 2, height * 0.47, height * 0.16, width / 2, height * 0.47, height * 0.88)
+      vignette.addColorStop(0, 'rgba(0,0,0,0)')
+      vignette.addColorStop(1, `rgba(0,0,0,${lerp(0.82, 0.6, skyPower)})`)
+      ctx.fillStyle = vignette
+      ctx.fillRect(0, 0, width, height)
+    }
+
+    const animate = (timestamp) => {
+      time = timestamp / 1000
+      mouseX = lerp(mouseX, targetMouseX, 0.05)
+      mouseY = lerp(mouseY, targetMouseY, 0.05)
+      lineEls.forEach((el) => {
+        if (!el.classList.contains('shown')) return
+        const baseLeft = Number(el.dataset.baseLeft || 0)
+        const baseTop = Number(el.dataset.baseTop || 0)
+        const depth = Number(el.dataset.depth || 0.012)
+        el.style.left = `${baseLeft + (mouseX - 0.5) * width * depth}px`
+        el.style.top = `${baseTop + (mouseY - 0.5) * height * depth * 0.6}px`
+      })
+      draw()
+      frameId = requestAnimationFrame(animate)
+    }
+
+    const handleMouseMove = (event) => {
+      rawMouseX = event.clientX
+      rawMouseY = event.clientY
+      targetMouseX = event.clientX / width
+      targetMouseY = event.clientY / height
+      cursor.style.left = `${event.clientX}px`
+      cursor.style.top = `${event.clientY}px`
+    }
+
+    const handleClick = (event) => {
+      const ripple = document.createElement('span')
+      ripple.className = 'arafah-ripple'
+      ripple.style.left = `${event.clientX}px`
+      ripple.style.top = `${event.clientY}px`
+      skyLayer.appendChild(ripple)
+      window.setTimeout(() => ripple.remove(), 1500)
+      spawnParticle(event.clientX, event.clientY, true)
+    }
+
+    arafahSkyLines.forEach((line, index) => {
+      const el = document.createElement('span')
+      el.className = 'arafah-sky-line'
+      el.textContent = line.text
+      el.style.fontSize = `${line.size}px`
+      el.dataset.baseOpacity = String(0.72 + (index % 5) * 0.03)
+      el.dataset.depth = String(0.008 + (index % 7) * 0.003)
+      skyLayer.appendChild(el)
+      lineEls.push(el)
+    })
+
+    resize()
+    const fontsReady = document.fonts?.ready || Promise.resolve()
+    fontsReady.then(() => {
+      if (disposed) return
+      placeLines()
+      revealLines()
+    })
+    updateScroll()
+    frameId = requestAnimationFrame(animate)
+    window.addEventListener('resize', resize)
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('click', handleClick)
+    scrollArea.addEventListener('scroll', updateScroll)
+
+    return () => {
+      disposed = true
+      cancelAnimationFrame(frameId)
+      clearTimeout(revealTimeout)
+      window.removeEventListener('resize', resize)
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('click', handleClick)
+      scrollArea.removeEventListener('scroll', updateScroll)
+      skyLayer.replaceChildren()
+    }
+  }, [])
+
+  return (
+    <div className="arafah-scene">
+      <div ref={cursorRef} className="arafah-cursor" aria-hidden="true" />
+      <canvas ref={canvasRef} className="arafah-canvas" aria-hidden="true" />
+      <div ref={scrollAreaRef} className="arafah-scroll-area">
+        <div ref={scrollTrackRef} className="arafah-scroll-track" />
+      </div>
+      <div ref={skyLayerRef} className="arafah-sky-layer" aria-hidden="true" />
+      <div ref={promptRef} className="arafah-scroll-prompt">
+        <span className="arafah-prompt-text">Take my hand and come with me</span>
+        <span className="arafah-scroll-label">scroll down</span>
+        <span className="arafah-scroll-arrow" />
+      </div>
+      <div ref={finalRef} className="arafah-final-msg">
+        <p>Till the day we are on Arafah together...</p>
+        <p className="sub">Door V - Arafah</p>
+      </div>
+      <div className="arafah-door-label">Door V - Arafah</div>
+    </div>
+  )
+}
+
 function MuseumOfLovingMaram({ embedded, onClose, theme }) {
   const [activeRoom, setActiveRoom] = useState(null)
   const [countdown, setCountdown] = useState(() => getMuseumCountdown())
@@ -1108,6 +1483,7 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
   const roomTwoAudioRef = useRef(null)
   const roomThreeAudioRef = useRef(null)
   const roomFourAudioRef = useRef(null)
+  const roomFiveAudioRef = useRef(null)
   const poemReferenceAudioRefs = useRef({})
   const audioFadeRef = useRef({})
   const poemAudioFadeRef = useRef({})
@@ -1125,21 +1501,24 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     const roomTwoAudio = new Audio('/audio/door2.mp3')
     const roomThreeAudio = new Audio('/audio/door3.mp3')
     const roomFourAudio = new Audio('/audio/door4/door4.mp3')
-    ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio].forEach((audio) => {
+    const roomFiveAudio = new Audio('/audio/door5.mp3')
+    ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio, roomFiveAudio].forEach((audio) => {
       audio.loop = true
       audio.preload = 'auto'
       audio.volume = 0
+      audio.load()
     })
     hallAudioRef.current = hallAudio
     roomAudioRef.current = roomAudio
     roomTwoAudioRef.current = roomTwoAudio
     roomThreeAudioRef.current = roomThreeAudio
     roomFourAudioRef.current = roomFourAudio
+    roomFiveAudioRef.current = roomFiveAudio
 
     return () => {
       Object.values(audioFadeRef.current).forEach(cancelAnimationFrame)
       Object.values(poemAudioFadeRef.current).forEach(cancelAnimationFrame)
-      ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio].forEach((audio) => {
+      ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio, roomFiveAudio].forEach((audio) => {
         audio.pause()
         audio.src = ''
       })
@@ -1152,6 +1531,7 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
       roomTwoAudioRef.current = null
       roomThreeAudioRef.current = null
       roomFourAudioRef.current = null
+      roomFiveAudioRef.current = null
       poemReferenceAudioRefs.current = {}
     }
   }, [])
@@ -1166,7 +1546,8 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     const roomTwoAudio = roomTwoAudioRef.current
     const roomThreeAudio = roomThreeAudioRef.current
     const roomFourAudio = roomFourAudioRef.current
-    if (!hallAudio || !roomAudio || !roomTwoAudio || !roomThreeAudio || !roomFourAudio) return undefined
+    const roomFiveAudio = roomFiveAudioRef.current
+    if (!hallAudio || !roomAudio || !roomTwoAudio || !roomThreeAudio || !roomFourAudio || !roomFiveAudio) return undefined
 
     const fadeAudio = (audio, targetVolume, duration = 1800, pauseAtEnd = false) => {
       if (audioFadeRef.current[audio.src]) cancelAnimationFrame(audioFadeRef.current[audio.src])
@@ -1192,8 +1573,10 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
           ? roomThreeAudio
           : activeRoom === 'poem-answers'
             ? roomFourAudio
-            : hallAudio
-    const inactiveAudios = [hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio].filter((audio) => audio !== activeAudio)
+            : activeRoom === 'arafah'
+              ? roomFiveAudio
+              : hallAudio
+    const inactiveAudios = [hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio, roomFiveAudio].filter((audio) => audio !== activeAudio)
     const activeVolume = isMuted
       ? 0
       : activeRoom === 'before-you'
@@ -1204,7 +1587,9 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
             ? 0.24
             : activeRoom === 'poem-answers'
               ? 0.12
-              : 0.22
+              : activeRoom === 'arafah'
+                ? 0.28
+                : 0.22
 
     const syncAudio = () => {
       if (!isMuted) {
@@ -1272,6 +1657,26 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     if (!room) return
     const maxScroll = Math.max(1, room.scrollHeight - room.clientHeight)
     setRoomProgress(Math.min(1, room.scrollTop / maxScroll))
+  }
+
+  const getRoomAudio = (roomId) => {
+    if (roomId === 'before-you') return roomAudioRef.current
+    if (roomId === 'balloon-notes') return roomTwoAudioRef.current
+    if (roomId === 'rule-of-three') return roomThreeAudioRef.current
+    if (roomId === 'poem-answers') return roomFourAudioRef.current
+    if (roomId === 'arafah') return roomFiveAudioRef.current
+    return hallAudioRef.current
+  }
+
+  const warmRoomAudio = (roomId) => {
+    const audio = getRoomAudio(roomId)
+    if (!audio) return
+    audio.preload = 'auto'
+    if (audio.readyState < 2) audio.load()
+    if (isMuted) return
+
+    audio.volume = 0
+    audio.play().catch(() => {})
   }
 
   const fadePoemReferenceAudio = (audio, targetVolume, duration = 900, resetAtEnd = false) => {
@@ -1499,6 +1904,7 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
                   setSelectedBalloonNote(null)
                   setActivePoemReference(null)
                   setHasSeenDoorFourEnding(false)
+                  warmRoomAudio(door.roomId)
                   setActiveRoom(door.roomId)
                 }}
                 aria-label={door.unlocked ? `Enter ${door.title}` : 'Locked memory door'}
@@ -1684,6 +2090,11 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
             <span>Future</span>
             <strong>The rest stays open.</strong>
           </div>
+        </section>
+      ) : activeRoom === 'arafah' ? (
+        <section className="arafah-room" aria-label="Room V, Arafah">
+          <button type="button" className="museum-back arafah-back" onClick={() => setActiveRoom(null)}>Back to hallway</button>
+          <ArafahRoomScene />
         </section>
       ) : (
         <section
