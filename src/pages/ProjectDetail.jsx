@@ -1121,6 +1121,7 @@ const arafahSkyLines = [
 ]
 
 const adventureMemoryPages = Array.from({ length: 25 }, (_, index) => index + 1)
+  .filter((pageNumber) => pageNumber !== 13)
   .map((pageNumber) => ({ type: 'image', src: `/pics/door6/${pageNumber}.png`, pageNumber }))
 
 const adventureBookPages = [
@@ -1599,7 +1600,7 @@ function AdventureBookRoom() {
       setPageIndex(nextIndex)
       setPendingPageIndex(null)
       setIsFlipping(false)
-    }, 1500)
+    }, 1320)
   }
 
   const openBook = () => {

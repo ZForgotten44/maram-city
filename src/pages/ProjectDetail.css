@@ -2803,10 +2803,10 @@
 
 .adventure-soft-balloon-cluster {
   position: absolute;
-  width: 76px;
-  height: 96px;
-  opacity: 0.34;
-  filter: saturate(0.78);
+  width: 160px;
+  height: 202px;
+  opacity: 0.58;
+  filter: saturate(0.9);
   animation: adventureBalloonDrift 58s ease-in-out infinite;
   pointer-events: none;
 }
@@ -2814,63 +2814,63 @@
 .adventure-soft-balloon-cluster::before {
   content: "";
   position: absolute;
-  left: 18px;
-  top: 4px;
-  width: 17px;
-  height: 23px;
+  left: 38px;
+  top: 10px;
+  width: 34px;
+  height: 46px;
   border-radius: 50% 50% 46% 46%;
   background:
     radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.22), transparent 20%),
-    rgba(185, 91, 78, 0.74);
+    rgba(185, 91, 78, 0.82);
   box-shadow:
-    -18px 12px 0 rgba(214, 176, 87, 0.62),
-    18px 9px 0 rgba(93, 132, 163, 0.58),
-    2px 30px 0 rgba(112, 143, 92, 0.5);
+    -37px 24px 0 rgba(214, 176, 87, 0.72),
+    38px 19px 0 rgba(93, 132, 163, 0.68),
+    5px 61px 0 rgba(112, 143, 92, 0.58);
 }
 
 .adventure-soft-balloon-cluster::after {
   content: "";
   position: absolute;
-  left: 28px;
-  top: 33px;
+  left: 58px;
+  top: 66px;
   width: 1px;
-  height: 48px;
-  background: rgba(225, 200, 162, 0.4);
+  height: 82px;
+  background: rgba(225, 200, 162, 0.46);
   box-shadow:
-    -14px -2px 0 rgba(225, 200, 162, 0.28),
-    14px -3px 0 rgba(225, 200, 162, 0.24);
+    -30px -5px 0 rgba(225, 200, 162, 0.34),
+    30px -6px 0 rgba(225, 200, 162, 0.3);
 }
 
 .adventure-soft-balloon-cluster-one {
-  left: 4.8%;
-  top: 5.5%;
-  --balloon-scale: 0.78;
+  left: 2.5%;
+  top: 3.5%;
+  --balloon-scale: 1.08;
   --balloon-tilt: -5deg;
 }
 
 .adventure-soft-balloon-cluster-two {
-  right: 6%;
-  top: 6.5%;
-  --balloon-scale: 0.66;
+  right: 2.5%;
+  top: 3.7%;
+  --balloon-scale: 0.98;
   --balloon-tilt: 4deg;
-  opacity: 0.27;
+  opacity: 0.42;
   animation-delay: -18s;
 }
 
 .adventure-soft-balloon-cluster-horizon {
-  left: 72%;
-  top: 23%;
-  --balloon-scale: 0.34;
+  left: 73%;
+  top: 21%;
+  --balloon-scale: 0.62;
   --balloon-tilt: -2deg;
-  opacity: 0.18;
+  opacity: 0.28;
   animation-delay: -31s;
 }
 
 .adventure-soft-balloon-cluster-final {
   left: 48%;
   top: 8%;
-  opacity: 0.18;
-  --balloon-scale: 0.5;
+  opacity: 0.26;
+  --balloon-scale: 0.78;
   --balloon-tilt: 1deg;
 }
 
@@ -2884,10 +2884,10 @@
 
 .adventure-soft-balloon-cluster-final::before {
   box-shadow:
-    -18px 12px 0 rgba(214, 176, 87, 0.42),
-    18px 9px 0 rgba(93, 132, 163, 0.36),
-    2px 30px 0 rgba(112, 143, 92, 0.3),
-    4px 70px 0 -5px rgba(229, 200, 158, 0.2);
+    -37px 24px 0 rgba(214, 176, 87, 0.46),
+    38px 19px 0 rgba(93, 132, 163, 0.4),
+    5px 61px 0 rgba(112, 143, 92, 0.34),
+    10px 116px 0 -5px rgba(229, 200, 158, 0.24);
 }
 
 .adventure-balloon {
@@ -3816,10 +3816,10 @@
   z-index: 8;
   transform-origin: left center;
   backface-visibility: hidden;
-  animation-duration: 1.5s;
+  animation-duration: 1.66s;
   animation-timing-function: cubic-bezier(.18,.62,.12,1);
   animation-fill-mode: forwards;
-  will-change: transform;
+  will-change: transform, filter;
 }
 
 .adventure-page-flip::before {
@@ -3830,7 +3830,7 @@
   background:
     linear-gradient(90deg, rgba(0,0,0,0.18), transparent 18%, rgba(255,255,255,0.18) 42%, rgba(0,0,0,0.24) 100%);
   opacity: 0;
-  animation: adventurePageShadow 1.5s ease forwards;
+  animation: adventurePageShadow 1.66s ease forwards;
   pointer-events: none;
 }
 
@@ -4393,26 +4393,26 @@
 }
 
 @keyframes adventureFlipNext {
-  0% { transform: rotateY(0deg) rotateZ(0deg) translateX(0); }
-  18% { transform: rotateY(-18deg) rotateZ(-0.35deg) translateX(-0.4%); }
-  42% { transform: rotateY(-64deg) rotateZ(-1deg) translateX(-1.8%); }
-  68% { transform: rotateY(-132deg) rotateZ(-2deg) translateX(-4%); }
-  100% { transform: rotateY(-179deg) rotateZ(-2.8deg) translateX(-6%); }
+  0% { transform: rotateY(0deg) rotateZ(0deg) translateX(0); filter: brightness(1); }
+  18% { transform: rotateY(-18deg) rotateZ(-0.35deg) translateX(-0.4%); filter: brightness(1); }
+  42% { transform: rotateY(-64deg) rotateZ(-1deg) translateX(-1.8%); filter: brightness(0.94); }
+  68% { transform: rotateY(-132deg) rotateZ(-2deg) translateX(-4%); filter: brightness(0.78); }
+  100% { transform: rotateY(-179deg) rotateZ(-2.8deg) translateX(-6%); filter: brightness(0.58); }
 }
 
 @keyframes adventureFlipPrev {
-  0% { transform: translateX(-96%) rotateY(0deg) rotateZ(-0.4deg); }
-  18% { transform: translateX(-93%) rotateY(18deg) rotateZ(0.1deg); }
-  44% { transform: translateX(-72%) rotateY(62deg) rotateZ(1deg); }
-  72% { transform: translateX(-26%) rotateY(128deg) rotateZ(2deg); }
-  100% { transform: translateX(0) rotateY(179deg) rotateZ(2.8deg); }
+  0% { transform: translateX(-96%) rotateY(0deg) rotateZ(-0.4deg); filter: brightness(0.92); }
+  18% { transform: translateX(-93%) rotateY(18deg) rotateZ(0.1deg); filter: brightness(0.98); }
+  44% { transform: translateX(-72%) rotateY(62deg) rotateZ(1deg); filter: brightness(1.02); }
+  72% { transform: translateX(-26%) rotateY(128deg) rotateZ(2deg); filter: brightness(0.88); }
+  100% { transform: translateX(0) rotateY(179deg) rotateZ(2.8deg); filter: brightness(0.62); }
 }
 
 @keyframes adventurePageShadow {
   0% { opacity: 0; transform: translateX(0); }
-  30% { opacity: 0.24; }
-  62% { opacity: 0.46; transform: translateX(-8%); }
-  100% { opacity: 0.16; transform: translateX(-16%); }
+  30% { opacity: 0.38; }
+  62% { opacity: 0.74; transform: translateX(-8%); }
+  100% { opacity: 0.2; transform: translateX(-16%); }
 }
 
 @keyframes adventureFinalLine {
