@@ -2567,6 +2567,1411 @@
   background: rgba(42, 26, 22, 0.5);
 }
 
+.adventure-book-room {
+  position: relative;
+  z-index: 2;
+  height: 100vh;
+  overflow: hidden;
+  background: #120c08;
+  animation: beforeYouEnter 1200ms ease both;
+}
+
+.adventure-room-scene {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: clamp(3.5rem, 5vh, 5rem) clamp(1rem, 3vw, 2rem);
+  color: #412a1b;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(126, 78, 38, 0.18), transparent 48%),
+    repeating-linear-gradient(0deg, rgba(255, 230, 185, 0.025) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(90deg, rgba(55, 31, 16, 0.08) 0 1px, transparent 1px 22px),
+    linear-gradient(180deg, #4c321d 0%, #332011 52%, #160d08 100%);
+  isolation: isolate;
+  touch-action: pan-y;
+}
+
+.adventure-room-scene::before,
+.adventure-room-scene::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.adventure-room-scene::before {
+  z-index: 0;
+  background:
+    linear-gradient(90deg, rgba(255, 233, 194, 0.04), transparent 18%, transparent 82%, rgba(42, 23, 12, 0.18)),
+    radial-gradient(circle at 50% 50%, transparent 0 52%, rgba(0, 0, 0, 0.36) 88%),
+    repeating-linear-gradient(115deg, rgba(255,255,255,0.012) 0 1px, transparent 1px 10px);
+  mix-blend-mode: normal;
+  opacity: 0.9;
+}
+
+.adventure-room-scene::after {
+  z-index: 3;
+  background: radial-gradient(ellipse at 50% 52%, transparent 0 54%, rgba(0, 0, 0, 0.42) 100%);
+}
+
+.adventure-room-lamp {
+  position: fixed;
+  left: 50%;
+  top: -20vh;
+  z-index: 1;
+  width: min(720px, 76vw);
+  height: min(440px, 44vh);
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 50% 36%, rgba(255, 219, 149, 0.24), rgba(132, 80, 34, 0.08) 48%, transparent 78%);
+  filter: blur(2px);
+  animation: adventureLamp 7s ease-in-out infinite;
+}
+
+.adventure-up-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.adventure-wall-map,
+.adventure-postcard,
+.adventure-ticket-fragment,
+.adventure-note-card {
+  position: absolute;
+  z-index: 0;
+  border-radius: 4px;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(107, 66, 31, 0.08) 0 18px, transparent 20px),
+    repeating-linear-gradient(0deg, rgba(65, 40, 20, 0.035) 0 1px, transparent 1px 8px),
+    rgba(232, 196, 135, 0.13);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 230, 185, 0.06),
+    0 10px 24px rgba(0, 0, 0, 0.1);
+  opacity: 0.68;
+}
+
+.adventure-wall-map::before,
+.adventure-wall-map::after,
+.adventure-postcard::before,
+.adventure-postcard::after {
+  content: "";
+  position: absolute;
+}
+
+.adventure-wall-map {
+  width: min(260px, 24vw);
+  height: min(180px, 18vw);
+  border: 1px solid rgba(255, 229, 181, 0.06);
+}
+
+.adventure-wall-map::before {
+  inset: 16% 12%;
+  border: 1px dashed rgba(84, 52, 27, 0.18);
+  border-left: 0;
+  border-bottom: 0;
+  border-radius: 50%;
+  transform: rotate(-18deg);
+}
+
+.adventure-wall-map::after {
+  left: 14%;
+  top: 20%;
+  width: 70%;
+  height: 48%;
+  background:
+    linear-gradient(38deg, transparent 0 34%, rgba(67, 43, 24, 0.13) 35% 37%, transparent 38%),
+    linear-gradient(-25deg, transparent 0 42%, rgba(67, 43, 24, 0.1) 43% 45%, transparent 46%);
+}
+
+.adventure-wall-map-one {
+  left: 6%;
+  top: 16%;
+  transform: rotate(-7deg);
+}
+
+.adventure-wall-map-two {
+  right: 7%;
+  top: 20%;
+  transform: rotate(6deg) scale(0.82);
+  opacity: 0.45;
+}
+
+.adventure-postcard {
+  width: 150px;
+  height: 96px;
+  background:
+    linear-gradient(90deg, transparent 0 55%, rgba(91, 59, 30, 0.1) 56% 57%, transparent 58%),
+    repeating-linear-gradient(0deg, transparent 0 12px, rgba(91, 59, 30, 0.08) 12px 13px),
+    rgba(240, 210, 154, 0.14);
+}
+
+.adventure-postcard::before {
+  left: 12px;
+  top: 12px;
+  width: 44px;
+  height: 34px;
+  border: 1px solid rgba(91, 59, 30, 0.13);
+  background: linear-gradient(145deg, rgba(123, 89, 47, 0.08), transparent);
+}
+
+.adventure-postcard::after {
+  right: 12px;
+  top: 11px;
+  width: 28px;
+  height: 22px;
+  border: 1px solid rgba(91, 59, 30, 0.13);
+}
+
+.adventure-postcard-one {
+  left: 16%;
+  bottom: 18%;
+  transform: rotate(8deg);
+}
+
+.adventure-postcard-two {
+  right: 16%;
+  bottom: 17%;
+  transform: rotate(-9deg) scale(0.86);
+  opacity: 0.48;
+}
+
+.adventure-ticket-fragment {
+  padding: 0.5rem 0.85rem;
+  border: 1px dashed rgba(91, 59, 30, 0.18);
+  color: rgba(63, 40, 21, 0.24);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.adventure-ticket-fragment-one {
+  left: 31%;
+  top: 14%;
+  transform: rotate(11deg);
+}
+
+.adventure-ticket-fragment-two {
+  right: 29%;
+  top: 13%;
+  transform: rotate(-8deg);
+  opacity: 0.44;
+}
+
+.adventure-note-card {
+  display: grid;
+  place-items: center;
+  width: 122px;
+  height: 82px;
+  color: rgba(56, 36, 20, 0.24);
+  font-family: "Bradley Hand", "Segoe Print", cursive;
+  font-size: 0.86rem;
+  transform: rotate(-6deg);
+}
+
+.adventure-note-card::before {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  width: 46px;
+  height: 18px;
+  background: rgba(217, 185, 119, 0.16);
+  transform: translateX(-50%) rotate(4deg);
+}
+
+.adventure-note-card-one {
+  left: 7%;
+  bottom: 32%;
+}
+
+.adventure-note-card-two {
+  right: 8%;
+  bottom: 33%;
+  transform: rotate(7deg);
+  opacity: 0.48;
+}
+
+.adventure-soft-balloon-cluster {
+  position: absolute;
+  width: 76px;
+  height: 96px;
+  opacity: 0.34;
+  filter: saturate(0.78);
+  animation: adventureBalloonDrift 58s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.adventure-soft-balloon-cluster::before {
+  content: "";
+  position: absolute;
+  left: 18px;
+  top: 4px;
+  width: 17px;
+  height: 23px;
+  border-radius: 50% 50% 46% 46%;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.22), transparent 20%),
+    rgba(185, 91, 78, 0.74);
+  box-shadow:
+    -18px 12px 0 rgba(214, 176, 87, 0.62),
+    18px 9px 0 rgba(93, 132, 163, 0.58),
+    2px 30px 0 rgba(112, 143, 92, 0.5);
+}
+
+.adventure-soft-balloon-cluster::after {
+  content: "";
+  position: absolute;
+  left: 28px;
+  top: 33px;
+  width: 1px;
+  height: 48px;
+  background: rgba(225, 200, 162, 0.4);
+  box-shadow:
+    -14px -2px 0 rgba(225, 200, 162, 0.28),
+    14px -3px 0 rgba(225, 200, 162, 0.24);
+}
+
+.adventure-soft-balloon-cluster-one {
+  left: 4.8%;
+  top: 5.5%;
+  --balloon-scale: 0.78;
+  --balloon-tilt: -5deg;
+}
+
+.adventure-soft-balloon-cluster-two {
+  right: 6%;
+  top: 6.5%;
+  --balloon-scale: 0.66;
+  --balloon-tilt: 4deg;
+  opacity: 0.27;
+  animation-delay: -18s;
+}
+
+.adventure-soft-balloon-cluster-horizon {
+  left: 72%;
+  top: 23%;
+  --balloon-scale: 0.34;
+  --balloon-tilt: -2deg;
+  opacity: 0.18;
+  animation-delay: -31s;
+}
+
+.adventure-soft-balloon-cluster-final {
+  left: 48%;
+  top: 8%;
+  opacity: 0.18;
+  --balloon-scale: 0.5;
+  --balloon-tilt: 1deg;
+}
+
+.adventure-soft-balloon-cluster-final::after {
+  height: 56px;
+}
+
+.adventure-soft-balloon-cluster-final {
+  animation-duration: 62s;
+}
+
+.adventure-soft-balloon-cluster-final::before {
+  box-shadow:
+    -18px 12px 0 rgba(214, 176, 87, 0.42),
+    18px 9px 0 rgba(93, 132, 163, 0.36),
+    2px 30px 0 rgba(112, 143, 92, 0.3),
+    4px 70px 0 -5px rgba(229, 200, 158, 0.2);
+}
+
+.adventure-balloon {
+  position: absolute;
+  left: calc(7% + (var(--i) * 11%));
+  top: calc(8% + (var(--i) % 4) * 9%);
+  width: calc(13px + (var(--i) % 3) * 4px);
+  height: calc(18px + (var(--i) % 3) * 5px);
+  border-radius: 50% 50% 46% 46%;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255,255,255,0.38), transparent 18%),
+    hsl(calc(18 + var(--i) * 27), 54%, 62%);
+  box-shadow: 0 0 18px rgba(255, 215, 145, 0.14);
+  opacity: 0.16;
+  animation: adventureBalloonDrift calc(24s + var(--i) * 2s) ease-in-out infinite;
+  animation-delay: calc(var(--i) * -2.8s);
+}
+
+.adventure-balloon-cluster {
+  position: absolute;
+  width: 64px;
+  height: 78px;
+  opacity: 0.13;
+  filter: blur(0.15px);
+  animation: adventureClusterFloat 30s ease-in-out infinite;
+}
+
+.adventure-balloon-cluster::before,
+.adventure-balloon-cluster::after {
+  content: "";
+  position: absolute;
+  border-radius: 50% 50% 46% 46%;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255,255,255,0.34), transparent 18%),
+    rgba(255, 205, 111, 0.72);
+  box-shadow:
+    18px -10px 0 rgba(215, 93, 78, 0.52),
+    32px 6px 0 rgba(95, 142, 177, 0.46),
+    8px 18px 0 rgba(214, 171, 72, 0.42),
+    26px 28px 0 rgba(126, 168, 98, 0.38);
+}
+
+.adventure-balloon-cluster::before {
+  left: 10px;
+  top: 4px;
+  width: 15px;
+  height: 21px;
+}
+
+.adventure-balloon-cluster::after {
+  left: 29px;
+  top: 22px;
+  width: 1px;
+  height: 44px;
+  border-radius: 0;
+  background: rgba(255, 228, 181, 0.32);
+  box-shadow:
+    -13px -14px 0 -0.2px rgba(255, 228, 181, 0.26),
+    14px -2px 0 -0.2px rgba(255, 228, 181, 0.24),
+    -4px 13px 0 -0.2px rgba(255, 228, 181, 0.2);
+}
+
+.adventure-balloon-cluster-one {
+  left: 8%;
+  top: 11%;
+}
+
+.adventure-balloon-cluster-two {
+  right: 9%;
+  top: 15%;
+  transform: scale(0.74);
+  animation-delay: -12s;
+}
+
+.adventure-balloon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 96%;
+  width: 1px;
+  height: 28px;
+  background: rgba(244, 219, 172, 0.32);
+  transform: translateX(-50%);
+}
+
+.adventure-distant-house {
+  position: absolute;
+  right: 11%;
+  top: 22%;
+  width: 52px;
+  height: 40px;
+  opacity: 0.12;
+  filter: blur(0.5px);
+  animation: adventureHouseFloat 28s ease-in-out infinite;
+}
+
+.adventure-distant-house::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  bottom: 0;
+  width: 35px;
+  height: 24px;
+  background: rgba(255, 220, 163, 0.5);
+  clip-path: polygon(0 100%, 0 30%, 50% 0, 100% 30%, 100% 100%);
+  box-shadow: 0 0 20px rgba(255, 198, 106, 0.14);
+}
+
+.adventure-distant-house::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: -22px;
+  width: 22px;
+  height: 24px;
+  border-left: 1px solid rgba(255, 228, 178, 0.45);
+  border-right: 1px solid rgba(255, 228, 178, 0.24);
+  transform: rotate(-6deg);
+}
+
+.adventure-cloud {
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(255, 224, 174, 0.1);
+  filter: blur(8px);
+  animation: adventureCloudDrift 34s ease-in-out infinite;
+}
+
+.adventure-cloud::before,
+.adventure-cloud::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: inherit;
+}
+
+.adventure-cloud::before {
+  left: 16%;
+  bottom: 20%;
+  width: 40%;
+  height: 110%;
+}
+
+.adventure-cloud::after {
+  right: 12%;
+  bottom: 14%;
+  width: 34%;
+  height: 86%;
+}
+
+.adventure-cloud-one {
+  left: 5%;
+  top: 18%;
+  width: 170px;
+  height: 38px;
+}
+
+.adventure-cloud-two {
+  right: 13%;
+  top: 11%;
+  width: 130px;
+  height: 30px;
+  animation-delay: -11s;
+}
+
+.adventure-cloud-three {
+  left: 63%;
+  bottom: 18%;
+  width: 150px;
+  height: 34px;
+  opacity: 0.07;
+  animation-delay: -20s;
+}
+
+.adventure-paper-scrap {
+  position: absolute;
+  left: calc(8% + var(--i) * 12%);
+  bottom: calc(8% + (var(--i) % 3) * 10%);
+  width: calc(22px + (var(--i) % 4) * 8px);
+  height: calc(14px + (var(--i) % 2) * 8px);
+  border-radius: 2px;
+  background:
+    linear-gradient(135deg, rgba(255, 232, 183, 0.12), rgba(204, 151, 85, 0.07));
+  box-shadow: inset 0 0 0 1px rgba(255, 230, 190, 0.08);
+  opacity: 0.14;
+  transform: rotate(calc(-18deg + var(--i) * 7deg));
+}
+
+.adventure-travel-stamp {
+  position: absolute;
+  z-index: 0;
+  border: 1px solid rgba(255, 224, 174, 0.09);
+  border-radius: 4px;
+  padding: 0.34rem 0.5rem;
+  color: rgba(255, 224, 174, 0.11);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  transform: rotate(-11deg);
+}
+
+.adventure-travel-stamp-one {
+  left: 20%;
+  top: 24%;
+}
+
+.adventure-travel-stamp-two {
+  right: 19%;
+  bottom: 22%;
+  transform: rotate(8deg);
+}
+
+.adventure-map-line {
+  position: absolute;
+  width: 260px;
+  height: 160px;
+  border: 1px dashed rgba(255, 220, 160, 0.09);
+  border-left: 0;
+  border-bottom: 0;
+  border-radius: 50%;
+  opacity: 0.72;
+}
+
+.adventure-map-line-one {
+  left: 8%;
+  bottom: 14%;
+  transform: rotate(-19deg);
+}
+
+.adventure-map-line-two {
+  right: 6%;
+  top: 35%;
+  transform: rotate(28deg) scaleX(-1);
+}
+
+.adventure-compass-doodle {
+  position: absolute;
+  left: 13%;
+  top: 66%;
+  width: 64px;
+  height: 64px;
+  border: 1px solid rgba(255, 222, 169, 0.08);
+  border-radius: 50%;
+  opacity: 0.8;
+}
+
+.adventure-compass-doodle::before,
+.adventure-compass-doodle::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1px;
+  height: 74%;
+  background: rgba(255, 222, 169, 0.08);
+  transform: translate(-50%, -50%);
+}
+
+.adventure-compass-doodle::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.adventure-room-dust {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.adventure-room-dust span {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: rgba(244, 210, 146, 0.52);
+  opacity: 0;
+  animation: adventureDust calc(12s + var(--i) * 0.24s) linear infinite;
+  animation-delay: calc(var(--i) * -0.52s);
+}
+
+.adventure-book-stage {
+  position: relative;
+  z-index: 5;
+  width: min(96vw, 1040px);
+  height: min(82vh, calc(var(--door6-vh, 100vh) - 7rem), 760px);
+  min-height: min(620px, calc(var(--door6-vh, 100vh) - 7rem));
+  display: grid;
+  place-items: center;
+  perspective: 1800px;
+  transform: translateY(0);
+}
+
+.adventure-book-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 4vh;
+  width: min(720px, 78vw);
+  height: 8vh;
+  transform: translateX(-50%) rotateX(64deg);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.64), transparent 68%);
+  filter: blur(6px);
+}
+
+.adventure-book {
+  position: relative;
+  width: min(46vw, 500px, max(260px, calc((var(--door6-vh, 100vh) - 8rem) * 0.72)));
+  aspect-ratio: 0.78;
+  transform-style: preserve-3d;
+  animation: adventureBookArrive 1.8s ease 260ms both;
+}
+
+.book-open .adventure-book {
+  animation: none;
+  transform: translateX(48%) scale(0.94);
+}
+
+.adventure-book::before,
+.adventure-book::after {
+  content: "";
+  position: absolute;
+  inset: 3.2% 3.9% -3.2%;
+  border-radius: 18px 28px 28px 18px;
+  background: #3d2416;
+  transform: translate3d(15px, 16px, -32px);
+  box-shadow: 0 32px 78px rgba(0, 0, 0, 0.48);
+}
+
+.adventure-book::after {
+  inset: 5% 2.8% -4.5% 7.6%;
+  background: repeating-linear-gradient(180deg, #e8ce9c 0 4px, #9e6f42 4px 5px);
+  transform: translate3d(22px, 21px, -18px);
+  opacity: 0.72;
+}
+
+.adventure-book-cover,
+.adventure-page-stack {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px 25px 25px 18px;
+  transform-style: preserve-3d;
+}
+
+.adventure-book-cover {
+  z-index: 4;
+  border: 0;
+  padding: 0;
+  color: #f7d99a;
+  cursor: pointer;
+  overflow: hidden;
+  transform-origin: left center;
+  background:
+    linear-gradient(90deg, rgba(24, 10, 6, 0.26) 0 11%, transparent 11%),
+    radial-gradient(circle at 68% 22%, rgba(255, 218, 150, 0.1), transparent 18%),
+    radial-gradient(circle at 22% 78%, rgba(29, 12, 7, 0.42), transparent 24%),
+    radial-gradient(circle at 70% 78%, rgba(255, 218, 140, 0.07), transparent 20%),
+    repeating-linear-gradient(8deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(28deg, rgba(255,255,255,0.018) 0 2px, transparent 2px 15px),
+    repeating-linear-gradient(100deg, rgba(0,0,0,0.13) 0 1px, transparent 1px 12px),
+    linear-gradient(135deg, #2b170f 0%, #6d3e22 40%, #28140d 100%);
+  box-shadow:
+    inset 0 0 0 5px rgba(34, 14, 8, 0.9),
+    inset 0 0 0 13px rgba(132, 82, 41, 0.1),
+    inset 0 0 0 15px rgba(255, 215, 139, 0.035),
+    inset 20px 0 34px rgba(25, 11, 7, 0.58),
+    inset -22px 0 46px rgba(255, 198, 114, 0.055),
+    0 30px 76px rgba(0, 0, 0, 0.56);
+  transition: transform 1.45s cubic-bezier(.18,.72,.16,1), filter 1.2s ease, opacity 1.2s ease;
+}
+
+.adventure-book-cover::before {
+  content: "";
+  position: absolute;
+  inset: 5.7% 6.4% 5.2% 7.2%;
+  border: 2px solid rgba(241, 202, 132, 0.22);
+  border-radius: 12px 20px 20px 12px;
+  box-shadow:
+    inset 0 0 28px rgba(37, 16, 8, 0.26),
+    0 0 0 1px rgba(42, 19, 10, 0.44);
+}
+
+.adventure-book-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255,255,255,0.12) 0 1px, transparent 2px),
+    radial-gradient(circle at 82% 72%, rgba(0,0,0,0.18) 0 2px, transparent 3px),
+    radial-gradient(circle at 28% 66%, rgba(255, 216, 145, 0.08) 0 28px, transparent 31px),
+    radial-gradient(circle at 60% 35%, rgba(0,0,0,0.16) 0 2px, transparent 3px),
+    radial-gradient(circle at 44% 82%, rgba(255,255,255,0.08) 0 1px, transparent 2px),
+    repeating-linear-gradient(94deg, transparent 0 16px, rgba(43, 19, 10, 0.13) 16px 17px);
+  opacity: 0.82;
+  mix-blend-mode: multiply;
+}
+
+.book-open .adventure-book-cover {
+  opacity: 0.96;
+  pointer-events: none;
+  transform: rotateY(-118deg) translateX(-1.5%) rotateZ(-1deg);
+  filter: brightness(0.74);
+}
+
+.cover-away .adventure-book-cover {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 360ms ease, visibility 0s linear 360ms;
+}
+
+.book-open .adventure-cover-title,
+.book-open .adventure-cover-subtitle {
+  opacity: 0;
+}
+
+.adventure-book-spine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 15%;
+  background:
+    repeating-linear-gradient(180deg, rgba(255, 216, 142, 0.18) 0 5px, transparent 5px 18px),
+    linear-gradient(90deg, rgba(15, 7, 5, 0.72), rgba(95, 51, 27, 0.48), rgba(24, 11, 7, 0.44));
+  box-shadow: inset -11px 0 24px rgba(0, 0, 0, 0.36);
+}
+
+.adventure-binding-strings {
+  position: absolute;
+  left: 5.2%;
+  top: 15%;
+  bottom: 15%;
+  z-index: 3;
+  width: 10%;
+  pointer-events: none;
+}
+
+.adventure-binding-strings span {
+  position: absolute;
+  left: 7%;
+  width: 88px;
+  height: 32px;
+  border: 0;
+  border-top: 4px solid rgba(202, 154, 86, 0.64);
+  border-bottom: 4px solid rgba(117, 72, 36, 0.5);
+  border-radius: 999px;
+  filter: drop-shadow(0 2px 2px rgba(26, 12, 7, 0.48));
+  transform: rotate(-4deg);
+  opacity: 0.9;
+}
+
+.adventure-binding-strings span:nth-child(1) { top: 4%; }
+.adventure-binding-strings span:nth-child(2) { top: 32%; transform: rotate(2deg); }
+.adventure-binding-strings span:nth-child(3) { top: 60%; transform: rotate(-1deg); }
+.adventure-binding-strings span:nth-child(4) { top: 86%; transform: rotate(3deg); }
+
+.adventure-binding-strings span::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 42% 42%, #251107 0 34%, #d2a260 36% 64%, #5a3218 68%);
+  transform: translateY(-50%);
+}
+
+.adventure-binding-strings span::after {
+  content: "";
+  position: absolute;
+  right: 7px;
+  top: 48%;
+  width: 20px;
+  height: 12px;
+  border-radius: 50%;
+  border-top: 2px solid rgba(232, 188, 113, 0.48);
+  transform: rotate(16deg);
+}
+
+.adventure-stitch-holes {
+  position: absolute;
+  left: 7.1%;
+  top: 12%;
+  bottom: 12%;
+  z-index: 4;
+  width: 11px;
+  background:
+    radial-gradient(circle, rgba(18, 8, 5, 0.86) 0 3px, rgba(217, 168, 96, 0.35) 3.5px 5px, transparent 5.5px)
+    0 0 / 11px 58px repeat-y;
+  filter: drop-shadow(0 1px 0 rgba(255, 220, 152, 0.1));
+}
+
+.adventure-cover-title,
+.adventure-cover-subtitle {
+  position: absolute;
+  left: 50%;
+  z-index: 2;
+  width: 76%;
+  transform: translateX(-50%) rotate(-1.1deg);
+  text-align: center;
+}
+
+.adventure-cover-title {
+  top: 27%;
+  color: rgba(255, 224, 154, 0.94);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.35rem, 3.25vw, 2.7rem);
+  font-weight: 700;
+  letter-spacing: 0.075em;
+  line-height: 1.16;
+  transform: translateX(-50%) rotate(-1.9deg);
+  text-shadow:
+    0 2px 0 rgba(50, 20, 10, 0.55),
+    0 -1px 0 rgba(255, 238, 183, 0.14),
+    0 0 32px rgba(255, 196, 94, 0.16);
+}
+
+.adventure-cover-subtitle {
+  top: 68%;
+  color: rgba(255, 224, 164, 0.56);
+  font-family: "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive;
+  font-size: clamp(1rem, 2.4vw, 1.6rem);
+  letter-spacing: 0.08em;
+  transform: translateX(-50%) rotate(2.2deg);
+}
+
+.adventure-cover-corners::before,
+.adventure-cover-corners::after {
+  content: "";
+  position: absolute;
+  width: 54px;
+  height: 54px;
+  border: 1px solid rgba(250, 209, 134, 0.35);
+  opacity: 0.72;
+}
+
+.adventure-cover-corners::before {
+  left: 11%;
+  top: 10%;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.adventure-cover-corners::after {
+  right: 8%;
+  bottom: 10%;
+  border-left: 0;
+  border-top: 0;
+}
+
+.adventure-cover-wear {
+  position: absolute;
+  z-index: 2;
+  border-radius: 50%;
+  background: rgba(255, 219, 154, 0.13);
+  filter: blur(0.4px);
+}
+
+.adventure-cover-wear-one {
+  right: 17%;
+  top: 21%;
+  width: 64px;
+  height: 8px;
+  transform: rotate(-18deg);
+}
+
+.adventure-cover-wear-two {
+  left: 26%;
+  bottom: 18%;
+  width: 46px;
+  height: 7px;
+  transform: rotate(12deg);
+}
+
+.adventure-page-stack {
+  z-index: 2;
+  transform: translate3d(10px, 10px, -3px);
+  opacity: 0;
+  transition: opacity 1.1s ease 420ms, transform 1.1s ease 420ms;
+}
+
+.book-open .adventure-page-stack {
+  opacity: 1;
+  transform: translate3d(9px, 8px, 0);
+}
+
+.adventure-page-backdrop {
+  position: absolute;
+  inset: 2.8%;
+  border-radius: 16px 22px 22px 16px;
+  background:
+    repeating-linear-gradient(180deg, rgba(108, 69, 38, 0.16) 0 1px, transparent 1px 13px),
+    linear-gradient(90deg, #b47a44, #e7c596 5%, #f1d9a7 94%, #b5773e);
+  box-shadow:
+    inset 18px 0 30px rgba(78, 43, 22, 0.18),
+    0 18px 48px rgba(0, 0, 0, 0.36);
+}
+
+.adventure-page {
+  position: absolute;
+  inset: 4.8% 5.6% 5.2% 7.2%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 5px 14px 14px 5px;
+  background:
+    radial-gradient(circle at 18% 24%, rgba(128, 80, 38, calc(0.08 + var(--book-age) * 0.08)) 0 32px, transparent 33px),
+    radial-gradient(circle at 78% 82%, rgba(99, 55, 25, calc(0.06 + var(--book-age) * 0.08)) 0 24px, transparent 25px),
+    radial-gradient(circle at 42% 35%, rgba(170, 102, 46, 0.04) 0 54px, transparent 58px),
+    repeating-linear-gradient(0deg, transparent 0 14px, rgba(108, 73, 42, 0.035) 14px 15px),
+    linear-gradient(135deg, #f5e4bd, #ead09b);
+  box-shadow:
+    inset 16px 0 34px rgba(74, 42, 22, 0.16),
+    inset -8px 0 20px rgba(255, 252, 224, 0.24),
+    0 18px 38px rgba(0, 0, 0, 0.28);
+  transform-style: preserve-3d;
+  animation: adventurePageBreathe 9s ease-in-out infinite;
+}
+
+.is-flipping .adventure-page {
+  animation: none;
+}
+
+.is-flipping .adventure-page:not(.adventure-page-flip) {
+  box-shadow:
+    inset 12px 0 24px rgba(74, 42, 22, 0.14),
+    inset -6px 0 14px rgba(255, 252, 224, 0.18),
+    0 12px 24px rgba(0, 0, 0, 0.22);
+}
+
+.adventure-page-left {
+  z-index: 1;
+  border-radius: 14px 5px 5px 14px;
+  transform: translateX(-96%) rotate(calc(0.75deg - var(--book-age) * 0.8deg));
+  background:
+    radial-gradient(circle at 28% 20%, rgba(122, 76, 38, calc(0.05 + var(--book-age) * 0.08)) 0 28px, transparent 29px),
+    radial-gradient(circle at 78% 72%, rgba(92, 55, 29, calc(0.055 + var(--book-age) * 0.07)) 0 18px, transparent 19px),
+    repeating-linear-gradient(0deg, transparent 0 13px, rgba(108, 73, 42, 0.03) 13px 14px),
+    linear-gradient(225deg, #edd5a5, #f4e3bd);
+  box-shadow:
+    inset -16px 0 32px rgba(74, 42, 22, 0.16),
+    inset 8px 0 20px rgba(255, 252, 224, 0.22),
+    0 20px 48px rgba(0, 0, 0, 0.26);
+}
+
+.adventure-page-left::after {
+  content: "";
+  position: absolute;
+  right: -3px;
+  top: 0;
+  bottom: 0;
+  width: 18px;
+  background: linear-gradient(90deg, rgba(83, 49, 25, 0.12), rgba(52, 29, 15, 0.24), transparent);
+  pointer-events: none;
+}
+
+.adventure-page-right {
+  z-index: 2;
+  transform: rotate(calc(-1.2deg + var(--book-age) * 1.8deg));
+  filter: sepia(calc(var(--book-age) * 0.18)) saturate(calc(1 - var(--book-age) * 0.12));
+}
+
+.adventure-left-stain {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(122, 73, 35, 0.08);
+}
+
+.adventure-left-stain-one {
+  left: 22%;
+  top: 19%;
+  width: 70px;
+  height: 44px;
+  transform: rotate(-18deg);
+}
+
+.adventure-left-stain-two {
+  right: 18%;
+  bottom: 18%;
+  width: 46px;
+  height: 30px;
+  transform: rotate(12deg);
+}
+
+.adventure-backside-memory {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  opacity: 0.26;
+  filter: sepia(0.35) saturate(0.55) blur(0.35px);
+  transform: rotate(-1.1deg) scaleX(-1);
+}
+
+.adventure-backside-memory .adventure-missing-page small,
+.adventure-backside-memory .adventure-missing-page span {
+  display: none;
+}
+
+.adventure-blank-left-page {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  color: rgba(91, 58, 33, 0.18);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  letter-spacing: 0.09em;
+}
+
+.adventure-blank-left-page span {
+  width: 62px;
+  height: 1px;
+  background: rgba(91, 58, 33, 0.14);
+  transform: rotate(-5deg);
+}
+
+.adventure-blank-left-page small {
+  margin-top: 1rem;
+  font-size: 0.78rem;
+}
+
+.adventure-page-hit-area {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.adventure-page-hit-area:disabled {
+  cursor: default;
+}
+
+.adventure-page img,
+.adventure-missing-page {
+  position: relative;
+  z-index: 2;
+  width: min(90%, 560px);
+  max-height: 84%;
+  object-fit: contain;
+  padding: clamp(0.6rem, 1.2vw, 0.95rem);
+  border: 1px solid rgba(109, 70, 36, 0.14);
+  background: #fff3d6;
+  box-shadow:
+    0 9px 18px rgba(70, 42, 22, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+  transform: rotate(calc(-0.9deg + var(--book-age) * 1.2deg));
+  user-select: none;
+}
+
+.adventure-missing-page {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  min-height: 62%;
+  color: rgba(96, 58, 30, 0.5);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  text-align: center;
+}
+
+.adventure-empty-page,
+.adventure-final-page {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 88%;
+  height: 82%;
+  border-radius: 3px;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(123, 74, 36, 0.035) 0 30px, transparent 31px),
+    radial-gradient(circle at 78% 76%, rgba(85, 52, 28, 0.028) 0 24px, transparent 25px),
+    repeating-linear-gradient(0deg, transparent 0 17px, rgba(92, 61, 34, 0.018) 17px 18px);
+  box-shadow: inset 0 0 32px rgba(112, 76, 42, 0.045);
+}
+
+.adventure-empty-page::before,
+.adventure-empty-page::after,
+.adventure-final-page::before,
+.adventure-final-page::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(110, 70, 36, 0.035);
+}
+
+.adventure-empty-page::before,
+.adventure-final-page::before {
+  left: 13%;
+  top: 16%;
+  width: 54px;
+  height: 28px;
+  transform: rotate(-14deg);
+}
+
+.adventure-empty-page::after,
+.adventure-final-page::after {
+  right: 16%;
+  bottom: 14%;
+  width: 38px;
+  height: 22px;
+  transform: rotate(12deg);
+}
+
+.adventure-final-page span {
+  position: relative;
+  z-index: 2;
+  color: rgba(73, 49, 30, 0.42);
+  font-family: "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive;
+  font-size: clamp(0.95rem, 2vw, 1.35rem);
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  transform: rotate(-1.2deg);
+}
+
+.adventure-missing-page span {
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-style: italic;
+}
+
+.adventure-missing-page small {
+  max-width: 84%;
+  margin-top: 0.6rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  overflow-wrap: anywhere;
+  opacity: 0.5;
+}
+
+.page-mood-0 img { filter: saturate(1.04) contrast(0.98); }
+.page-mood-1 img { filter: sepia(0.04) saturate(0.98); }
+.page-mood-2 img { filter: sepia(0.1) saturate(0.92) brightness(0.98); }
+.page-mood-3 img { filter: sepia(0.18) saturate(0.84) brightness(0.96); }
+.page-mood-4 img { filter: sepia(0.24) saturate(0.78) brightness(0.94); }
+
+.adventure-tape {
+  position: absolute;
+  z-index: 4;
+  width: 86px;
+  height: 26px;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.24) 0 1px, transparent 1px 7px),
+    rgba(236, 210, 154, 0.6);
+  box-shadow: 0 2px 8px rgba(71, 43, 20, 0.1);
+  opacity: 0.78;
+}
+
+.adventure-tape-one {
+  left: 12%;
+  top: 11%;
+  transform: rotate(-11deg);
+}
+
+.adventure-tape-two {
+  right: 12%;
+  bottom: 12%;
+  transform: rotate(8deg);
+}
+
+.adventure-page-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  width: 18px;
+  opacity: 0.56;
+}
+
+.adventure-page-edge-left {
+  left: 0;
+  background: linear-gradient(90deg, rgba(76, 42, 20, 0.22), transparent);
+}
+
+.adventure-page-edge-right {
+  right: 0;
+  background: linear-gradient(90deg, transparent, rgba(127, 78, 35, 0.18));
+}
+
+.adventure-pencil-mark {
+  position: absolute;
+  z-index: 3;
+  color: rgba(82, 57, 37, 0.24);
+  font-family: "Bradley Hand", "Segoe Print", cursive;
+  font-size: clamp(0.9rem, 1.6vw, 1.25rem);
+  transform: rotate(-8deg);
+}
+
+.adventure-pencil-mark::before {
+  content: "x";
+}
+
+.adventure-pencil-mark-one {
+  left: 13%;
+  bottom: 18%;
+}
+
+.adventure-pencil-mark-two {
+  right: 17%;
+  top: 18%;
+  transform: rotate(13deg);
+}
+
+.adventure-page-number {
+  position: absolute;
+  right: 8%;
+  bottom: 5%;
+  z-index: 4;
+  color: rgba(89, 55, 30, 0.28);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.82rem;
+  letter-spacing: 0.18em;
+}
+
+.adventure-page-flip {
+  z-index: 8;
+  transform-origin: left center;
+  backface-visibility: hidden;
+  animation-duration: 1.5s;
+  animation-timing-function: cubic-bezier(.18,.62,.12,1);
+  animation-fill-mode: forwards;
+  will-change: transform;
+}
+
+.adventure-page-flip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,0.18), transparent 18%, rgba(255,255,255,0.18) 42%, rgba(0,0,0,0.24) 100%);
+  opacity: 0;
+  animation: adventurePageShadow 1.5s ease forwards;
+  pointer-events: none;
+}
+
+.adventure-page-flip-next {
+  animation-name: adventureFlipNext;
+}
+
+.adventure-page-flip-prev {
+  z-index: 9;
+  transform-origin: right center;
+  transform: translateX(-96%) rotate(calc(0.75deg - var(--book-age) * 0.8deg));
+  animation-name: adventureFlipPrev;
+}
+
+.adventure-page-curl {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  z-index: 7;
+  width: 22%;
+  background: linear-gradient(90deg, transparent, rgba(255, 246, 218, 0.62), rgba(96, 58, 30, 0.18));
+  filter: blur(0.3px);
+  transform: skewY(-3deg);
+}
+
+.adventure-page-arrow {
+  position: fixed;
+  top: 50%;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  width: 3.4rem;
+  height: 4.8rem;
+  border: 1px solid rgba(241, 210, 156, 0.13);
+  border-radius: 999px;
+  color: rgba(241, 210, 156, 0.58);
+  background: rgba(20, 12, 8, 0.18);
+  cursor: pointer;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 3.2rem;
+  line-height: 1;
+  opacity: 0.72;
+  transform: translateY(-50%);
+  transition: opacity 0.3s ease, background 0.3s ease, transform 0.3s ease;
+}
+
+.adventure-page-arrow:hover {
+  opacity: 1;
+  background: rgba(55, 32, 18, 0.28);
+  transform: translateY(-50%) scale(1.04);
+}
+
+.adventure-page-arrow:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.adventure-page-arrow-prev {
+  left: clamp(0.8rem, 4vw, 4rem);
+}
+
+.adventure-page-arrow-next {
+  right: clamp(0.8rem, 4vw, 4rem);
+}
+
+.adventure-book-controls {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(1.1rem, 3vh, 2rem);
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(8px);
+  transition: opacity 1.2s ease 900ms, transform 1.2s ease 900ms;
+}
+
+.adventure-book-controls.visible {
+  opacity: 0.58;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.adventure-book-controls button {
+  border: 0;
+  color: rgba(241, 210, 156, 0.72);
+  background: transparent;
+  cursor: pointer;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 0.78rem;
+  font-style: italic;
+  letter-spacing: 0.12em;
+  text-transform: lowercase;
+}
+
+.adventure-book-controls button:disabled {
+  cursor: default;
+  opacity: 0.22;
+}
+
+.adventure-book-controls span {
+  color: rgba(241, 210, 156, 0.34);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+}
+
+.adventure-final-line {
+  position: fixed;
+  left: 50%;
+  bottom: 8.5%;
+  z-index: 9;
+  margin: 0;
+  color: rgba(95, 60, 32, 0.48);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(0.74rem, 1.4vw, 0.95rem);
+  font-style: italic;
+  letter-spacing: 0.08em;
+  opacity: 0;
+  transform: translateX(-50%) translateY(6px);
+  animation: adventureFinalLine 3.2s ease forwards;
+}
+
+.adventure-back {
+  position: fixed;
+  top: 1.35rem;
+  right: 1.35rem;
+  z-index: 20;
+  color: rgba(241, 210, 156, 0.68);
+  background: rgba(28, 17, 10, 0.28);
+  border-color: rgba(241, 210, 156, 0.1);
+  opacity: 0.58;
+}
+
+.adventure-back:hover {
+  opacity: 0.9;
+}
+
 .balloon-note-modal {
   position: fixed;
   inset: 0;
@@ -2941,6 +4346,79 @@
   100% { width: 120px; height: 120px; opacity: 0; }
 }
 
+@keyframes adventureBookArrive {
+  from { opacity: 0; transform: translateY(28px) rotateX(6deg) scale(0.92); filter: blur(3px); }
+  to { opacity: 1; transform: translateY(0) rotateX(0deg) scale(1); filter: blur(0); }
+}
+
+@keyframes adventureLamp {
+  0%, 100% { opacity: 0.82; transform: translateX(-50%) scale(1); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.035); }
+}
+
+@keyframes adventureDust {
+  0% { opacity: 0; transform: translate3d(-8px, 24px, 0); }
+  24% { opacity: 0.46; }
+  100% { opacity: 0; transform: translate3d(18px, -92px, 0); }
+}
+
+@keyframes adventureBalloonDrift {
+  0%, 100% { transform: translate3d(-4px, 14px, 0) rotate(var(--balloon-tilt, -3deg)) scale(var(--balloon-scale, 1)); }
+  50% { transform: translate3d(10px, -24px, 0) rotate(var(--balloon-tilt, -3deg)) scale(var(--balloon-scale, 1)); }
+}
+
+@keyframes adventureHouseFloat {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-2deg); }
+  50% { transform: translate3d(-18px, -22px, 0) rotate(2deg); }
+}
+
+@keyframes adventureCloudDrift {
+  0%, 100% { transform: translateX(-14px); }
+  50% { transform: translateX(18px); }
+}
+
+@keyframes adventureScrapFloat {
+  0%, 100% { transform: translate3d(0, 8px, 0) rotate(calc(-18deg + var(--i) * 7deg)); }
+  50% { transform: translate3d(12px, -18px, 0) rotate(calc(-6deg + var(--i) * 7deg)); }
+}
+
+@keyframes adventureClusterFloat {
+  0%, 100% { transform: translate3d(-8px, 12px, 0) rotate(-4deg) scale(1); }
+  50% { transform: translate3d(12px, -28px, 0) rotate(4deg) scale(1.02); }
+}
+
+@keyframes adventurePageBreathe {
+  0%, 100% { background-position: 50% 50%, 50% 50%, 50% 50%, 0 0, 50% 50%; }
+  50% { background-position: 50.5% 49.5%, 49.5% 50.5%, 50% 50%, 0 2px, 50% 50%; }
+}
+
+@keyframes adventureFlipNext {
+  0% { transform: rotateY(0deg) rotateZ(0deg) translateX(0); }
+  18% { transform: rotateY(-18deg) rotateZ(-0.35deg) translateX(-0.4%); }
+  42% { transform: rotateY(-64deg) rotateZ(-1deg) translateX(-1.8%); }
+  68% { transform: rotateY(-132deg) rotateZ(-2deg) translateX(-4%); }
+  100% { transform: rotateY(-179deg) rotateZ(-2.8deg) translateX(-6%); }
+}
+
+@keyframes adventureFlipPrev {
+  0% { transform: translateX(-96%) rotateY(0deg) rotateZ(-0.4deg); }
+  18% { transform: translateX(-93%) rotateY(18deg) rotateZ(0.1deg); }
+  44% { transform: translateX(-72%) rotateY(62deg) rotateZ(1deg); }
+  72% { transform: translateX(-26%) rotateY(128deg) rotateZ(2deg); }
+  100% { transform: translateX(0) rotateY(179deg) rotateZ(2.8deg); }
+}
+
+@keyframes adventurePageShadow {
+  0% { opacity: 0; transform: translateX(0); }
+  30% { opacity: 0.24; }
+  62% { opacity: 0.46; transform: translateX(-8%); }
+  100% { opacity: 0.16; transform: translateX(-16%); }
+}
+
+@keyframes adventureFinalLine {
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 @media (max-width: 860px) {
   .museum-doors {
     position: relative;
@@ -3061,6 +4539,52 @@
 
   .door-four-lamp-one { left: 20%; }
   .door-four-lamp-three { left: 80%; }
+
+  .adventure-book-stage {
+    width: 96vw;
+    height: min(78vh, calc(var(--door6-vh, 100vh) - 6.5rem));
+    min-height: min(520px, calc(var(--door6-vh, 100vh) - 6.5rem));
+  }
+
+  .adventure-book {
+    width: min(44vw, 360px, max(185px, calc((var(--door6-vh, 100vh) - 7rem) * 0.72)));
+  }
+
+  .book-closed .adventure-book {
+    width: min(82vw, 430px, max(260px, calc((var(--door6-vh, 100vh) - 7rem) * 0.72)));
+  }
+
+  .book-open .adventure-book {
+    transform: translateX(48%) scale(0.98);
+  }
+
+  .adventure-page {
+    inset: 5.5% 5.5% 6% 7.5%;
+  }
+
+  .adventure-page img {
+    width: 88%;
+    max-height: 76%;
+    padding: 0.55rem;
+  }
+
+  .adventure-cover-title {
+    font-size: clamp(1.35rem, 8vw, 2.35rem);
+  }
+
+  .adventure-book-controls {
+    bottom: 1rem;
+    gap: 0.7rem;
+  }
+
+  .adventure-book-controls button {
+    font-size: 0.72rem;
+  }
+
+  .adventure-back {
+    top: 0.85rem;
+    right: 0.85rem;
+  }
 }
 
 .project-detail[data-theme="day"] {

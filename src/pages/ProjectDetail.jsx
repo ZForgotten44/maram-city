@@ -289,7 +289,7 @@ const museumDoors = [
   { title: 'The Rule of Three', unlocked: true, tone: 'amber', unlock: 'Enter', symbol: 'III', roomId: 'rule-of-three' },
   { title: 'The Poem That Answers Back', unlocked: true, tone: 'rose', unlock: 'Enter', symbol: 'IV', roomId: 'poem-answers' },
   { title: 'Arafah', unlocked: true, tone: 'starlit', unlock: 'Enter', symbol: 'V', roomId: 'arafah' },
-  { title: 'Sound of Us', unlocked: false, tone: 'violet', unlock: 'Opens May 27', symbol: 'VI' },
+  { title: '100 Years of Adventure', unlocked: true, tone: 'violet', unlock: 'Enter', symbol: 'VI', roomId: 'adventure-book' },
   { title: '100 Years Together', unlocked: false, tone: 'sacred', unlock: 'Opens May 29', symbol: 'VII' },
 ]
 
@@ -1120,6 +1120,16 @@ const arafahSkyLines = [
   { text: 'اللهم اجعلنا لباسًا وسكنًا وأمانًا لبعضنا', size: 17 },
 ]
 
+const adventureMemoryPages = Array.from({ length: 25 }, (_, index) => index + 1)
+  .map((pageNumber) => ({ type: 'image', src: `/pics/door6/${pageNumber}.png`, pageNumber }))
+
+const adventureBookPages = [
+  ...adventureMemoryPages,
+  { type: 'blank', id: 'quiet-page-one' },
+  { type: 'blank', id: 'quiet-page-two' },
+  { type: 'final', id: 'you-are-my-adventure' },
+]
+
 function ArafahRoomScene() {
   const canvasRef = useRef(null)
   const scrollAreaRef = useRef(null)
@@ -1469,6 +1479,325 @@ function ArafahRoomScene() {
   )
 }
 
+function AdventureBookRoom() {
+  const [isOpen, setIsOpen] = useState(false)
+  const [isCoverAway, setIsCoverAway] = useState(false)
+  const [pageIndex, setPageIndex] = useState(0)
+  const [pendingPageIndex, setPendingPageIndex] = useState(null)
+  const [flipDirection, setFlipDirection] = useState('next')
+  const [isFlipping, setIsFlipping] = useState(false)
+  const [missingPages, setMissingPages] = useState({})
+  const [viewport, setViewport] = useState(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }))
+  const touchStartXRef = useRef(null)
+  const flipTimeoutRef = useRef(null)
+  const coverTimeoutRef = useRef(null)
+  const paperAudioContextRef = useRef(null)
+  const visiblePageIndex = pendingPageIndex ?? pageIndex
+  const leftPageIndex = pendingPageIndex == null
+    ? pageIndex - 1
+    : flipDirection === 'next'
+      ? pageIndex
+      : pendingPageIndex - 1
+  const flipPageIndex = flipDirection === 'prev' && pendingPageIndex != null ? pendingPageIndex : pageIndex
+  const ageProgress = pageIndex / (adventureBookPages.length - 1)
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(flipTimeoutRef.current)
+      clearTimeout(coverTimeoutRef.current)
+    }
+  }, [])
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewport({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      })
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    const indexesToPreload = Array.from({ length: 13 }, (_, index) => pageIndex - 6 + index)
+      .filter((index) => index >= 0 && index < adventureBookPages.length)
+    indexesToPreload.forEach((index) => {
+      if (adventureBookPages[index]?.type !== 'image') return
+      const img = new Image()
+      img.src = adventureBookPages[index].src
+    })
+  }, [pageIndex])
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'ArrowRight') turnPage(pageIndex + 1)
+      if (event.key === 'ArrowLeft') turnPage(pageIndex - 1)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, isFlipping, pageIndex])
+
+  useEffect(() => {
+    if (!isOpen) return undefined
+    const preloadAll = () => {
+      adventureBookPages.forEach((page) => {
+        if (page.type !== 'image') return
+        const img = new Image()
+        img.src = page.src
+      })
+    }
+    if ('requestIdleCallback' in window) {
+      const idleId = window.requestIdleCallback(preloadAll, { timeout: 1800 })
+      return () => window.cancelIdleCallback(idleId)
+    }
+    const id = setTimeout(preloadAll, 600)
+    return () => clearTimeout(id)
+  }, [isOpen])
+
+  const playPaperRustle = () => {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext
+    if (!AudioContextClass) return
+    const context = paperAudioContextRef.current || new AudioContextClass()
+    paperAudioContextRef.current = context
+    if (context.state === 'suspended') context.resume().catch(() => {})
+
+    const duration = 0.46
+    const buffer = context.createBuffer(1, context.sampleRate * duration, context.sampleRate)
+    const data = buffer.getChannelData(0)
+    for (let i = 0; i < data.length; i += 1) {
+      const progress = i / data.length
+      const envelope = Math.sin(progress * Math.PI) * (1 - progress * 0.24)
+      data[i] = (Math.random() * 2 - 1) * envelope * 0.18
+    }
+    const source = context.createBufferSource()
+    const filter = context.createBiquadFilter()
+    const gain = context.createGain()
+    filter.type = 'bandpass'
+    filter.frequency.value = 1450
+    filter.Q.value = 0.72
+    gain.gain.value = 0.035
+    source.buffer = buffer
+    source.connect(filter)
+    filter.connect(gain)
+    gain.connect(context.destination)
+    source.start()
+  }
+
+  const turnPage = (nextIndex) => {
+    if (isFlipping || !isOpen) return
+    if (nextIndex < 0 || nextIndex >= adventureBookPages.length || nextIndex === pageIndex) return
+    playPaperRustle()
+    clearTimeout(flipTimeoutRef.current)
+    setFlipDirection(nextIndex > pageIndex ? 'next' : 'prev')
+    setPendingPageIndex(nextIndex)
+    setIsFlipping(true)
+    flipTimeoutRef.current = setTimeout(() => {
+      setPageIndex(nextIndex)
+      setPendingPageIndex(null)
+      setIsFlipping(false)
+    }, 1500)
+  }
+
+  const openBook = () => {
+    if (isOpen) return
+    playPaperRustle()
+    clearTimeout(coverTimeoutRef.current)
+    setIsCoverAway(false)
+    setIsOpen(true)
+    coverTimeoutRef.current = setTimeout(() => setIsCoverAway(true), 1380)
+  }
+
+  const markPageMissing = (index) => {
+    setMissingPages((current) => ({ ...current, [index]: true }))
+  }
+
+  const renderMemoryImage = (index, decorative = false) => (
+    adventureBookPages[index]?.type === 'blank' ? (
+      <div className="adventure-empty-page" aria-hidden={decorative ? 'true' : undefined} />
+    ) : adventureBookPages[index]?.type === 'final' ? (
+      <div className="adventure-final-page" aria-hidden={decorative ? 'true' : undefined}>
+        <span>you are my adventure.</span>
+      </div>
+    ) : missingPages[index] ? (
+      <div className="adventure-missing-page" aria-hidden={decorative ? 'true' : undefined}>
+        <span>memory page missing</span>
+        <small>{adventureBookPages[index]?.src}</small>
+      </div>
+    ) : (
+      <img
+        src={adventureBookPages[index]?.src}
+        alt={decorative ? '' : `Adventure Book memory ${index + 1}`}
+        draggable="false"
+        loading={index <= 2 ? 'eager' : 'lazy'}
+        onError={() => markPageMissing(index)}
+      />
+    )
+  )
+
+  const handleTouchStart = (event) => {
+    touchStartXRef.current = event.touches[0]?.clientX ?? null
+  }
+
+  const handleTouchEnd = (event) => {
+    const startX = touchStartXRef.current
+    if (startX == null) return
+    const endX = event.changedTouches[0]?.clientX ?? startX
+    const delta = endX - startX
+    touchStartXRef.current = null
+    if (Math.abs(delta) < 36) return
+    turnPage(delta < 0 ? pageIndex + 1 : pageIndex - 1)
+  }
+
+  return (
+    <div
+      className={`adventure-room-scene ${isOpen ? 'book-open' : 'book-closed'} ${isCoverAway ? 'cover-away' : ''} ${isFlipping ? `is-flipping flip-${flipDirection}` : ''}`}
+      style={{ '--book-age': ageProgress, '--door6-vw': `${viewport.width}px`, '--door6-vh': `${viewport.height}px` }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <div className="adventure-room-lamp" aria-hidden="true" />
+      <div className="adventure-room-dust" aria-hidden="true">
+        {Array.from({ length: 24 }, (_, index) => (
+          <span key={index} style={{ '--i': index, '--x': `${(index * 37) % 100}%`, '--y': `${(index * 61) % 100}%` }} />
+        ))}
+      </div>
+      <div className="adventure-up-atmosphere" aria-hidden="true">
+        <span className="adventure-wall-map adventure-wall-map-one" />
+        <span className="adventure-wall-map adventure-wall-map-two" />
+        <span className="adventure-postcard adventure-postcard-one" />
+        <span className="adventure-postcard adventure-postcard-two" />
+        <span className="adventure-ticket-fragment adventure-ticket-fragment-one">ADMIT ONE</span>
+        <span className="adventure-ticket-fragment adventure-ticket-fragment-two">PARADISE FALLS</span>
+        {Array.from({ length: 7 }, (_, index) => (
+          <span key={`scrap-${index}`} className="adventure-paper-scrap" style={{ '--i': index }} />
+        ))}
+        <span className="adventure-map-line adventure-map-line-one" />
+        <span className="adventure-map-line adventure-map-line-two" />
+        <span className="adventure-compass-doodle" />
+        <span className="adventure-travel-stamp adventure-travel-stamp-one">PARADISE</span>
+        <span className="adventure-travel-stamp adventure-travel-stamp-two">ADVENTURE</span>
+        <span className="adventure-note-card adventure-note-card-one">places to go</span>
+        <span className="adventure-note-card adventure-note-card-two">things to keep</span>
+        <span className="adventure-soft-balloon-cluster adventure-soft-balloon-cluster-one" />
+        <span className="adventure-soft-balloon-cluster adventure-soft-balloon-cluster-two" />
+        <span className="adventure-soft-balloon-cluster adventure-soft-balloon-cluster-horizon" />
+        {adventureBookPages[visiblePageIndex]?.type === 'final' && (
+          <span className="adventure-soft-balloon-cluster adventure-soft-balloon-cluster-final" />
+        )}
+      </div>
+
+      <div className="adventure-book-stage">
+        <div className="adventure-book-shadow" aria-hidden="true" />
+        <div className="adventure-book">
+          <button
+            type="button"
+            className="adventure-book-cover"
+            onClick={openBook}
+            aria-label="Open Our Adventure Book"
+            disabled={isOpen}
+          >
+            <span className="adventure-book-spine" aria-hidden="true" />
+            <span className="adventure-stitch-holes" aria-hidden="true" />
+            <span className="adventure-binding-strings" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+            </span>
+            <span className="adventure-cover-corners" aria-hidden="true" />
+            <span className="adventure-cover-title">OUR ADVENTURE BOOK</span>
+            <span className="adventure-cover-subtitle">100 years of us</span>
+            <span className="adventure-cover-wear adventure-cover-wear-one" aria-hidden="true" />
+            <span className="adventure-cover-wear adventure-cover-wear-two" aria-hidden="true" />
+          </button>
+
+          <div className="adventure-page-stack" aria-live="polite">
+            <div className="adventure-page-backdrop" aria-hidden="true" />
+            <article className="adventure-page adventure-page-left" aria-hidden="true">
+              <span className="adventure-page-edge adventure-page-edge-left" />
+              <span className="adventure-page-edge adventure-page-edge-right" />
+              <span className="adventure-left-stain adventure-left-stain-one" />
+              <span className="adventure-left-stain adventure-left-stain-two" />
+              {leftPageIndex >= 0 ? (
+                <div className="adventure-backside-memory">
+                  {renderMemoryImage(leftPageIndex, true)}
+                </div>
+              ) : (
+                <div className="adventure-blank-left-page">
+                  <span />
+                  <small>the beginning</small>
+                </div>
+              )}
+            </article>
+
+            <article className={`adventure-page adventure-page-current adventure-page-right page-mood-${Math.floor(ageProgress * 4)}`}>
+              <span className="adventure-page-edge adventure-page-edge-left" aria-hidden="true" />
+              <span className="adventure-page-edge adventure-page-edge-right" aria-hidden="true" />
+              <span className="adventure-tape adventure-tape-one" aria-hidden="true" />
+              <span className="adventure-tape adventure-tape-two" aria-hidden="true" />
+              <span className="adventure-pencil-mark adventure-pencil-mark-one" aria-hidden="true" />
+              <span className="adventure-pencil-mark adventure-pencil-mark-two" aria-hidden="true" />
+              <button
+                type="button"
+                className="adventure-page-hit-area"
+                onClick={() => turnPage(pageIndex + 1)}
+                aria-label="Turn to next memory page"
+                disabled={pageIndex === adventureBookPages.length - 1 || isFlipping}
+              >
+                {renderMemoryImage(visiblePageIndex)}
+              </button>
+              <span className="adventure-page-number">{String(visiblePageIndex + 1).padStart(2, '0')}</span>
+            </article>
+
+            {isFlipping && (
+              <article className={`adventure-page adventure-page-flip adventure-page-flip-${flipDirection}`} aria-hidden="true">
+                <span className="adventure-page-curl" />
+                <span className="adventure-tape adventure-tape-one" />
+                <span className="adventure-tape adventure-tape-two" />
+                {renderMemoryImage(flipPageIndex, true)}
+              </article>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        className="adventure-page-arrow adventure-page-arrow-prev"
+        onClick={() => turnPage(pageIndex - 1)}
+        disabled={!isOpen || pageIndex === 0 || isFlipping}
+        aria-label="Previous Adventure Book page"
+      >
+        ‹
+      </button>
+      <button
+        type="button"
+        className="adventure-page-arrow adventure-page-arrow-next"
+        onClick={() => turnPage(pageIndex + 1)}
+        disabled={!isOpen || pageIndex === adventureBookPages.length - 1 || isFlipping}
+        aria-label="Next Adventure Book page"
+      >
+        ›
+      </button>
+
+      <div className={`adventure-book-controls ${isOpen ? 'visible' : ''}`} aria-label="Adventure Book page controls">
+        <button type="button" onClick={() => turnPage(pageIndex - 1)} disabled={!isOpen || pageIndex === 0 || isFlipping}>
+          previous
+        </button>
+        <span>{String(pageIndex + 1).padStart(2, '0')} / {adventureBookPages.length}</span>
+        <button type="button" onClick={() => turnPage(pageIndex + 1)} disabled={!isOpen || pageIndex === adventureBookPages.length - 1 || isFlipping}>
+          next
+        </button>
+      </div>
+
+    </div>
+  )
+}
+
 function MuseumOfLovingMaram({ embedded, onClose, theme }) {
   const [activeRoom, setActiveRoom] = useState(null)
   const [countdown, setCountdown] = useState(() => getMuseumCountdown())
@@ -1484,6 +1813,7 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
   const roomThreeAudioRef = useRef(null)
   const roomFourAudioRef = useRef(null)
   const roomFiveAudioRef = useRef(null)
+  const roomSixAudioRef = useRef(null)
   const poemReferenceAudioRefs = useRef({})
   const audioFadeRef = useRef({})
   const poemAudioFadeRef = useRef({})
@@ -1502,7 +1832,8 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     const roomThreeAudio = new Audio('/audio/door3.mp3')
     const roomFourAudio = new Audio('/audio/door4/door4.mp3')
     const roomFiveAudio = new Audio('/audio/door5.mp3')
-    ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio, roomFiveAudio].forEach((audio) => {
+    const roomSixAudio = new Audio('/audio/door6.mp3')
+    ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio, roomFiveAudio, roomSixAudio].forEach((audio) => {
       audio.loop = true
       audio.preload = 'auto'
       audio.volume = 0
@@ -1514,11 +1845,12 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     roomThreeAudioRef.current = roomThreeAudio
     roomFourAudioRef.current = roomFourAudio
     roomFiveAudioRef.current = roomFiveAudio
+    roomSixAudioRef.current = roomSixAudio
 
     return () => {
       Object.values(audioFadeRef.current).forEach(cancelAnimationFrame)
       Object.values(poemAudioFadeRef.current).forEach(cancelAnimationFrame)
-      ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio, roomFiveAudio].forEach((audio) => {
+      ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio, roomFiveAudio, roomSixAudio].forEach((audio) => {
         audio.pause()
         audio.src = ''
       })
@@ -1532,6 +1864,7 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
       roomThreeAudioRef.current = null
       roomFourAudioRef.current = null
       roomFiveAudioRef.current = null
+      roomSixAudioRef.current = null
       poemReferenceAudioRefs.current = {}
     }
   }, [])
@@ -1547,7 +1880,8 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     const roomThreeAudio = roomThreeAudioRef.current
     const roomFourAudio = roomFourAudioRef.current
     const roomFiveAudio = roomFiveAudioRef.current
-    if (!hallAudio || !roomAudio || !roomTwoAudio || !roomThreeAudio || !roomFourAudio || !roomFiveAudio) return undefined
+    const roomSixAudio = roomSixAudioRef.current
+    if (!hallAudio || !roomAudio || !roomTwoAudio || !roomThreeAudio || !roomFourAudio || !roomFiveAudio || !roomSixAudio) return undefined
 
     const fadeAudio = (audio, targetVolume, duration = 1800, pauseAtEnd = false) => {
       if (audioFadeRef.current[audio.src]) cancelAnimationFrame(audioFadeRef.current[audio.src])
@@ -1575,8 +1909,10 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
             ? roomFourAudio
             : activeRoom === 'arafah'
               ? roomFiveAudio
-              : hallAudio
-    const inactiveAudios = [hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio, roomFiveAudio].filter((audio) => audio !== activeAudio)
+              : activeRoom === 'adventure-book'
+                ? roomSixAudio
+                : hallAudio
+    const inactiveAudios = [hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio, roomFiveAudio, roomSixAudio].filter((audio) => audio !== activeAudio)
     const activeVolume = isMuted
       ? 0
       : activeRoom === 'before-you'
@@ -1589,7 +1925,9 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
               ? 0.12
               : activeRoom === 'arafah'
                 ? 0.28
-                : 0.22
+                : activeRoom === 'adventure-book'
+                  ? 0.08
+                  : 0.22
 
     const syncAudio = () => {
       if (!isMuted) {
@@ -1665,6 +2003,7 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     if (roomId === 'rule-of-three') return roomThreeAudioRef.current
     if (roomId === 'poem-answers') return roomFourAudioRef.current
     if (roomId === 'arafah') return roomFiveAudioRef.current
+    if (roomId === 'adventure-book') return roomSixAudioRef.current
     return hallAudioRef.current
   }
 
@@ -2095,6 +2434,11 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
         <section className="arafah-room" aria-label="Room V, Arafah">
           <button type="button" className="museum-back arafah-back" onClick={() => setActiveRoom(null)}>Back to hallway</button>
           <ArafahRoomScene />
+        </section>
+      ) : activeRoom === 'adventure-book' ? (
+        <section className="adventure-book-room" aria-label="Room VI, 100 Years of Adventure">
+          <button type="button" className="museum-back adventure-back" onClick={() => setActiveRoom(null)}>Back to hallway</button>
+          <AdventureBookRoom />
         </section>
       ) : (
         <section
