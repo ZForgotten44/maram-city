@@ -1,6 +1,6 @@
 // Building.jsx — Gothic Voxel City
 import { useMemo, useRef, useState, memo } from "react"
-import { Box, useCursor } from "@react-three/drei"
+import { Box, Html, useCursor } from "@react-three/drei"
 import { useFrame } from "@react-three/fiber"
 import * as THREE from "three"
 import { useTheme } from "../context/ThemeContext"
@@ -608,6 +608,8 @@ function Headquarters({ material, importance = 1 }) {
 const ENERGY_STRIP = '#E6B85C'
 const TEAL_GLOW = '#2DD4BF'
 const TOWER_TOP_GLOW = '#E8C547'
+const QUEEN_PINK_GLOW = '#ff9ec6'
+const QUEEN_PURPLE_GLOW = '#b88cff'
 const FLICKER_THROTTLE = 0.5
 function Tower({ material, importance = 1, projectId = 'tower-east' }) {
   const isEast = projectId === 'tower-east'
@@ -622,23 +624,23 @@ function Tower({ material, importance = 1, projectId = 'tower-east' }) {
     const t = state.clock.elapsedTime
     const nightMult = 1 - themeBlend
     // Side strip: brighter at night, slow sine pulse (neon spine)
-    const stripPulse = 0.6 + 0.4 * Math.sin(t * 0.9)
-    const stripOpacity = themeBlend > 0.6 ? 0.35 : 0.5 + nightMult * (0.45 * stripPulse)
-    const stripBright = themeBlend > 0.6 ? 0.8 : 0.85 + nightMult * 0.4
-    stripRefs.current.forEach((mesh) => {
+    const stripPulse = 0.62 + 0.38 * Math.sin(t * 0.9)
+    const celebrationPulse = 0.65 + 0.35 * Math.sin(t * 0.72 + (isEast ? 0 : 1.4))
+    const stripOpacity = Math.min(1, 0.52 + nightMult * 0.34 + celebrationPulse * 0.16)
+    stripRefs.current.forEach((mesh, i) => {
       if (mesh?.material) {
-        mesh.material.color.set(ENERGY_STRIP)
+        mesh.material.color.set(i % 2 ? QUEEN_PINK_GLOW : ENERGY_STRIP)
         mesh.material.opacity = Math.min(1, stripOpacity)
         if (mesh.material.emissive) {
-          mesh.material.emissive.set(ENERGY_STRIP)
-          mesh.material.emissiveIntensity = nightMult * 0.25 * stripPulse
+          mesh.material.emissive.set(i % 2 ? QUEEN_PINK_GLOW : ENERGY_STRIP)
+          mesh.material.emissiveIntensity = 0.08 + nightMult * 0.28 + celebrationPulse * 0.18
         }
       }
     })
-    stripAuraRefs.current.forEach((mesh) => {
+    stripAuraRefs.current.forEach((mesh, i) => {
       if (mesh?.material) {
-        mesh.material.color.set(ENERGY_STRIP)
-        mesh.material.opacity = nightMult * 0.2 * stripPulse
+        mesh.material.color.set(i % 2 ? QUEEN_PURPLE_GLOW : ENERGY_STRIP)
+        mesh.material.opacity = 0.1 + nightMult * 0.16 + stripPulse * 0.08
       }
     })
     // Top beacon: flicker (not constant) + stronger range
@@ -647,7 +649,7 @@ function Tower({ material, importance = 1, projectId = 'tower-east' }) {
       beaconFlickerRef.current = 0.7 + pseudoRand(Math.floor(t * 2)) * 0.4
     }
     const beaconPulse = 0.7 + 0.3 * Math.sin(t * 1.5)
-    const topIntensity = nightMult * beaconFlickerRef.current * beaconPulse * 1.4
+    const topIntensity = 0.18 + nightMult * beaconFlickerRef.current * beaconPulse * 1.4 + celebrationPulse * 0.28
     topGlowRefs.current.forEach((obj) => {
       const mesh = obj?.isMesh ? obj : obj?.children?.[0]
       if (mesh?.material?.emissiveIntensity !== undefined) {
@@ -655,7 +657,7 @@ function Tower({ material, importance = 1, projectId = 'tower-east' }) {
       }
     })
     if (beaconHaloRef.current?.material) {
-      beaconHaloRef.current.material.opacity = nightMult * (0.18 + 0.08 * Math.sin(t * 1.2))
+      beaconHaloRef.current.material.opacity = 0.14 + nightMult * 0.2 + 0.08 * Math.sin(t * 1.2)
     }
   })
   const h = 9 + importance * 1.2
@@ -679,10 +681,11 @@ function Tower({ material, importance = 1, projectId = 'tower-east' }) {
         let cur = towerBrightnessRef.current[i]
         cur += (targetB - cur) * FLICKER_LERP_SPEED
         towerBrightnessRef.current[i] = cur
-        mat.color.lerpColors(new THREE.Color(WINDOW_DARK), new THREE.Color(TOWER_TOP_GLOW), cur)
+        const targetColor = i % 3 === 0 ? QUEEN_PINK_GLOW : i % 3 === 1 ? TOWER_TOP_GLOW : QUEEN_PURPLE_GLOW
+        mat.color.lerpColors(new THREE.Color(WINDOW_DARK), new THREE.Color(targetColor), cur)
       })
     } else {
-      towerWinGroupMats.forEach((mat) => mat.color.set(WINDOW_LIT))
+      towerWinGroupMats.forEach((mat, i) => mat.color.set(i % 3 === 0 ? '#ffd7e5' : i % 3 === 1 ? WINDOW_LIT : '#d8c5ff'))
     }
   })
   return (
@@ -760,6 +763,12 @@ function Tower({ material, importance = 1, projectId = 'tower-east' }) {
           <StdMat material={material} />
         )}
       </Box>
+      {[0, 1].map((i) => (
+        <mesh key={`tower-celebration-halo-${i}`} position={[0, h + 0.25 + i * 0.55, 0]} rotation={[-Math.PI / 2, 0, 0]} castShadow={false} receiveShadow={false}>
+          <ringGeometry args={[0.94 + i * 0.18, 0.99 + i * 0.18, 36]} />
+          <meshBasicMaterial color={i === 0 ? ENERGY_STRIP : QUEEN_PINK_GLOW} transparent opacity={0.18} depthWrite={false} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
       <Box args={[1.38, 0.35, 1.38]} position={[0, h + 0.27, 0]} castShadow>
         <StdMat material={material} />
       </Box>
@@ -885,12 +894,21 @@ function DefaultBuilding({ material, importance = 1 }) {
 function MuseumOfLovingMaramBuilding({ material, importance = 1 }) {
   const { themeBlend } = useTheme()
   const birthdayRefs = useRef([])
+  const queenLightRefs = useRef([])
   useFrame((state) => {
     const t = state.clock.elapsedTime
     birthdayRefs.current.forEach((mesh, i) => {
       if (!mesh) return
       mesh.position.y = mesh.userData.baseY + Math.sin(t * 0.32 + i) * 0.08
       mesh.rotation.y = Math.sin(t * 0.18 + i) * 0.08
+    })
+    queenLightRefs.current.forEach((mesh, i) => {
+      if (!mesh?.material) return
+      const pulse = 0.58 + 0.28 * Math.sin(t * 0.9 + i * 0.7)
+      mesh.material.opacity = (mesh.userData.baseOpacity ?? 0.24) * pulse
+      if (mesh.material.emissiveIntensity !== undefined) {
+        mesh.material.emissiveIntensity = 0.45 + pulse * 0.5
+      }
     })
   })
 
@@ -994,12 +1012,48 @@ function MuseumOfLovingMaramBuilding({ material, importance = 1 }) {
       </mesh>
       <mesh position={[0, 4.08, 0]} castShadow={false} receiveShadow={false}>
         <sphereGeometry args={[0.98, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshStandardMaterial color={glass} emissive={warmLight} emissiveIntensity={night ? 0.12 : 0.03} roughness={0.24} metalness={0.06} transparent opacity={0.62} />
+        <meshStandardMaterial color={glass} emissive={warmLight} emissiveIntensity={night ? 0.52 : 0.22} roughness={0.24} metalness={0.06} transparent opacity={0.72} />
       </mesh>
       {[0, 1, 2, 3].map((i) => (
         <mesh key={`skylight-rib-${i}`} position={[0, 4.13, 0]} rotation={[0, (Math.PI / 4) * i, 0]} castShadow={false} receiveShadow={false}>
           <boxGeometry args={[0.018, 0.045, 1.95]} />
           <meshStandardMaterial color={brass} roughness={0.36} metalness={0.4} />
+        </mesh>
+      ))}
+      {[0, 1, 2].map((i) => (
+        <mesh
+          key={`queen-dome-beam-${i}`}
+          ref={(el) => {
+            if (el) {
+              el.userData.baseOpacity = i === 1 ? 0.22 : 0.16
+              queenLightRefs.current[i] = el
+            }
+          }}
+          position={[0, 7.1, 0]}
+          rotation={[0, (i - 1) * 0.42, (i - 1) * 0.18]}
+          castShadow={false}
+          receiveShadow={false}
+        >
+          <coneGeometry args={[1.25 + i * 0.2, 6.1, 32, 1, true]} />
+          <meshBasicMaterial color={i === 1 ? '#ffd478' : '#ff9ec6'} transparent opacity={0.16} depthWrite={false} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
+      {[1.3, 1.85, 2.4].map((radius, i) => (
+        <mesh
+          key={`queen-dome-halo-${i}`}
+          ref={(el) => {
+            if (el) {
+              el.userData.baseOpacity = 0.32 - i * 0.06
+              queenLightRefs.current[4 + i] = el
+            }
+          }}
+          position={[0, 4.12 + i * 0.08, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          castShadow={false}
+          receiveShadow={false}
+        >
+          <ringGeometry args={[radius, radius + 0.035, 48]} />
+          <meshBasicMaterial color={i === 1 ? '#ff9ec6' : '#ffd478'} transparent opacity={0.24} depthWrite={false} side={THREE.DoubleSide} />
         </mesh>
       ))}
 
@@ -1040,6 +1094,27 @@ function MuseumOfLovingMaramBuilding({ material, importance = 1 }) {
           <meshStandardMaterial color={warmLight} emissive={warmLight} emissiveIntensity={night ? 0.32 : 0.08} transparent opacity={0.86} roughness={0.4} />
         </mesh>
       ))}
+      <group position={[0, 0.34, 3.22]} rotation={[0, 0, 0]}>
+        <mesh position={[0, 0.74, 0]} castShadow receiveShadow>
+          <coneGeometry args={[0.46, 1.25, 28]} />
+          <meshStandardMaterial color="#9b314b" emissive="#ffb2c8" emissiveIntensity={night ? 0.24 : 0.08} roughness={0.64} metalness={0.04} />
+        </mesh>
+        <mesh position={[0, 1.42, 0]} castShadow={false} receiveShadow={false}>
+          <sphereGeometry args={[0.17, 18, 14]} />
+          <meshStandardMaterial color="#f0caa8" roughness={0.58} />
+        </mesh>
+        <mesh position={[0, 1.64, 0]} castShadow={false} receiveShadow={false}>
+          <coneGeometry args={[0.18, 0.3, 5]} />
+          <meshStandardMaterial color="#d9ad4f" emissive="#ffe0a0" emissiveIntensity={night ? 0.22 : 0.08} roughness={0.36} metalness={0.3} />
+        </mesh>
+        <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]} castShadow={false} receiveShadow={false}>
+          <ringGeometry args={[0.52, 0.78, 32]} />
+          <meshBasicMaterial color="#ffd478" transparent opacity={0.34} depthWrite={false} side={THREE.DoubleSide} />
+        </mesh>
+        <Html position={[0, 1.95, 0]} center distanceFactor={8} zIndexRange={[40, 0]} transform={false}>
+          <div className="island-queen-label">Island Queen</div>
+        </Html>
+      </group>
 
       {/* Minimal landscape and benches keep the pavilion quiet inside the city. */}
       {[-2.35, 2.35].map((x, i) => (

@@ -3995,6 +3995,182 @@ function InboxModalContent({ onClose }) {
   )
 }
 
+const QUEEN_BALLOON_COLORS = ['#f5a6c8', '#e4b75f', '#fff0d2', '#b84a63', '#d8c5ff']
+const QUEEN_DAY_WORLD_CLUSTERS = [
+  { id: 'museum-left', anchor: [-9.55, 0, -0.95], height: 2.25, scale: 1.1, phase: 0.2, colors: [0, 1, 2] },
+  { id: 'museum-right', anchor: [-4.45, 0, -1.15], height: 2.15, scale: 1.05, phase: 1.1, colors: [1, 0, 3] },
+  { id: 'museum-path', anchor: [-7.25, 0, 1.55], height: 1.75, scale: 0.86, phase: 2.1, colors: [2, 0] },
+  { id: 'tower-east', anchor: [-3.35, 0, -9.15], height: 5.6, scale: 0.82, phase: 3.3, colors: [1, 4, 0] },
+  { id: 'tower-west', anchor: [4.95, 0, -9.25], height: 5.2, scale: 0.78, phase: 4.2, colors: [4, 1, 2] },
+  { id: 'main-path', anchor: [0.4, 0, -11.15], height: 1.8, scale: 0.72, phase: 5.1, colors: [0, 2] },
+]
+
+function QueenDayBalloonCluster({ cluster }) {
+  const groupRef = useRef()
+  const poleColor = '#d6be92'
+  useFrame((state) => {
+    if (!groupRef.current) return
+    const t = state.clock.elapsedTime + cluster.phase
+    groupRef.current.position.y = Math.sin(t * 0.85) * 0.035
+    groupRef.current.rotation.z = Math.sin(t * 0.55) * 0.035
+    groupRef.current.rotation.y = Math.sin(t * 0.38) * 0.06
+  })
+
+  return (
+    <group ref={groupRef} position={cluster.anchor} scale={cluster.scale}>
+      <mesh position={[0, cluster.height / 2, 0]} castShadow={false} receiveShadow={false}>
+        <cylinderGeometry args={[0.018, 0.022, cluster.height, 6]} />
+        <meshStandardMaterial color={poleColor} roughness={0.5} metalness={0.15} />
+      </mesh>
+      <mesh position={[0, 0.04, 0]} rotation={[-Math.PI / 2, 0, 0]} castShadow={false} receiveShadow={false}>
+        <ringGeometry args={[0.15, 0.24, 16]} />
+        <meshBasicMaterial color="#ffd478" transparent opacity={0.24} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+      {cluster.colors.map((colorIndex, index) => {
+        const angle = (index / Math.max(1, cluster.colors.length)) * Math.PI * 2 + cluster.phase
+        const x = Math.cos(angle) * 0.22
+        const z = Math.sin(angle) * 0.14
+        const y = cluster.height + 0.28 + (index % 2) * 0.28
+        const color = QUEEN_BALLOON_COLORS[colorIndex % QUEEN_BALLOON_COLORS.length]
+        const heart = index === 0 && cluster.id.includes('museum')
+        return (
+          <group key={`${cluster.id}-balloon-${index}`} position={[x, y, z]}>
+            <mesh castShadow receiveShadow={false} scale={heart ? [1.08, 0.88, 0.82] : [1, 1.18, 0.9]}>
+              <sphereGeometry args={[0.24, 18, 14]} />
+              <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.08} roughness={0.34} metalness={0.04} />
+            </mesh>
+            {heart && (
+              <>
+                <mesh position={[-0.12, 0.13, 0]} scale={[0.72, 0.62, 0.62]} castShadow={false} receiveShadow={false}>
+                  <sphereGeometry args={[0.16, 14, 10]} />
+                  <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.08} roughness={0.34} />
+                </mesh>
+                <mesh position={[0.12, 0.13, 0]} scale={[0.72, 0.62, 0.62]} castShadow={false} receiveShadow={false}>
+                  <sphereGeometry args={[0.16, 14, 10]} />
+                  <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.08} roughness={0.34} />
+                </mesh>
+              </>
+            )}
+            <mesh position={[0, -0.38, 0]} castShadow={false} receiveShadow={false}>
+              <cylinderGeometry args={[0.004, 0.004, 0.72, 4]} />
+              <meshBasicMaterial color="#f2d8a6" transparent opacity={0.62} />
+            </mesh>
+          </group>
+        )
+      })}
+    </group>
+  )
+}
+
+function QueenDayRooftopLights() {
+  const refs = useRef([])
+  useFrame((state) => {
+    const t = state.clock.elapsedTime
+    refs.current.forEach((mesh, index) => {
+      if (!mesh?.material) return
+      mesh.material.opacity = 0.42 + 0.18 * Math.sin(t * 1.1 + index * 0.8)
+    })
+  })
+  return (
+    <group>
+      {[
+        [-7, 3.84, -2.5, 2.9, 2.15],
+        [-4, 10.95, -10, 0.78, 0.78],
+        [4, 10.95, -10, 0.78, 0.78],
+      ].map(([x, y, z, rx, rz], i) => (
+        <mesh key={`queen-roof-ring-${i}`} ref={(el) => (refs.current[i] = el)} position={[x, y, z]} rotation={[-Math.PI / 2, 0, 0]} castShadow={false} receiveShadow={false}>
+          <ringGeometry args={[Math.max(rx, rz), Math.max(rx, rz) + 0.035, 48]} />
+          <meshBasicMaterial color={i === 0 ? '#ffd478' : '#ff9ec6'} transparent opacity={0.36} depthWrite={false} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function QueenDayWorldCelebration() {
+  return (
+    <group>
+      {QUEEN_DAY_WORLD_CLUSTERS.map((cluster) => (
+        <QueenDayBalloonCluster key={cluster.id} cluster={cluster} />
+      ))}
+      <QueenDayRooftopLights />
+    </group>
+  )
+}
+
+function playQueenAnnouncementChime() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext
+  if (!AudioContextClass) return
+  const context = new AudioContextClass()
+  const now = context.currentTime
+  const master = context.createGain()
+  master.gain.setValueAtTime(0.0001, now)
+  master.gain.exponentialRampToValueAtTime(0.055, now + 0.18)
+  master.gain.exponentialRampToValueAtTime(0.0001, now + 2.4)
+  master.connect(context.destination)
+
+  ;[523.25, 659.25, 783.99].forEach((frequency, index) => {
+    const osc = context.createOscillator()
+    const gain = context.createGain()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(frequency, now)
+    gain.gain.setValueAtTime(0.0001, now)
+    gain.gain.exponentialRampToValueAtTime(0.42 - index * 0.08, now + 0.22 + index * 0.08)
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.75 + index * 0.2)
+    osc.connect(gain)
+    gain.connect(master)
+    osc.start(now + index * 0.16)
+    osc.stop(now + 2.2 + index * 0.16)
+  })
+
+  window.setTimeout(() => context.close().catch(() => {}), 2800)
+}
+
+function QueenDayAnnouncement({ show, onDismiss }) {
+  useEffect(() => {
+    if (!show) return undefined
+    let played = false
+    const playOnce = () => {
+      if (played) return
+      played = true
+      try {
+        playQueenAnnouncementChime()
+      } catch {
+        // Browser audio policies can still block the chime; the visual announcement should continue.
+      }
+    }
+    playOnce()
+    window.addEventListener('pointerdown', playOnce, { once: true })
+    window.addEventListener('keydown', playOnce, { once: true })
+    return () => {
+      window.removeEventListener('pointerdown', playOnce)
+      window.removeEventListener('keydown', playOnce)
+    }
+  }, [show])
+
+  if (!show) return null
+
+  return (
+    <div className="queen-announcement-backdrop" role="dialog" aria-modal="true" aria-labelledby="queen-announcement-title" onClick={onDismiss}>
+      <div className="queen-announcement-drift" aria-hidden="true">
+        {Array.from({ length: 12 }, (_, index) => (
+          <span key={index} style={{ '--i': index }} />
+        ))}
+      </div>
+      <section className="queen-announcement-card" onClick={onDismiss}>
+        <button type="button" className="queen-announcement-close" onClick={onDismiss} aria-label="Dismiss Queen's Day announcement">×</button>
+        <p className="queen-announcement-kicker">Royal Proclamation</p>
+        <h1 id="queen-announcement-title">THE QUEEN&apos;S DAY</h1>
+        <p className="queen-announcement-copy">
+          Today, the island celebrates its Queen<br />
+          turning 22 years old.
+        </p>
+        <p className="queen-announcement-footnote">Lights will burn brighter tonight.</p>
+      </section>
+    </div>
+  )
+}
+
 function WorldMap() {
   const { theme, ambientRef, directionalRef } = useTheme()
   const lhWorld = useLighthouseWorld()
@@ -4006,12 +4182,14 @@ function WorldMap() {
   const [flyToBuildingId, setFlyToBuildingId] = useState(null)
   const [showMapModal, setShowMapModal] = useState(false)
   const [activeModal, setActiveModal] = useState(null)
+  const [showQueenAnnouncement, setShowQueenAnnouncement] = useState(false)
   const prevThemeRef = useRef(null)
   const resetCameraRef = useRef(null)
   const controlsRef = useRef(null)
   const cityGroupRef = useRef(null)
   const cityFadeRef = useRef(1)
   const flyToWorldPosRef = useRef(null)
+  const cityAudioRef = useRef(null)
   const introPlaying = false
 
   const onOpenProject = useMemo(() => (id) => {
@@ -4074,6 +4252,52 @@ function WorldMap() {
     const id = setTimeout(() => setShowWelcome(false), 5000)
     return () => clearTimeout(id)
   }, [])
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setShowQueenAnnouncement(true), 650)
+    return () => window.clearTimeout(id)
+  }, [])
+
+  const dismissQueenAnnouncement = () => {
+    setShowQueenAnnouncement(false)
+  }
+
+  useEffect(() => {
+    const audio = new Audio('/audio/main.mp3')
+    cityAudioRef.current = audio
+    audio.loop = true
+    audio.preload = 'auto'
+    audio.volume = 0.34
+    audio.load()
+    return () => {
+      audio.pause()
+      audio.src = ''
+      cityAudioRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    const audio = cityAudioRef.current
+    if (!audio) return undefined
+    const shouldPlay = activeModal?.type !== 'museum'
+    let disposed = false
+    const tryPlay = () => {
+      if (disposed || !shouldPlay) return
+      audio.play().catch(() => {})
+    }
+    if (shouldPlay) {
+      tryPlay()
+      window.addEventListener('pointerdown', tryPlay, { once: true })
+      window.addEventListener('keydown', tryPlay, { once: true })
+    } else {
+      audio.pause()
+    }
+    return () => {
+      disposed = true
+      window.removeEventListener('pointerdown', tryPlay)
+      window.removeEventListener('keydown', tryPlay)
+    }
+  }, [activeModal?.type])
 
   useEffect(() => {
     const onKey = (e) => {
@@ -4211,6 +4435,7 @@ function WorldMap() {
               <PeopleWalking />
               <CarsMoving />
               <SimpleTrees />
+              <QueenDayWorldCelebration />
               <SeatingArea />
               <MicroAirport
                   onHover={(h) => setSelectedBuilding(h ? 'airport' : (prev) => (prev === 'airport' ? null : prev))}
@@ -4250,7 +4475,8 @@ function WorldMap() {
           )}
         </Canvas>
 
-        <WelcomeOverlay show={showWelcome} />
+        <WelcomeOverlay show={showWelcome && !showQueenAnnouncement} />
+        <QueenDayAnnouncement show={showQueenAnnouncement} onDismiss={dismissQueenAnnouncement} />
 
       <NavigationUI
         selectedBuilding={selectedBuilding}

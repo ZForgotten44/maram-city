@@ -290,7 +290,7 @@ const museumDoors = [
   { title: 'The Poem That Answers Back', unlocked: true, tone: 'rose', unlock: 'Enter', symbol: 'IV', roomId: 'poem-answers' },
   { title: 'Arafah', unlocked: true, tone: 'starlit', unlock: 'Enter', symbol: 'V', roomId: 'arafah' },
   { title: '100 Years of Adventure', unlocked: true, tone: 'violet', unlock: 'Enter', symbol: 'VI', roomId: 'adventure-book' },
-  { title: '100 Years Together', unlocked: false, tone: 'sacred', unlock: 'Opens May 29', symbol: 'VII' },
+  { title: "The Queen's Room", unlocked: true, tone: 'sacred', unlock: 'Enter', symbol: 'VII', roomId: 'queens-room' },
 ]
 
 const beforeYouPoem = `Before I knew your name,
@@ -1799,6 +1799,388 @@ function AdventureBookRoom() {
   )
 }
 
+const queensRoomFrames = [
+  { src: '/pics/door7/1.jpeg', note: 'the first morning you laughed at nothing', tilt: -4.5 },
+  { src: '/pics/door7/2.jpeg', note: 'softness, caught mid-air', tilt: 3.2 },
+  { src: '/pics/door7/3.jpeg', note: 'a day the light agreed with us', tilt: -2.4 },
+  { src: '/pics/door7/4.jpeg', note: 'you, being impossibly you', tilt: 4.2 },
+  { src: '/pics/door7/5.jpeg', note: 'home, written as a face', tilt: -3.6 },
+]
+
+const queensIntro = [
+  'For twenty-two years,\nGod has been letting the world borrow something that never truly belonged to it.',
+  'You.',
+  'And I think that is why I have always looked at you a little differently than everyone else does.',
+  'Not like a person passing through life,\nbut like someone holding a candle inside a hurricane and somehow keeping the flame alive.',
+  'A miracle.\nQuietly.',
+  'I have crossed countries, languages, cities glowing at midnight,\nhave shaken hands with strangers whose names dissolved by daylight,\nhave watched oceans swallow sunsets whole without making a sound,\nyet nothing in this world has ever humbled me\nthe way your softness does.',
+  'Because softness surviving this world is not weakness.\nIt is war.',
+  'And today,\nwhile the earth celebrates twenty-two years since your heart first arrived here,\nI do not want to offer you diamonds,\nbecause diamonds are only beautiful after pressure.',
+  'You were beautiful long before pain touched you.',
+  'So instead,\nI wrote you twenty-two reminders.',
+  'Not because you do not know them already,\nfor wisdom does not always come to teach the unaware,\nsometimes it comes simply to remind the wise.',
+  'And if I have learned anything from loving you,\nit is this:',
+  'the world is a loud place,\nand precious things must be spoken to gently,\nor they forget their worth.',
+  'So listen to me carefully now,\nmy love.',
+  'These are the twenty-two things\nI pray the universe to never let you forget.',
+]
+
+const queensAdvices = [
+  { number: 1, lines: [
+    'Nothing,\nnothing in this life,\nis worth losing yourself for.',
+    'Not grades.\nNot work.\nNot expectations.\nNot the noise people mistake for success.',
+    'Because every time I walk through the cemetery\nand see flowers resting beside names once feared and admired,\nI remember how temporary all of this is.',
+    'Health is wealth.\nPeace is wealth.\nSleep is wealth.',
+    'If your heart is calm,\nthen believe me:\nyou are already richer than most of the world.',
+  ] },
+  { number: 2, lines: [
+    'Start early.',
+    'Not because I want you to become a machine made of schedules and alarms,\nbut because stress steals joy before life even arrives.',
+    'A task finished early feels light.\nA task delayed follows you into dinner,\ninto prayer,\ninto sleep.',
+    'Protect your peace before the storm asks for it.',
+  ] },
+  { number: 3, lines: [
+    'Never underestimate yourself again.',
+    'I mean it.',
+    'I have seen twenty-one countries.\nDifferent languages.\nDifferent beauties.\nDifferent minds.',
+    'And somehow,\nagainst all statistical logic,\nthe most extraordinary soul I found\nwas you.',
+    'You,\nwith your impossible kindness.\nYou,\nwhose voice can make exhaustion leave my bones.\nYou,\nwhose existence alone made life feel less accidental.',
+    'You are not small.\nDo not speak about yourself as if you are.',
+  ] },
+  { number: 4, lines: [
+    'Family first.',
+    'Always.',
+    'The world will try to convince you that achievement is measured in titles,\nin salaries,\nin applause from strangers who would not recognize your sadness in a crowded room.',
+    'But the greatest industry in human history\nhas never been money.\nIt has always been people.',
+    'Raising good hearts.\nCreating safe homes.\nLoving others so beautifully\nthat they continue spreading your softness\nlong after you are gone.',
+    'That,\nthat is legacy.',
+  ] },
+  { number: 5, lines: [
+    'Do what you love.',
+    'Please.',
+    'Life is too fragile to spend years becoming someone else\u2019s idea of successful.',
+    'If one day your soul begins suffocating somewhere,\nleave.',
+    'And I swear to you:\neven if the whole world stands on one side\nand your happiness stands alone on the other,\nI will stand beside your happiness.',
+    'Me and you against everything.',
+    'Always.',
+  ] },
+  { number: 6, lines: [
+    'Be kind to everyone.\nBut do not hand everyone access to your heart.',
+    'Friendship is not candy displayed behind glass.\nTrust is not something sold cheaply.',
+    'The people closest to us\ncan either become ladders to heaven\nor doors to hell.',
+    'So smile warmly.\nLove gently.\nBut choose carefully.',
+    'Be friendly to everyone,\nBut, do NOT befriend everyone.',
+  ] },
+  { number: 7, lines: [
+    'Learn the power of \u201cno.\u201d',
+    'Because not every request deserves your exhaustion.',
+    'People will call exploitation \u201cfriendship.\u201d\nThey will call convenience \u201clove.\u201d\nThey will take pieces of your time\nwhile acting surprised you began disappearing.',
+    'Do not disappear for people\nwho would never notice your silence.',
+  ] },
+  { number: 8, lines: [
+    'Life is give and take.',
+    'Even the oceans understand this.',
+    'The tide leaves.\nThe tide returns.',
+    'So if you keep pouring from your cup into others\nwhile nobody refills yours,\nstep away.',
+    'Love should nourish.\nFriendship should nourish.\nEven sacrifice should mean something.',
+    'And if anyone ever makes you feel guilty\nfor protecting your peace,',
+    'walk away smiling.',
+  ] },
+  { number: 9, lines: [
+    'This time will pass.',
+    'The beautiful days.\nThe terrible days.\nThe anxious nights.\nThe mornings that arrive too quickly.',
+    'All of it passes.',
+    'So when happiness visits you,\nhold it gently instead of loudly.\nAnd when sadness visits,\ndo not build it a home.',
+    'It was never planning to stay forever anyway.',
+  ] },
+  { number: 10, lines: [
+    'Sing more.',
+    'Sing at all.',
+    'Seriously.',
+    'The world has enough people speaking.\nIt needs more people singing.',
+    'And selfishly,\nI want to hear your voice filling rooms someday,\ncarelessly,\nbeautifully,\nwhile sunlight falls across our kitchen floor.',
+  ] },
+  { number: 11, lines: [
+    'Work on your jokes.',
+    'Because honestly,\nyour punchlines sometimes arrive like delayed flights.',
+    'And yet somehow,\nI still laugh before they end\nbecause your happiness is contagious.',
+    'So maybe this advice is actually for me.',
+  ] },
+  { number: 12, lines: [
+    'Never stop observing the world.',
+    'Look up from the glowing rectangle.',
+    'Watch birds argue over crumbs.\nWatch old couples crossing streets slowly.\nWatch rain turn cities softer.',
+    'There is evidence of God everywhere,\nbut people miss it\nbecause they keep scrolling past miracles.',
+  ] },
+  { number: 13, lines: [
+    'Protect your information.',
+    'Not everyone asking questions deserves answers.',
+    'Most danger enters lives quietly\nthrough details carelessly shared,\nthrough trust carelessly placed,\nthrough people studying you while pretending merely to know you.',
+    'Observe more than you reveal.',
+  ] },
+  { number: 14, lines: [
+    'Trust your first instinct more often.',
+    'Your soul notices things\nyour logic takes hours to explain.',
+  ] },
+  { number: 15, lines: [
+    'Ask.',
+    'Ask questions.\nAsk for help.\nAsk for directions.\nAsk when confused.',
+    'There is no weakness in asking.',
+    'Only wisdom refusing to drown silently.',
+  ] },
+  { number: 16, lines: [
+    'Help others whenever you can.',
+    'But never light yourself on fire\njust to keep strangers warm.',
+    'You matter too.',
+  ] },
+  { number: 17, lines: [
+    'Sleep well.',
+    'Please.',
+    'One good night of peace\nis one of Allah\u2019s gentlest mercies upon us.',
+    'And unlike me,\ndo not try to replace rest with caffeine and regret.',
+  ] },
+  { number: 18, lines: [
+    'Never trade your values\nfor acceptance.',
+    'Not for crowds.\nNot for comfort.\nNot even for me.',
+    'If you ever truly believe in something,\nhold it with dignity.',
+    'I would rather stand beside you disagreeing with me honestly\nthan you abandon yourself to keep me comfortable.',
+  ] },
+  { number: 19, lines: [
+    'Be happy without guilt.',
+    'This world is already heavy enough.',
+    'Laugh.\nTravel.\nEat slowly.\nDance badly.\nTake pictures of sunsets.',
+    'Joy is not ignorance.',
+    'Sometimes joy itself is survival.',
+  ] },
+  { number: 20, lines: [
+    'Remember death',
+    'not to fear life,\nbut to honor it.',
+    'Birthdays are strange things.',
+    'Everyone sings while time quietly slips another year through our fingers.',
+    'And maybe that sounds sad,\nbut strangely,\nI find it beautiful.',
+    'Because knowing life ends\nis exactly what makes your existence feel sacred to me.',
+  ] },
+  { number: 21, lines: [
+    'Never forget how loved you are.',
+    'You changed me.',
+    'Before you,\nlife felt like something I needed to survive.',
+    'After you,\nlife became something I wanted to witness.',
+    'You made ordinary days feel important.\nYou made the future feel real.\nYou made love feel less like poetry\nand more like oxygen.',
+  ] },
+  { number: 22, lines: [
+    'And finally,',
+    'when this world becomes cruel,\nas it sometimes will,\ndo not let it convince you to become cruel with it.',
+    'Stay soft.',
+    'Please stay soft.',
+    'Because I have seen what this world does to gentle people,\nand still,\nsomehow,\nyou remained kind.',
+    'That may be the rarest thing I have ever witnessed.',
+  ] },
+]
+
+const queensClosing = [
+  'So happy twenty-second birthday,\nmy queen.',
+  'If heaven ever asked me\nwhat my favorite miracle on earth looked like,',
+  'I would simply say your name.',
+]
+
+const queensFloatingPhrases = ['happy birthday', '22', 'my queen', 'softness survived', 'you are loved']
+
+function QueensStanza({ text }) {
+  const linesArr = text.split('\n')
+  return (
+    <p className="queens-stanza">
+      {linesArr.map((line, i) => (
+        <span key={i} className="queens-line">{line}</span>
+      ))}
+    </p>
+  )
+}
+
+function QueensRoom() {
+  const rootRef = useRef(null)
+  const [loadedFrames, setLoadedFrames] = useState({})
+
+  useEffect(() => {
+    const root = rootRef.current
+    if (!root) return undefined
+    const targets = root.querySelectorAll('.queens-reveal')
+    if (!('IntersectionObserver' in window)) {
+      targets.forEach((el) => el.classList.add('is-visible'))
+      return undefined
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.18, rootMargin: '0px 0px -8% 0px' },
+    )
+    targets.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div className="queens-room-scroll" ref={rootRef}>
+      <div className="queens-atmosphere" aria-hidden="true">
+        <span className="queens-glow queens-glow-one" />
+        <span className="queens-glow queens-glow-two" />
+        <span className="queens-fairy-lights">
+          {Array.from({ length: 22 }, (_, i) => (
+            <span key={i} className="queens-fairy-bulb" style={{ '--i': i }} />
+          ))}
+        </span>
+        <span className="queens-balloons">
+          {Array.from({ length: 5 }, (_, i) => (
+            <span key={i} className={`queens-balloon queens-balloon-${i}`} style={{ '--i': i }} />
+          ))}
+        </span>
+        <span className="queens-side-balloons queens-side-left" aria-hidden="true">
+          {Array.from({ length: 4 }, (_, i) => (
+            <span key={i} className={`queens-side-balloon queens-side-balloon-${i % 3}`} style={{ '--i': i }} />
+          ))}
+        </span>
+        <span className="queens-side-balloons queens-side-right" aria-hidden="true">
+          {Array.from({ length: 4 }, (_, i) => (
+            <span key={i} className={`queens-side-balloon queens-side-balloon-${(i + 1) % 3}`} style={{ '--i': i }} />
+          ))}
+        </span>
+        {Array.from({ length: 9 }, (_, i) => (
+          <span key={`note-${i}`} className="queens-note" style={{ '--i': i }}>{i % 2 === 0 ? '\u266a' : '\u266b'}</span>
+        ))}
+        {Array.from({ length: 14 }, (_, i) => (
+          <span key={`star-${i}`} className="queens-star" style={{ '--i': i }} />
+        ))}
+        {Array.from({ length: 8 }, (_, i) => (
+          <span key={`flower-${i}`} className={`queens-flower queens-flower-${i % 2 === 0 ? 'left' : 'right'}`} style={{ '--i': i }}>
+            {i % 3 === 0 ? '\u2740' : i % 3 === 1 ? '\u2741' : '\u273f'}
+          </span>
+        ))}
+        {Array.from({ length: 3 }, (_, i) => (
+          <span key={`bird-${i}`} className="queens-bird" style={{ '--i': i }}>
+            <span className="queens-bird-wing queens-bird-wing-l" />
+            <span className="queens-bird-wing queens-bird-wing-r" />
+          </span>
+        ))}
+        {Array.from({ length: 10 }, (_, i) => (
+          <span key={`spark-${i}`} className="queens-spark" style={{ '--i': i }} />
+        ))}
+        {Array.from({ length: 18 }, (_, i) => (
+          <span key={i} className="queens-confetti" style={{ '--i': i }} />
+        ))}
+        {Array.from({ length: 16 }, (_, i) => (
+          <span key={i} className="queens-dust" style={{ '--i': i }} />
+        ))}
+        {queensFloatingPhrases.map((phrase, i) => (
+          <span key={phrase} className="queens-floating-phrase" style={{ '--i': i }}>{phrase}</span>
+        ))}
+      </div>
+
+      <header className="queens-hero queens-reveal">
+        <p className="queens-kicker">Room 07</p>
+        <h2 className="queens-title">The Queen&rsquo;s Room</h2>
+        <p className="queens-subtitle">happy birthday, my queen</p>
+      </header>
+
+      <section className="queens-frames-wall queens-reveal" aria-label="Hanging framed photographs">
+        {[queensRoomFrames.slice(0, 3), queensRoomFrames.slice(3)].map((row, rowIndex) => (
+          <div key={rowIndex} className={`queens-frames-row queens-frames-row-${rowIndex}`}>
+            <span className="queens-frame-string" aria-hidden="true" />
+            {row.map((frame, i) => {
+              const ratio = loadedFrames[frame.src]
+              const orientation = ratio ? (ratio > 1.08 ? 'landscape' : ratio < 0.92 ? 'portrait' : 'square') : null
+              return (
+                <figure
+                  key={frame.src}
+                  className={`queens-frame ${orientation ? `queens-frame-${orientation}` : ''}`}
+                  style={{ '--tilt': `${frame.tilt}deg`, '--i': rowIndex * 3 + i, '--frame-ar': ratio || '' }}
+                >
+                  <span className="queens-frame-clip" aria-hidden="true" />
+                  <div className="queens-frame-inner">
+                    <img
+                      src={frame.src}
+                      alt={frame.note}
+                      loading="lazy"
+                      onLoad={(e) => {
+                        const { naturalWidth, naturalHeight } = e.currentTarget
+                        const r = naturalWidth && naturalHeight ? naturalWidth / naturalHeight : 0.8
+                        setLoadedFrames((prev) => ({ ...prev, [frame.src]: r }))
+                      }}
+                      onError={(e) => { e.currentTarget.style.display = 'none' }}
+                    />
+                    {!ratio && <span className="queens-frame-placeholder" aria-hidden="true" />}
+                  </div>
+                  <figcaption className="queens-frame-note">{frame.note}</figcaption>
+                </figure>
+              )
+            })}
+          </div>
+        ))}
+      </section>
+
+      <div className="queens-scroll-hint queens-reveal" aria-hidden="true">
+        <span>scroll, slowly</span>
+        <span className="queens-scroll-arrow" />
+      </div>
+
+      <article className="queens-letter" aria-label="A birthday letter for the Queen">
+        <span className="queens-letter-corner queens-letter-corner-tl" aria-hidden="true" />
+        <span className="queens-letter-corner queens-letter-corner-tr" aria-hidden="true" />
+        <span className="queens-letter-corner queens-letter-corner-bl" aria-hidden="true" />
+        <span className="queens-letter-corner queens-letter-corner-br" aria-hidden="true" />
+        <section className="queens-intro">
+          {queensIntro.map((stanza, i) => (
+            <div key={i} className="queens-reveal queens-block" style={{ '--i': i }}>
+              <QueensStanza text={stanza} />
+            </div>
+          ))}
+        </section>
+
+        <div className="queens-divider queens-reveal" aria-hidden="true">
+          <span>twenty-two reminders</span>
+        </div>
+
+        <section className="queens-advices" aria-label="22 lessons for 22 years alive">
+          {queensAdvices.map((advice) => {
+            return (
+              <div key={advice.number} className="queens-advice queens-reveal" style={{ '--n': advice.number }}>
+                <span className="queens-number queens-number-ink" aria-hidden="true">
+                  <span className="queens-number-mark">{advice.number}</span>
+                </span>
+                <span className="queens-advice-index">{`Lesson ${advice.number} of 22`}</span>
+                <div className="queens-advice-body">
+                  {advice.lines.map((stanza, i) => (
+                    <QueensStanza key={i} text={stanza} />
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </section>
+
+        <div className="queens-divider queens-reveal" aria-hidden="true">
+          <span>&middot;</span>
+        </div>
+
+        <section className="queens-closing">
+          {queensClosing.map((stanza, i) => (
+            <div key={i} className="queens-reveal queens-block" style={{ '--i': i }}>
+              <QueensStanza text={stanza} />
+            </div>
+          ))}
+          <div className="queens-signature queens-reveal">
+            <span className="queens-signature-line">your lover forever,</span>
+            <span className="queens-signature-name">Mahmoud</span>
+          </div>
+        </section>
+      </article>
+    </div>
+  )
+}
+
 function MuseumOfLovingMaram({ embedded, onClose, theme }) {
   const [activeRoom, setActiveRoom] = useState(null)
   const [countdown, setCountdown] = useState(() => getMuseumCountdown())
@@ -1815,6 +2197,7 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
   const roomFourAudioRef = useRef(null)
   const roomFiveAudioRef = useRef(null)
   const roomSixAudioRef = useRef(null)
+  const roomSevenAudioRef = useRef(null)
   const poemReferenceAudioRefs = useRef({})
   const audioFadeRef = useRef({})
   const poemAudioFadeRef = useRef({})
@@ -1834,7 +2217,8 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     const roomFourAudio = new Audio('/audio/door4/door4.mp3')
     const roomFiveAudio = new Audio('/audio/door5.mp3')
     const roomSixAudio = new Audio('/audio/door6.mp3')
-    ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio, roomFiveAudio, roomSixAudio].forEach((audio) => {
+    const roomSevenAudio = new Audio('/audio/door7.mp3')
+    ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio, roomFiveAudio, roomSixAudio, roomSevenAudio].forEach((audio) => {
       audio.loop = true
       audio.preload = 'auto'
       audio.volume = 0
@@ -1847,11 +2231,12 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     roomFourAudioRef.current = roomFourAudio
     roomFiveAudioRef.current = roomFiveAudio
     roomSixAudioRef.current = roomSixAudio
+    roomSevenAudioRef.current = roomSevenAudio
 
     return () => {
       Object.values(audioFadeRef.current).forEach(cancelAnimationFrame)
       Object.values(poemAudioFadeRef.current).forEach(cancelAnimationFrame)
-      ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio, roomFiveAudio, roomSixAudio].forEach((audio) => {
+      ;[hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio, roomFiveAudio, roomSixAudio, roomSevenAudio].forEach((audio) => {
         audio.pause()
         audio.src = ''
       })
@@ -1866,6 +2251,7 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
       roomFourAudioRef.current = null
       roomFiveAudioRef.current = null
       roomSixAudioRef.current = null
+      roomSevenAudioRef.current = null
       poemReferenceAudioRefs.current = {}
     }
   }, [])
@@ -1882,7 +2268,8 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     const roomFourAudio = roomFourAudioRef.current
     const roomFiveAudio = roomFiveAudioRef.current
     const roomSixAudio = roomSixAudioRef.current
-    if (!hallAudio || !roomAudio || !roomTwoAudio || !roomThreeAudio || !roomFourAudio || !roomFiveAudio || !roomSixAudio) return undefined
+    const roomSevenAudio = roomSevenAudioRef.current
+    if (!hallAudio || !roomAudio || !roomTwoAudio || !roomThreeAudio || !roomFourAudio || !roomFiveAudio || !roomSixAudio || !roomSevenAudio) return undefined
 
     const fadeAudio = (audio, targetVolume, duration = 1800, pauseAtEnd = false) => {
       if (audioFadeRef.current[audio.src]) cancelAnimationFrame(audioFadeRef.current[audio.src])
@@ -1912,8 +2299,10 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
               ? roomFiveAudio
               : activeRoom === 'adventure-book'
                 ? roomSixAudio
-                : hallAudio
-    const inactiveAudios = [hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio, roomFiveAudio, roomSixAudio].filter((audio) => audio !== activeAudio)
+                : activeRoom === 'queens-room'
+                  ? roomSevenAudio
+                  : hallAudio
+    const inactiveAudios = [hallAudio, roomAudio, roomTwoAudio, roomThreeAudio, roomFourAudio, roomFiveAudio, roomSixAudio, roomSevenAudio].filter((audio) => audio !== activeAudio)
     const activeVolume = isMuted
       ? 0
       : activeRoom === 'before-you'
@@ -1928,7 +2317,9 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
                 ? 0.28
                 : activeRoom === 'adventure-book'
                   ? 0.08
-                  : 0.22
+                  : activeRoom === 'queens-room'
+                    ? 0.26
+                    : 0.22
 
     const syncAudio = () => {
       if (!isMuted) {
@@ -2005,7 +2396,19 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     if (roomId === 'poem-answers') return roomFourAudioRef.current
     if (roomId === 'arafah') return roomFiveAudioRef.current
     if (roomId === 'adventure-book') return roomSixAudioRef.current
+    if (roomId === 'queens-room') return roomSevenAudioRef.current
     return hallAudioRef.current
+  }
+
+  const getRoomVolume = (roomId) => {
+    if (roomId === 'before-you') return 0.24
+    if (roomId === 'balloon-notes') return 0.23
+    if (roomId === 'rule-of-three') return 0.24
+    if (roomId === 'poem-answers') return 0.12
+    if (roomId === 'arafah') return 0.28
+    if (roomId === 'adventure-book') return 0.08
+    if (roomId === 'queens-room') return 0.26
+    return 0.22
   }
 
   const warmRoomAudio = (roomId) => {
@@ -2015,8 +2418,27 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
     if (audio.readyState < 2) audio.load()
     if (isMuted) return
 
+    // Start playback directly from the enter gesture and fade it in here so the
+    // room is audibly alive instantly, independent of the post-render sync effect.
     audio.volume = 0
-    audio.play().catch(() => {})
+    const target = getRoomVolume(roomId)
+    const startedAt = performance.now()
+    const duration = 3200
+    const fadeIn = (now) => {
+      const progress = Math.min(1, (now - startedAt) / duration)
+      audio.volume = target * progress
+      if (progress < 1) audioFadeRef.current[audio.src] = requestAnimationFrame(fadeIn)
+    }
+    const startFade = () => {
+      if (audioFadeRef.current[audio.src]) cancelAnimationFrame(audioFadeRef.current[audio.src])
+      audioFadeRef.current[audio.src] = requestAnimationFrame(fadeIn)
+    }
+    const playPromise = audio.play()
+    if (playPromise && typeof playPromise.then === 'function') {
+      playPromise.then(startFade).catch(() => {})
+    } else {
+      startFade()
+    }
   }
 
   const fadePoemReferenceAudio = (audio, targetVolume, duration = 900, resetAtEnd = false) => {
@@ -2222,16 +2644,27 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
             <span className="museum-orbit museum-orbit-one" />
             <span className="museum-orbit museum-orbit-two" />
           </div>
-          <div className="museum-countdown" aria-label="Countdown to Maram birthday, EEST">
-            <p>almost May 29</p>
-            <b>waiting for her birthday</b>
-            <div>
-              <span><strong>{countdown.days}</strong><em>days</em></span>
-              <span><strong>{countdown.hours}</strong><em>hours</em></span>
-              <span><strong>{countdown.minutes}</strong><em>minutes</em></span>
-              <span><strong>{countdown.seconds}</strong><em>seconds</em></span>
+          {countdown.finished ? (
+            <div className="museum-countdown museum-birthday" aria-label="It's her birthday">
+              <span className="museum-birthday-confetti" aria-hidden="true">
+                {Array.from({ length: 16 }, (_, i) => <span key={i} style={{ '--i': i }} />)}
+              </span>
+              <p>the wait is over</p>
+              <b className="museum-birthday-headline">IT&rsquo;S YOUR BIRTHDAY!!</b>
+              <span className="museum-birthday-sub">YOU ARE 22, GIRL!</span>
             </div>
-          </div>
+          ) : (
+            <div className="museum-countdown" aria-label="Countdown to Maram birthday, EEST">
+              <p>almost May 29</p>
+              <b>waiting for her birthday</b>
+              <div>
+                <span><strong>{countdown.days}</strong><em>days</em></span>
+                <span><strong>{countdown.hours}</strong><em>hours</em></span>
+                <span><strong>{countdown.minutes}</strong><em>minutes</em></span>
+                <span><strong>{countdown.seconds}</strong><em>seconds</em></span>
+              </div>
+            </div>
+          )}
           <div className="museum-doors">
             {museumDoors.map((door, i) => (
               <button
@@ -2258,6 +2691,13 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
                 <span className="museum-door-threshold" />
                 <span className="museum-door-lock">{door.unlock}</span>
                 <span className="museum-door-room-particles" />
+                {i === museumDoors.length - 1 && (
+                  <span className="final-door-balloons" aria-hidden="true">
+                    <span className="final-door-balloon final-door-balloon-a" />
+                    <span className="final-door-balloon final-door-balloon-b" />
+                    <span className="final-door-balloon final-door-balloon-c" />
+                  </span>
+                )}
                 {!door.unlocked && <span className="museum-door-seal" />}
               </button>
             ))}
@@ -2441,6 +2881,11 @@ function MuseumOfLovingMaram({ embedded, onClose, theme }) {
           <button type="button" className="museum-back adventure-back" onClick={() => setActiveRoom(null)}>Back to hallway</button>
           <AdventureBookRoom />
         </section>
+      ) : activeRoom === 'queens-room' ? (
+        <section className="queens-room" aria-label="Room VII, The Queen's Room">
+          <button type="button" className="museum-back queens-back" onClick={() => setActiveRoom(null)}>Back to hallway</button>
+          <QueensRoom />
+        </section>
       ) : (
         <section
           ref={roomRef}
@@ -2544,6 +2989,7 @@ function getMuseumCountdown() {
   const minutes = Math.floor((totalSeconds % 3600) / 60)
   const seconds = totalSeconds % 60
   return {
+    finished: totalSeconds <= 0,
     days: String(days).padStart(2, '0'),
     hours: String(hours).padStart(2, '0'),
     minutes: String(minutes).padStart(2, '0'),

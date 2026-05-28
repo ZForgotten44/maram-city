@@ -250,6 +250,168 @@
   cursor: crosshair;
 }
 
+.island-queen-label {
+  padding: 0.28rem 0.55rem;
+  border: 1px solid rgba(255, 220, 136, 0.72);
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, rgba(72, 28, 43, 0.88), rgba(138, 72, 80, 0.72)),
+    rgba(40, 18, 28, 0.9);
+  box-shadow:
+    0 0 12px rgba(255, 196, 102, 0.28),
+    inset 0 0 12px rgba(255, 220, 136, 0.1);
+  color: rgba(255, 236, 190, 0.98);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.48);
+}
+
+.queen-announcement-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 19000;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  cursor: pointer;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 207, 128, 0.1), transparent 36%),
+    linear-gradient(180deg, rgba(10, 8, 14, 0.42), rgba(6, 5, 9, 0.66));
+  backdrop-filter: blur(6px) saturate(0.92);
+  animation: queenAnnouncementBackdrop 1400ms ease both;
+}
+
+.queen-announcement-card {
+  position: relative;
+  width: min(600px, 90vw);
+  padding: clamp(2.6rem, 6vw, 4.25rem) clamp(1.8rem, 6vw, 3.6rem);
+  cursor: default;
+  overflow: hidden;
+  border: 0.5px solid rgba(255, 230, 180, 0.16);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 224, 164, 0.08), transparent 46%),
+    linear-gradient(160deg, rgba(34, 26, 38, 0.34), rgba(18, 14, 22, 0.46));
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.3),
+    0 0 90px rgba(255, 190, 130, 0.06);
+  color: rgba(255, 248, 234, 0.96);
+  text-align: center;
+  transform: translateY(18px);
+  animation: queenAnnouncementCard 1600ms cubic-bezier(.2,.74,.18,1) 220ms both;
+}
+
+.queen-announcement-card::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 1.6rem;
+  width: 40%;
+  height: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, rgba(255, 224, 168, 0.32), transparent);
+}
+
+.queen-announcement-close {
+  position: absolute;
+  right: 1.1rem;
+  top: 1rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(255, 236, 196, 0.5);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 300ms ease, transform 300ms ease;
+}
+
+.queen-announcement-close:hover {
+  color: rgba(255, 244, 214, 0.9);
+  transform: scale(1.1);
+}
+
+.queen-announcement-kicker {
+  margin: 0 0 1.4rem;
+  color: rgba(255, 218, 158, 0.66);
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+}
+
+.queen-announcement-card h1 {
+  margin: 0;
+  color: rgba(255, 245, 224, 0.96);
+  font-family: 'Cormorant Garamond', 'Playfair Display', var(--font-gothic), serif;
+  font-weight: 400;
+  font-size: clamp(2.1rem, 7.5vw, 3.9rem);
+  letter-spacing: 0.1em;
+  line-height: 1.1;
+  text-shadow: 0 0 30px rgba(255, 196, 130, 0.22);
+}
+
+.queen-announcement-copy {
+  margin: 1.7rem auto 0;
+  max-width: 38ch;
+  color: rgba(255, 242, 222, 0.78);
+  font-family: 'Cormorant Garamond', Georgia, "Times New Roman", serif;
+  font-size: clamp(1.1rem, 3vw, 1.42rem);
+  font-style: italic;
+  line-height: 1.7;
+}
+
+.queen-announcement-footnote {
+  margin: 2rem 0 0;
+  color: rgba(255, 213, 170, 0.52);
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.queen-announcement-drift {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.queen-announcement-drift span {
+  position: absolute;
+  left: calc(var(--i) * 8%);
+  top: -10%;
+  width: 4px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 220, 150, 0.6);
+  box-shadow: 0 0 14px rgba(255, 180, 210, 0.16);
+  opacity: 0;
+  animation: queenAnnouncementDrift 8s linear infinite;
+  animation-delay: calc(var(--i) * -0.45s);
+}
+
+@keyframes queenAnnouncementBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes queenAnnouncementCard {
+  from { opacity: 0; transform: translateY(28px) scale(0.98); filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes queenAnnouncementDrift {
+  0% { opacity: 0; transform: translate3d(0, -8vh, 0) rotate(0deg); }
+  18% { opacity: 0.48; }
+  100% { opacity: 0; transform: translate3d(24px, 110vh, 0) rotate(240deg); }
+}
+
 .building-info {
   position: absolute;
   bottom: 5%;
