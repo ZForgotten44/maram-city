@@ -10,6 +10,7 @@ import About from './pages/About'
 import LighthousePage from './pages/Lighthouse'
 import SoundDesign from './components/SoundDesign'
 import ErrorBoundary from './components/ErrorBoundary'
+import { Analytics } from '@vercel/analytics/react'
 
 function ScrollHandler() {
   const location = useLocation()
@@ -78,6 +79,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/lighthouse" element={<LighthousePage />} />
           </Routes>
+          <Analytics />
         </Router>
         </LighthouseWorldProvider>
       </ThemeProvider>
