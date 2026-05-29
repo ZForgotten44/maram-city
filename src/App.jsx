@@ -11,6 +11,7 @@ import LighthousePage from './pages/Lighthouse'
 import SoundDesign from './components/SoundDesign'
 import ErrorBoundary from './components/ErrorBoundary'
 import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 
 function ScrollHandler() {
   const location = useLocation()
@@ -80,6 +81,7 @@ function App() {
             <Route path="/lighthouse" element={<LighthousePage />} />
           </Routes>
           <Analytics />
+          <SpeedInsights />
         </Router>
         </LighthouseWorldProvider>
       </ThemeProvider>

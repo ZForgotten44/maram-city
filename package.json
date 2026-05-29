@@ -16,6 +16,7 @@
     "@react-three/drei": "^9.88.0",
     "@react-three/fiber": "^8.15.0",
     "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "framer-motion": "^10.16.16",
     "googleapis": "^144.0.0",
     "gsap": "^3.12.2",
